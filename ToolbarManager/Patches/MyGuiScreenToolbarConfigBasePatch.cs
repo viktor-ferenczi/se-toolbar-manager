@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using HarmonyLib;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Definitions;
 using Sandbox.Game.Gui;
 using Sandbox.Game.GUI;
 using Sandbox.Game.Screens.Helpers;
@@ -11,7 +12,9 @@ using Sandbox.Graphics.GUI;
 using ToolbarManager.Gui;
 using VRage.Audio;
 using VRage.Game;
+using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Input;
+using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Private;
 using VRage.Utils;
 using VRageMath;
@@ -41,6 +44,8 @@ namespace ToolbarManager.Patches
         {
             if (!Cfg.EnableStagingArea)
                 return;
+            
+            var isCharacter = __instance.m_character != null;
             
             var toolbarType = MyToolbarComponent.CurrentToolbar?.ToolbarType;
 
@@ -113,17 +118,35 @@ namespace ToolbarManager.Patches
             stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
             stagingPanel.Position = stagingLabel.Position + new Vector2(0f, stagingLabelHeight + spacing);
             stagingPanel.Size = new Vector2(panelWidth, stagingHeight - 0.05f);
-            
-            toolbarLabel.Position += new Vector2(0f, 0.004f);
-            
+
+            // Adjust the "Toolbar" label position a bit
+            toolbarLabel.Position += new Vector2(0f, 0.005f);
+
+            // Custom block group buttons
+            var saveAsCustomBlockGroupButton = new MyGuiControlButton
+            {
+                Text = "Save as custom group",
+                VisualStyle = MyGuiControlButtonStyleEnum.RectangularBorderLess,
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+                Position = stagingLabel.Position + new Vector2(0.15f, 0.003f),
+                Size = new Vector2(0.18f, stagingLabelHeight),
+            };
+            saveAsCustomBlockGroupButton.ButtonClicked += obj => OnSaveAsCustomBlockGroupClicked(__instance, stagingGrid, obj);
+
             __instance.AddControl(stagingLabel);
+            if (isCharacter)
+                __instance.AddControl(saveAsCustomBlockGroupButton);
             __instance.AddControl(stagingPanel);
             
             // Must re-insert the controls before toolbarLabel, otherwise they would be rendered in front of the context menu
             __instance.Controls.m_controls.Remove(stagingLabel);
+            if (isCharacter)
+                __instance.Controls.m_controls.Remove(saveAsCustomBlockGroupButton);
             __instance.Controls.m_controls.Remove(stagingPanel);
             var index = __instance.Controls.m_controls.FindIndex(c => c == toolbarLabel);
             __instance.Controls.m_controls.Insert(index, stagingPanel);
+            if (isCharacter)
+                __instance.Controls.m_controls.Insert(index, saveAsCustomBlockGroupButton);
             __instance.Controls.m_controls.Insert(index, stagingLabel);
             
             __instance.m_dragAndDrop.ItemDropped += (sender, eventArgs) => OnStagingGridOnDrop(stagingGrid, eventArgs);
@@ -352,6 +375,86 @@ namespace ToolbarManager.Patches
             // Disallow overwriting the selected or first slot.
             MyGuiAudio.PlaySound(MyGuiSounds.HudUnable);
             return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.SortCategoriesToDisplayList))]
+        private static bool SortCategoriesToDisplayListPrefix(MyGuiScreenToolbarConfigBase __instance)
+        {
+            // Custom groups block category
+            var isShip = __instance.m_screenCubeGrid != null;
+            if (!isShip)
+            {
+                var customBlockGroups = new MyGuiBlockCategoryDefinition
+                {
+                    Id = default,
+                    DisplayNameEnum = MyStringId.GetOrCompute("Custom Block Groups"),
+                    DescriptionEnum = null,
+                    DisplayNameString = "Custom Block Groups",
+                    DescriptionString = null,
+                    DescriptionArgs = null,
+                    Icons = new string[] { "PhysicalGunObject/WelderItem" },
+                    Enabled = true,
+                    Public = true,
+                    Name = "Custom Block Groups",
+                    ItemIds = new HashSet<string> { "PhysicalGunObject/WelderItem", "PhysicalGunObject/AngleGrinderItem", "PhysicalGunObject/HandDrillItem" },
+                    IsShipCategory = false,
+                    IsBlockCategory = true,
+                    SearchBlocks = true,
+                    ShowAnimations = false,
+                    ShowInCreative = true,
+                    IsAnimationCategory = false,
+                    IsToolCategory = true,
+                    ValidItems = 3,
+                    StrictSearch = false,
+                    m_hasTypelessEntry = false,
+                    AvailableInSurvival = true,
+                    Context = null
+                };
+                __instance.m_sortedCategories["Custom Block Groups"] = customBlockGroups;
+            }
+
+            return true;
+        }
+        
+        private static void OnSaveAsCustomBlockGroupClicked(MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase, MyGuiControlGrid stagingGrid, MyGuiControlButton obj)
+        {
+            var lst = myGuiScreenToolbarConfigBase.m_categoriesListbox;
+            foreach (var item in lst.Items)
+            {
+                if (item.Text.ToString() == "Custom Block Groups")
+                {
+                    lst.SelectSingleItem(item);
+                    myGuiScreenToolbarConfigBase.categories_ItemClicked(lst);
+                    break;
+                }
+            }
+
+            var blockVariantGroupBuilder = new MyObjectBuilder_BlockVariantGroup();
+            blockVariantGroupBuilder.Blocks = stagingGrid.Items
+                .Where(i => i != null)
+                .Select(i => i.UserData as MyGuiScreenToolbarConfigBase.GridItemUserData)
+                .Where(gi => gi != null)
+                .Select(gi => gi.ItemData() as MyObjectBuilder_ToolbarItemCubeBlock)
+                .Where(ti => ti != null)
+                .Select(ti => ti.DefinitionId)
+                .ToArray();
+            
+            if (blockVariantGroupBuilder.Blocks.Length == 0)
+                return;
+
+            var blockVariantGroup = new MyBlockVariantGroup();
+            blockVariantGroup.m_blockIdsToResolve = blockVariantGroupBuilder.Blocks;
+            blockVariantGroup.ResolveBlocks();
+            
+            var groupDefinition = new MyCubeBlockDefinitionGroup();
+            
+            //groupDefinition.m_definitions = blockVariantGroupBuilder.Blocks.Select(d => MyCubeBlockDefinition);
+
+            var position = new Vector2I(0, 0);
+            myGuiScreenToolbarConfigBase.AddCubeDefinition(myGuiScreenToolbarConfigBase.m_gridBlocks, groupDefinition, position);
+
+            var customGroup = new MyBlockVariantGroup();
         }
     }
 }
