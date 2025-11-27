@@ -228,6 +228,10 @@ namespace ToolbarManager.Patches
             {
                 // Clone the item to remove the toolbar number and current state, which is not relevant in the staging area
                 var clone = new MyGuiGridItem(item.Icons, item.SubIcon, item.ToolTip, userData);
+                
+                // Copy the label text (e.g., "Vel: 1.2") from the original item
+                foreach (var pair in item.TextsByAlign)
+                    clone.AddText(pair.Value, pair.Key);
             
                 // Remove any existing item, so identical ones are "moved" and not copied all the time (reduces clutter)
                 for (var i = 0; i < stagingGrid.m_items.Count; i++)
