@@ -1,4 +1,5 @@
 .idea
+.nuget
 Bin64
 Pulsar
 ToolbarManager.sln.DotSettings.user
