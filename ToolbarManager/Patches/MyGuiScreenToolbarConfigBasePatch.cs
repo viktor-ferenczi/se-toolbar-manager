@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using HarmonyLib;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Gui;
@@ -231,8 +232,15 @@ namespace ToolbarManager.Patches
                 
                 // Copy the label text (e.g., "Vel: 1.2") from the original item
                 foreach (var pair in item.TextsByAlign)
-                    clone.AddText(pair.Value, pair.Key);
-            
+                {
+                    // Handle the case when there is no label, but some garbage is there instead (reason unknown)
+                    var text = pair.Value.ToString();
+                    if (string.IsNullOrEmpty(text) || text.Contains('\n'))
+                        continue;
+                    
+                    clone.AddText(new StringBuilder(text), pair.Key);
+                }
+
                 // Remove any existing item, so identical ones are "moved" and not copied all the time (reduces clutter)
                 for (var i = 0; i < stagingGrid.m_items.Count; i++)
                 {
