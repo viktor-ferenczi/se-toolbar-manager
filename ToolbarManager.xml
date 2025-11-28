@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
+  <Id>viktor-ferenczi/se-toolbar-manager</Id>
+   
+  <FriendlyName>Toolbar Manager</FriendlyName>
+  <Author>Viktor</Author>
+  <Tooltip>Allows saving and loading of character and block toolbars.</Tooltip>
+  <Description>Allows saving, loading and efficiently editing of character and block toolbars.
+Speed up your build by using a familiar toolbar layout, copy cockpits into remote control blocks and more. Allows copying toolbars between ships and games, identifies blocks by name (like named groups). Stores your toolbars locally, works with online multiplayer. 
+
+For support join the SE Mods Discord:
+https://discord.gg/PYPFPGf3Ca
+
+Please consider supporting my work on Patreon:
+https://www.patreon.com/semods
+
+One time support via PayPal:
+https://www.paypal.com/paypalme/vferenczi/
+
+Thank you!
+  </Description>
+
+  <SourceDirectories>
+    <Directory>ToolbarManager</Directory>
+  </SourceDirectories>
+
+  <Commit>111ba1fb771e289a99b11256de8e9e3531801996</Commit>
+
+</PluginData>
