@@ -4,7 +4,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ToolbarManager</RootNamespace>
     <AssemblyName>ToolbarManager</AssemblyName>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>13</LangVersion>
 
     <!-- Ensure SDK generates assembly attributes (no need for AssemblyInfo) -->
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
