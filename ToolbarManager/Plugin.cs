@@ -9,8 +9,8 @@ using VRage.Plugins;
 
 // Set the assembly version manually if compiled by Pulsar (it won't create what was in AssemblyInfo.cs before)
 #if !DEV_BUILD
-[assembly: AssemblyVersion("1.6.4.0")]
-[assembly: AssemblyFileVersion("1.6.4.0")]
+[assembly: AssemblyVersion("1.6.5.0")]
+[assembly: AssemblyFileVersion("1.6.5.0")]
 #endif
 
 namespace ToolbarManager;

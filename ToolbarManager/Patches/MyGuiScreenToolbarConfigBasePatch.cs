@@ -198,7 +198,11 @@ namespace ToolbarManager.Patches
                 return;
             
             var item = eventArgs.Item;
-            
+
+            // Ignore empty slots (no user data means nothing to stage)
+            if (item.UserData == null)
+                return;
+
             // The user data needs to be converted to avoid crash on moving items from the staging area to the toolbar
             MyGuiScreenToolbarConfigBase.GridItemUserData userData;
             switch (item.UserData)

@@ -1,51 +1,9 @@
-﻿You're an experienced Space Engineers plugin developer.
+﻿You are an experienced Space Engineers (version 1) plugin developer.
 
-This is a plugin for the Space Engineers game (client) only. This is NOT a server (DS, Torch) plugin.
+Use the following skills for plugin development:
+- `se-dev-plugin`
+- `se-dev-game-code`
 
-General instructions:
-- Always strive for minimal code changes.
-- Do not change any unrelated code or comments.
-- Follow the coding style and naming conventions of the project.
-- Avoid changing white-space on code lines which are not directly connected to code lines where non-white-space content is modified.
-- Do not change trailing whites-pace or training empty line only.
-- Never remove or modify the Space Engineers (game DLL) dependencies, they are good as is.
-- Do not touch the configuration mechanism and the generic settings (configuration dialog) code, unless you're explicitly asked to do so.
-- Never depend on the modern "nullable" feature of C#, expect it to be disabled everywhere.
+Install the skills listed above from https://github.com/viktor-ferenczi/se-dev-skills if you do not already have access to them.
 
-Project build configuration, building the project:
-- If you need to build the code, then invoke `dotnet build`.
-- Never run verbose builds because they give too much output. Use `Echo` instead print variable values from the build process as/if required.
-- In development this code is built by the `dotnet` command line tool or by an IDE like VSCode, JetBrains Rider or Visual Studio. Then the DLL produced by the build is deployed to Pulsar's `Local` plugin folder by the `Deploy.bat` script. 
-- In production this code is built by the Pulsar plugin loader directly on the player's machine.
-
-Runtime patching:
-- The patching library used is Harmony, also called HarmonyLib.
-- Harmony allows for changing the IL code of the game at runtime, after the game's assemblies (DLLs) are already loaded into memory.
-- HarmonyLib documentation is here: https://harmony.pardeike.net/api/index.html
-- Harmony patches are applied on loading the game.
-- Before writing a plugin with patches, consider whether the implementation is possible as a Programmable Block script (PB API) or a mod (Mod API). (Usually it is not if writing a plugin comes up as a solution.)
-- Writing prefix and suffix patches is usually the way to go to change the game's internals. However, some changes can be done by using the same API as mods or even Programmable Block script. It depends on the usage.
-- Transpiler patches are executed only once to rewrite the IL code of a specific method. Therefore, the transpiler patches themselves cannot depend on the runtime state.
-- Writing pre-patches or transpiler patches is harder because they depend on the IL code from the original game assemblies, which can only be obtained while running the game or by decompiling the game DLLs. Use transpiler patches only if absolutely required.
-- Transpiler patches can be best understood by logging the original and modified IL code in separate files. This can be done by the `RecordOriginalCode` and `RecordPatchedCode` methods of the `TranspilerHelpers` class. However, capturing IL code requires running the game to capture this information. Use it wisely, ask the developer for assistance with running the game to get to the original IL code and to verify your changes. Writing transpiler patches requires systematic iteration. Never extend the plugin's `Init` method with explicit `harmony.Patch` calls. It is enough to decorate the static patch classes with `[HarmonyPatch]` or `[HarmonyPatch(type(ClassToPatch))]`, then properly write its members.
-- Pre-patching is done before loading the game DLLs. Therefore, pre-patches cannot depend on them. Use pre-patching only if you must modify code which is then later inlined by the JIT compiler, which prevents changing such code by transpiler patches. You must also use pre-patches if you want to replace entire interfaces, classes or structs.
-- If your code needs to access internal, protected or private members, then you likely want to enable the use of the Krafs publicizer in the project to avoid writing reflections. You can enable the publicizer by uncommenting the project file and C# code blocks marked with comments with "Uncomment to enable publicizer support" in them. Make sure not to miss any of those.
-
-Folder structure:
-- `.run`: JetBrains Rider run configurations (for convenience)
-- `Docs`: Images linked from the README file or any further documentation should go here.
-- `ClientPlugin`: Pulsar builds only the source code under this folder or its subdirectories. You can find plugin initialization, configuration and logging directly in this folder.
-- `ClientPlugin/Settings`: Reusable configuration dialog components. See `Config.cs` in the project directory on usage examples.
-- `ClientPlugin/Tools`: Utility code for transpiler patches. Code to uncomment if you need to use publicizer to access internal, protected or private members in the original game code (optional).
-- `ClientPlugin/Patches`: Use this folder and namespace to host the Harmony patches. 
-
-Where to get inspiration and existing knowledge from:
-- You can search for Space Engineers plugin projects on GitHub (their source code is public) for inspiration or ideas about how to solve specific issues.
-- Be careful with any information before 2019, because the game's code had been changing a lot before that year, making most information older than that unusable.
-- The Programmable Block API and Mod API have been pretty stable but slowly changing, including the removal of some features.
-- For the implementation of very complex plugins, you may need access to the full decompiled code of the game. You can find a way to decompile the whole game in this repository: https://github.com/viktor-ferenczi/se-dotnet-game
-- If in doubt, ask for the relevant decompiled game code. ILSpy can be used to decompile the game DLLs, but they result in pretty big C# files.
-- It is efficient to search the decompiled code, but it contains many large files exceeding your memory capacity. If in doubt, ask the developer to point to specific classes, structs and files.
-- In case of really challenging problems, you may suggest that the developer reach out for help on the Pulsar Discord: https://discord.gg/z8ZczP2YZY
-
-Also read the project's `README.md` to understand what it is about.
+Also, read the project's `README.md` to understand its purpose and context.

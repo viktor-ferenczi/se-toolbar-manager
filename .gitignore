@@ -6,3 +6,4 @@ ToolbarManager.sln.DotSettings.user
 /packages
 **/bin
 **/obj
+.claude
