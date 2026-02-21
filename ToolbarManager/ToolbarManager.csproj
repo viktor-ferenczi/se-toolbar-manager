@@ -10,8 +10,8 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 
     <!-- Assembly version from original AssemblyInfo.cs -->
-    <AssemblyVersion>1.6.4.0</AssemblyVersion>
-    <FileVersion>1.6.4.0</FileVersion>
+    <AssemblyVersion>1.6.5.0</AssemblyVersion>
+    <FileVersion>1.6.5.0</FileVersion>
 
     <!-- Default configuration if none supplied -->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
