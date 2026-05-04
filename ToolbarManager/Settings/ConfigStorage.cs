@@ -14,6 +14,7 @@ namespace ToolbarManager.Settings
         public static void Save(Config config)
         {
             var path = ConfigFilePath;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
             using (var text = File.CreateText(path))
                 new XmlSerializer(typeof(Config)).Serialize(text, config);
         }
