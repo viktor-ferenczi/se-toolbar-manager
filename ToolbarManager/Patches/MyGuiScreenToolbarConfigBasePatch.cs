@@ -68,32 +68,10 @@ namespace ToolbarManager.Patches
             var toolbarLabel = __instance.m_toolbarLabel;
 
             // Available space
-            var topLeft = gridBlocksPanel.Position - gridBlocksPanel.Size * 0.5f;
+            var topLeft = gridBlocksPanel.GetPositionAbsoluteTopLeft() - new Vector2(0.5f, 0.5f);
             var panelWidth = gridBlocksPanel.Size.X;
             var availableHeight = gridBlocksPanel.Size.Y;
-            
-            // Sizes
-            const float spacing = 0.002f;
-            const float cellHeight = 0.07f;
-            var stagingHeight = 0.208f + cellHeight * (Cfg.StagingAreaRowCount - 2f);
-            var stagingLabelHeight = toolbarLabel.Size.Y;
-            var gridBlocksPanelHeight = availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight + /* WHY??? */ 0.058f;
-            
-            // Reduce the size of the original block grid to make space for the staging area
-            gridBlocksPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
-            gridBlocksPanel.Position = topLeft;
-            gridBlocksPanel.Size = new Vector2(panelWidth, gridBlocksPanelHeight);
-            
-            // Staging label
-            var stagingLabel = new MyGuiControlLabel();
-            stagingLabel.Text = "Staging";
-            stagingLabel.AddTooltip(Config.StagingAreaDescription);
-            stagingLabel.ColorMask = toolbarLabel.ColorMask;
-            stagingLabel.TextScale = toolbarLabel.TextScale;
-            stagingLabel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
-            stagingLabel.Position = topLeft + new Vector2(0f, gridBlocksPanelHeight + spacing) + /* WHY??? */ new Vector2(0.17f, 0.063f);
-            stagingLabel.Size = new Vector2(0.15f, stagingLabelHeight);
-            
+
             // Staging grid and scrollable panel
             var entityId = __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId ?? __instance.m_character?.EntityId ?? 0;
             var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea) ? existingArea : StagingAreas[entityId] = new MyGuiControlGrid();
@@ -105,28 +83,53 @@ namespace ToolbarManager.Patches
                 stagingGrid.ColumnsCount = 10;
                 stagingGrid.RowsCount = 10;
             }
-            
-            var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid);
-            stagingPanel.BackgroundTexture = MyGuiControlGrid.GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks).BackgroundTexture;
-            stagingPanel.ColorMask = __instance.m_gridBlocks.ColorMask;
-            stagingPanel.ScrollbarVEnabled = true;
-            stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X, 10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y);
-            stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+
+            var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid)
+            {
+                BackgroundTexture = MyGuiControlGrid.GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks).BackgroundTexture,
+                ColorMask = __instance.m_gridBlocks.ColorMask,
+                ScrollbarVEnabled = true,
+                ScrolledAreaPadding = gridBlocksPanel.ScrolledAreaPadding,
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+            };
+
+            // Sizes
+            const float spacing = 0.002f;
+            float cellHeight = stagingGrid.ItemStep.Y; // 0.07f
+            var stagingHeight = cellHeight * Cfg.StagingAreaRowCount + stagingPanel.ScrolledAreaPadding.VerticalSum + stagingGrid.m_styleDef.ItemMargin.Bottom;
+            var stagingLabelHeight = toolbarLabel.Size.Y;
+            var extraHeight = 0.008f; // Stealing space from Toolbar label
+            var gridBlocksPanelHeight = availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight + extraHeight;
+
+            // Reduce the size of the original block grid to make space for the staging area
+            gridBlocksPanel.Position -= new Vector2(0f, (availableHeight - gridBlocksPanelHeight) * 0.5f);
+            gridBlocksPanel.Size = new Vector2(panelWidth, gridBlocksPanelHeight);
+            __instance.m_researchPanel.Position = gridBlocksPanel.Position;
+            __instance.m_researchPanel.Size = gridBlocksPanel.Size;
+            __instance.m_researchPanel.ScrollbarHEnabled = false;
+
+            // Staging label
+            var stagingLabel = new MyGuiControlLabel
+            {
+                Text = "Staging",
+                ColorMask = toolbarLabel.ColorMask,
+                TextScale = toolbarLabel.TextScale,
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+                Position = topLeft + new Vector2(0f, gridBlocksPanelHeight + spacing),
+                Size = new Vector2(0.15f, stagingLabelHeight)
+            };
+            stagingLabel.AddTooltip(Config.StagingAreaDescription);
+
             stagingPanel.Position = stagingLabel.Position + new Vector2(0f, stagingLabelHeight + spacing);
-            stagingPanel.Size = new Vector2(panelWidth, stagingHeight - 0.05f);
-            
+            stagingPanel.Size = new Vector2(panelWidth, stagingHeight);
+
             toolbarLabel.Position += new Vector2(0f, 0.004f);
             
-            __instance.AddControl(stagingLabel);
-            __instance.AddControl(stagingPanel);
-            
-            // Must re-insert the controls before toolbarLabel, otherwise they would be rendered in front of the context menu
-            __instance.Controls.m_controls.Remove(stagingLabel);
-            __instance.Controls.m_controls.Remove(stagingPanel);
+            // Must insert the controls before toolbarLabel, otherwise they would be rendered in front of the context menu
             var index = __instance.Controls.m_controls.FindIndex(c => c == toolbarLabel);
-            __instance.Controls.m_controls.Insert(index, stagingPanel);
-            __instance.Controls.m_controls.Insert(index, stagingLabel);
-            
+            __instance.Controls.Add(stagingPanel, index);
+            __instance.Controls.Add(stagingLabel, index);
+
             __instance.m_dragAndDrop.ItemDropped += (sender, eventArgs) => OnStagingGridOnDrop(stagingGrid, eventArgs);
             
             stagingGrid.ItemClicked += OnStagingGridItemClicked;
