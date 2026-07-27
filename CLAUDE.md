@@ -1,1 +1,0 @@
-Carefully read and internalize `AGENTS.md` before doing anything else.

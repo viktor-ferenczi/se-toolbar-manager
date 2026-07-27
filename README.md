@@ -153,3 +153,46 @@ _in alphabetical order_
 - SwiftyTech - Stargate Dimensions
 
 **Thank you very much for all your support and testing effort!**
+## Development
+
+This project is based on the
+[Space Engineers client plugin template](https://github.com/viktor-ferenczi/se-client-plugin-template).
+
+### Prerequisites
+
+- [Space Engineers](https://store.steampowered.com/app/244850/Space_Engineers/)
+- [Python 3.12](https://python.org) (requires 3.12 or newer)
+- [Pulsar](https://github.com/SpaceGT/Pulsar)
+- [.NET Framework 4.8.1 Developer Pack](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net481) and
+  [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+
+### Setting up a working copy
+
+Run `setup.py` after cloning the repository. It copies `Directory.Build.props.template` to
+`Directory.Build.props` (a local, **not committed** config file) and fills in the auto-detected
+paths, most importantly `Bin64`. Leaving a path empty falls back to the platform specific
+auto-detection in `ClientPlugin/ClientPlugin.csproj`.
+
+### Plugin version
+
+The plugin version lives in `Version.Build.props`, which **is** committed and imported by
+`Directory.Build.props`. Bump the version there.
+
+### Building and debugging on .NET 10
+
+- Start the game with the `Interim.exe` Pulsar executable with the `-sources` command line option.
+- Click on the Sources button in Pulsar's dialog, then register this repository as a development folder.
+- Load `ToolbarManager.xml` (the PluginHub registration) as well.
+- Select `Debug` mode and run `Interim.exe`, then attach the debugger.
+- Select `Release` mode to test exactly how Pulsar will build and run the plugin on the player's machine.
+
+### Accessing internal, protected and private members in game code
+
+The [Krafs publicizer](https://github.com/krafs/Publicizer) is enabled for `Sandbox.Game` and
+`Sandbox.Graphics`, see `ClientPlugin/Tools/GameAssembliesToPublicize.cs` and the `Publicize`
+items in `ClientPlugin/ClientPlugin.csproj`.
+
+### Release
+
+- Always make the final release from a RELEASE build and test it before publishing.
+- Pulsar compiles the source code on the player's machine, watch out for differences.
