@@ -67,23 +67,34 @@ public static class MyGuiScreenToolbarConfigBasePatch
         var gridBlocksPanel = __instance.m_gridBlocksPanel;
         var toolbarLabel = __instance.m_toolbarLabel;
 
-        // Available space
-        var topLeft = gridBlocksPanel.Position - gridBlocksPanel.Size * 0.5f;
+        // Available space.
+        // The block grid panel is nested into intermediate parent controls (a tab page, and since
+        // game version 1.210 also a MyGuiControlParent holding the DLC upsale panel), therefore its
+        // own Position is relative to that parent and cannot be compared to the position of controls
+        // owned by the screen. Lay the staging area out in absolute coordinates instead, then convert
+        // back into screen space when assigning the positions below.
+        var blocksTopLeft = gridBlocksPanel.GetPositionAbsoluteTopLeft();
         var panelWidth = gridBlocksPanel.Size.X;
         var availableHeight = gridBlocksPanel.Size.Y;
-        
+
         // Sizes
         const float spacing = 0.002f;
         const float cellHeight = 0.07f;
         var stagingHeight = 0.208f + cellHeight * (Cfg.StagingAreaRowCount - 2f);
         var stagingLabelHeight = toolbarLabel.Size.Y;
-        var gridBlocksPanelHeight = availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight + /* WHY??? */ 0.058f;
-        
-        // Reduce the size of the original block grid to make space for the staging area
+        var gridBlocksPanelHeight = availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight;
+
+        // Reduce the size of the original block grid to make space for the staging area.
+        // Anchoring it to its top left corner keeps it in place while only its bottom edge moves up.
+        gridBlocksPanel.Position -= gridBlocksPanel.Size * 0.5f;
         gridBlocksPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
-        gridBlocksPanel.Position = topLeft;
         gridBlocksPanel.Size = new Vector2(panelWidth, gridBlocksPanelHeight);
-        
+
+        // Origin to convert the absolute positions calculated below into the screen's coordinate system
+        var screenCenter = __instance.GetPositionAbsoluteCenter();
+        var stagingLabelTopLeft = blocksTopLeft + new Vector2(0f, gridBlocksPanelHeight + spacing);
+        var stagingPanelTopLeft = stagingLabelTopLeft + new Vector2(0f, stagingLabelHeight + spacing);
+
         // Staging label
         var stagingLabel = new MyGuiControlLabel();
         stagingLabel.Text = "Staging";
@@ -91,7 +102,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
         stagingLabel.ColorMask = toolbarLabel.ColorMask;
         stagingLabel.TextScale = toolbarLabel.TextScale;
         stagingLabel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
-        stagingLabel.Position = topLeft + new Vector2(0f, gridBlocksPanelHeight + spacing) + /* WHY??? */ new Vector2(0.17f, 0.063f);
+        stagingLabel.Position = stagingLabelTopLeft - screenCenter;
         stagingLabel.Size = new Vector2(0.15f, stagingLabelHeight);
         
         // Staging grid and scrollable panel
@@ -112,8 +123,8 @@ public static class MyGuiScreenToolbarConfigBasePatch
         stagingPanel.ScrollbarVEnabled = true;
         stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X, 10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y);
         stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
-        stagingPanel.Position = stagingLabel.Position + new Vector2(0f, stagingLabelHeight + spacing);
-        stagingPanel.Size = new Vector2(panelWidth, stagingHeight - 0.05f);
+        stagingPanel.Position = stagingPanelTopLeft - screenCenter;
+        stagingPanel.Size = new Vector2(panelWidth, stagingHeight);
         
         toolbarLabel.Position += new Vector2(0f, 0.004f);
         
