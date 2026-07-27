@@ -1,119 +1,104 @@
 using ClientPlugin.Settings;
 using ClientPlugin.Settings.Elements;
-using Sandbox.Graphics.GUI;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ClientPlugin.Settings.Tools;
 using VRage.Input;
-using VRageMath;
 
 
 namespace ClientPlugin;
-
-public enum ExampleEnum
-{
-    FirstAlpha,
-    SecondBeta,
-    ThirdGamma,
-    AndTheDelta,
-    Epsilon
-}
 
 public class Config : INotifyPropertyChanged
 {
     #region Options
 
-    // TODO: Define your configuration options and their default values
-    private bool toggle = true;
-    private int integer = 2;
-    private float number = 0.1f;
-    private string text = "Default Text";
-    private ExampleEnum dropdown = ExampleEnum.FirstAlpha;
-    private Color color = Color.Cyan;
-    private Color colorWithAlpha = new Color(0.8f, 0.6f, 0.2f, 0.5f);
-    private Binding keybind = new Binding(MyKeys.None);
+    private bool enableStagingArea = true;
+    private int stagingAreaRowCount = 2;
+    private bool preventOverwritingSlots = true;
+    private bool useCharacterProfilesForBuildCockpit = true;
+
+    private bool keepBlockSearchText;
+    private string latestBlockSearchText = "";
+
+    private bool keepProfileSearchText;
+    private string latestProfileSearchText = "";
+
+    private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
 
     #endregion
 
     #region User interface
 
-    // TODO: Settings dialog title
-    public readonly string Title = "Config Demo";
+    public readonly string Title = "Toolbar Manager";
 
-    [Separator("Some settings")]
-        
-    // TODO: Settings dialog controls, one property for each configuration option
+    public const string StagingAreaDescription = "The staging area allows for the convenient reordering of toolbar items,\nincluding moving them between toolbar pages.\n\nThe staging areas are preserved for the character\nand each block with a toolbar in-memory during gameplay,\nbut NOT SAVED over sessions (world loads) and game restarts.\nPlease save your toolbars into profiles after editing.";
 
-    [Checkbox(description: "Checkbox Tooltip")]
-    public bool Toggle
+    [Separator("Functionality")]
+
+    [Checkbox(label: "Enable staging area", description: StagingAreaDescription)]
+    public bool EnableStagingArea
     {
-        get => toggle;
-        set => SetField(ref toggle, value);
+        get => enableStagingArea;
+        set => SetField(ref enableStagingArea, value);
     }
 
-    [Slider(-1f, 10f, 1f, SliderAttribute.SliderType.Integer, description: "Integer Slider Tooltip")]
-    public int Integer
+    [Slider(1f, 8f, 1f, SliderAttribute.SliderType.Integer, label: "Staging rows", description: "Number of rows visible in the staging area [1..8]")]
+    public int StagingAreaRowCount
     {
-        get => integer;
-        set => SetField(ref integer, value);
+        get => stagingAreaRowCount;
+        set => SetField(ref stagingAreaRowCount, value);
     }
 
-    [Slider(-5f, 4.5f, 0.5f, SliderAttribute.SliderType.Float, description: "Float Slider Tooltip")]
-    public float Number
+    [Checkbox(label: "Prevent overwriting slots", description: "Prevent overwriting the selected or first toolbar slot on double-clicking blocks")]
+    public bool PreventOverwritingSlots
     {
-        get => number;
-        set => SetField(ref number, value);
+        get => preventOverwritingSlots;
+        set => SetField(ref preventOverwritingSlots, value);
     }
 
-    [Textbox(description: "Textbox Tooltip")]
-    public string Text
+    [Checkbox(label: "Build cockpit is character", description: "Building from cockpit (Ctrl-G) uses the character profiles")]
+    public bool UseCharacterProfilesForBuildCockpit
     {
-        get => text;
-        set => SetField(ref text, value);
+        get => useCharacterProfilesForBuildCockpit;
+        set => SetField(ref useCharacterProfilesForBuildCockpit, value);
     }
 
-    [Dropdown(description: "Dropdown Tooltip")]
-    public ExampleEnum Dropdown
+    [Separator("Recent searches")]
+
+    [Checkbox(description: "Keep the search text between subsequent uses of the block search")]
+    public bool KeepBlockSearchText
     {
-        get => dropdown;
-        set => SetField(ref dropdown, value);
+        get => keepBlockSearchText;
+        set => SetField(ref keepBlockSearchText, value);
     }
 
-    [Separator("More settings")]
-        
-    [Color(description: "RGB color")]
-    public Color Color
+    public string LatestBlockSearchText
     {
-        get => color;
-        set => SetField(ref color, value);
+        get => latestBlockSearchText;
+        set => SetField(ref latestBlockSearchText, value);
     }
 
-    [Color(hasAlpha: true, description: "RGBA color")]
-    public Color ColorWithAlpha
+    [Checkbox(description: "Keep the search text between subsequent uses of the Profile dialog")]
+    public bool KeepProfileSearchText
     {
-        get => colorWithAlpha;
-        set => SetField(ref colorWithAlpha, value);
+        get => keepProfileSearchText;
+        set => SetField(ref keepProfileSearchText, value);
     }
 
-    [Keybind(description: "Keybind Tooltip - Unbind by right clicking the button")]
-    public Binding Keybind
+    public string LatestProfileSearchText
     {
-        get => keybind;
-        set => SetField(ref keybind, value);
+        get => latestProfileSearchText;
+        set => SetField(ref latestProfileSearchText, value);
     }
 
-    [Button(description: "Button Tooltip")]
-    public void Button()
+    [Separator("Hotkeys")]
+
+    [Keybind(description: "Key to open the G menu and activate block search")]
+    public Binding BlockSearchKey
     {
-        MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(
-            MyMessageBoxStyleEnum.Info,
-            buttonType: MyMessageBoxButtonsType.OK,
-            messageText: new StringBuilder("You clicked me!"),
-            messageCaption: new StringBuilder("Custom Button Function"),
-            size: new Vector2(0.6f, 0.5f)
-        ));
+        get => blockSearchKey;
+        set => SetField(ref blockSearchKey, value);
     }
 
     #endregion
@@ -122,6 +107,11 @@ public class Config : INotifyPropertyChanged
 
     public static readonly Config Default = new Config();
     public static readonly Config Current = ConfigStorage.Load();
+
+    public static void Save()
+    {
+        ConfigStorage.Save(Current);
+    }
 
     public event PropertyChangedEventHandler PropertyChanged;
 
