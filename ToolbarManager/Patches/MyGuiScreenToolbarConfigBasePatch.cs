@@ -134,7 +134,7 @@ namespace ToolbarManager.Patches
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.dragAndDrop_OnDrop))]
+        [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.OnDragAndDropOnDrop))]
         private static bool DragAndDropOnDropPrefix(MyGuiScreenToolbarConfigBase __instance, MyDragAndDropEventArgs eventArgs)
         {
             if (!Cfg.EnableStagingArea)

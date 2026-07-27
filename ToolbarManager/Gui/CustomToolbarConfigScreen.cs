@@ -3,6 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Gui;
+using Sandbox.Game.Screens;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
 using VRage.Game;
@@ -15,7 +16,7 @@ namespace ToolbarManager.Gui
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class CustomToolbarConfigScreen : MyGuiScreenCubeBuilder
     {
-        private static readonly MethodInfo SearchItemTextboxTextChangedMethod = AccessTools.Method(typeof(MyGuiScreenToolbarConfigBase), "searchItemTexbox_TextChanged");
+        private static readonly MethodInfo SearchItemTextboxTextChangedMethod = AccessTools.Method(typeof(MyGuiScreenToolbarConfigBase), "OnSearchItemTexboxTextChanged");
         private static readonly FieldInfo FramesBeforeSearchEnabledField = AccessTools.Field(typeof(MyGuiScreenToolbarConfigBase), "m_framesBeforeSearchEnabled");
 
         private readonly CustomSearchCondition customSearchCondition = new CustomSearchCondition();
