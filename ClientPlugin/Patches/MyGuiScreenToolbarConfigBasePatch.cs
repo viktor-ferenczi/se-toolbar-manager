@@ -11,6 +11,7 @@ using Sandbox.Game.Gui;
 using Sandbox.Game.GUI;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
+using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
 using VRage.Audio;
 using VRage.Game;
@@ -29,6 +30,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
 {
     private static Config Cfg => Config.Current;
     private const string StagingLabelName = "ToolbarManagerStagingLabel";
+    private const string StagingFillName = "ToolbarManagerStagingLineFill";
 
     // Keep a set of staging grids, one for each toolbar.
     // This is not persisted, so they are gone when a game is restarted or a new world is loaded.
@@ -160,10 +162,25 @@ public static class MyGuiScreenToolbarConfigBasePatch
         stagingPanel.Position = stagingPanelTopLeft - screenCenter;
         stagingPanel.Size = new Vector2(panelWidth, stagingHeight);
 
+        // The staging line falls into the gap between the two panel backgrounds, which
+        // leaves the world showing through behind the label and the DLC link. Fill it
+        // with the block panel's own background fill, so the column looks continuous.
+        var lineFill = new MyGuiControlPanel(
+            texture: (
+                gridBlocksPanel.BackgroundTexture ?? stagingPanel.BackgroundTexture
+            )?.Center.Texture
+        );
+        lineFill.Name = StagingFillName;
+        lineFill.ColorMask = gridBlocksPanel.ColorMask;
+        lineFill.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+        lineFill.Position = stagingLabelTopLeft - new Vector2(0f, spacing) - screenCenter;
+        lineFill.Size = new Vector2(panelWidth, stagingLabelHeight + 2f * spacing);
+
         toolbarLabel.Position += new Vector2(0f, 0.004f);
 
         __instance.AddControl(stagingLabel);
         __instance.AddControl(stagingPanel);
+        __instance.AddControl(lineFill);
 
         // Must re-insert the controls before toolbarLabel, otherwise they would be rendered in front of the context menu
         __instance.Controls.m_controls.Remove(stagingLabel);
@@ -171,6 +188,11 @@ public static class MyGuiScreenToolbarConfigBasePatch
         var index = __instance.Controls.m_controls.FindIndex(c => c == toolbarLabel);
         __instance.Controls.m_controls.Insert(index, stagingPanel);
         __instance.Controls.m_controls.Insert(index, stagingLabel);
+
+        // The upsell panel lives on the blocks tab page, which is drawn before any
+        // screen level control, so the fill has to go first to stay behind it.
+        __instance.Controls.m_controls.Remove(lineFill);
+        __instance.Controls.m_controls.Insert(0, lineFill);
 
         LayoutDlcUpsell(__instance, stagingLabel);
 
@@ -244,22 +266,32 @@ public static class MyGuiScreenToolbarConfigBasePatch
         panel.m_separator.Visible = false;
         panel.m_linkIcon.Visible = false;
 
-        // Keep Keen's localized text and click handler, including the collection link.
-        var name = panel.m_dlcName;
+        // The DLC name is the store link itself, so Keen's separate "View in store"
+        // button carries the name and its own click handler, and the plain name label
+        // is dropped. One line, one clickable thing.
         var link = panel.m_buyButton;
-        // Inset the link so it does not sit flush against the right edge of the
-        // panel. This is the gap the block and staging grids draw between their
-        // cells, which is wider than the grid style's own ItemMargin.
-        const float cellGap = 0.003f;
-        name.TextScale = stagingLabel.TextScale;
-        name.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
-        name.Position = new Vector2(-width / 2f, 0f);
-        link.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_CENTER;
-        link.Position = new Vector2(width / 2f - cellGap, 0f);
-        var nameWidth = Math.Max(0f, width - link.Size.X - cellGap - gap);
-        if (name.Size.X > nameWidth)
-            name.TextScale *= nameWidth / name.Size.X;
+        panel.m_dlcName.Visible = false;
+        link.Text = panel.m_dlcName.Text ?? "";
+        link.TextScale = stagingLabel.TextScale;
+
+        var textSize = MeasureLink(link);
+        if (textSize.X > width && textSize.X > 0f)
+        {
+            link.TextScale *= width / textSize.X;
+            textSize = MeasureLink(link);
+        }
+
+        link.Size = textSize;
+        link.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
+        link.Position = new Vector2(-width / 2f, 0f);
     }
+
+    private static Vector2 MeasureLink(MyGuiControlButton link) =>
+        MyGuiManager.MeasureString(
+            link.TextFont,
+            new StringBuilder(link.Text),
+            link.TextScaleWithLanguage
+        );
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.OnDragAndDropOnDrop))]
