@@ -271,7 +271,12 @@ public static class MyGuiScreenToolbarConfigBasePatch
         // is dropped. One line, one clickable thing.
         var link = panel.m_buyButton;
         panel.m_dlcName.Visible = false;
-        link.Text = panel.m_dlcName.Text ?? "";
+        // UrlText underlines the text and shows the hand cursor, DlcUpsaleLink does
+        // neither. Setting the style resets the text metrics, so it comes first.
+        link.VisualStyle = MyGuiControlButtonStyleEnum.UrlText;
+        link.Text = panel.m_openCompleteCollection
+            ? "Open the complete DLC collection"
+            : $"Open the {panel.m_dlcName.Text}";
         link.TextScale = stagingLabel.TextScale;
 
         var textSize = MeasureLink(link);
