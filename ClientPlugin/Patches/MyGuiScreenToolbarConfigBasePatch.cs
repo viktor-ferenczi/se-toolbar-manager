@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ClientPlugin.Gui;
 using HarmonyLib;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Game;
 using Sandbox.Game.Gui;
 using Sandbox.Game.GUI;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.World;
+using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
-using ClientPlugin.Gui;
 using VRage.Audio;
 using VRage.Game;
 using VRage.Input;
@@ -26,23 +29,28 @@ namespace ClientPlugin.Patches;
 public static class MyGuiScreenToolbarConfigBasePatch
 {
     private static Config Cfg => Config.Current;
-    
+    private const string StagingLabelName = "ToolbarManagerStagingLabel";
+    private const string StagingFillName = "ToolbarManagerStagingLineFill";
+
     // Keep a set of staging grids, one for each toolbar.
     // This is not persisted, so they are gone when a game is restarted or a new world is loaded.
-    private static readonly Dictionary<long, MyGuiControlGrid> StagingAreas = new Dictionary<long, MyGuiControlGrid>(16);
+    private static readonly Dictionary<long, MyGuiControlGrid> StagingAreas = new Dictionary<
+        long,
+        MyGuiControlGrid
+    >(16);
 
     public static void OnSessionLoading()
     {
         StagingAreas.Clear();
     }
-    
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.RecreateControls))]
     private static void RecreateControlsPostfix(MyGuiScreenToolbarConfigBase __instance)
     {
         if (!Cfg.EnableStagingArea)
             return;
-        
+
         var toolbarType = MyToolbarComponent.CurrentToolbar?.ToolbarType;
 
         var button = new MyGuiControlButton
@@ -50,7 +58,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
             Text = "TM",
             Name = "OpenToolbarManagerButton",
             VisualStyle = MyGuiControlButtonStyleEnum.Square,
-            Position = new Vector2(-0.45f, 0.425f)
+            Position = new Vector2(-0.45f, 0.425f),
         };
 
         button.SetToolTip("Open Toolbar Manager");
@@ -59,13 +67,23 @@ public static class MyGuiScreenToolbarConfigBasePatch
         button.Enabled = toolbarType != null && toolbarType != MyToolbarType.None;
 
         __instance.Elements.Add(button);
-        
+
         // Allow for drag&drop reordering of toolbar items on the currently selected toolbar page
-        __instance.m_toolbarControl.m_toolbarItemsGrid.ItemDragged += (sender, eventArgs) => OnToolbarItemDragged(__instance, sender, eventArgs);
-        
+        __instance.m_toolbarControl.m_toolbarItemsGrid.ItemDragged += (sender, eventArgs) =>
+            OnToolbarItemDragged(__instance, sender, eventArgs);
+
         // Shortcuts
         var gridBlocksPanel = __instance.m_gridBlocksPanel;
         var toolbarLabel = __instance.m_toolbarLabel;
+
+        // A remembered DLC category can show its upsell during RecreateControls.
+        // Recover the full vanilla panel before reserving space for staging.
+        if (__instance.m_upsalePanel.Visible)
+        {
+            gridBlocksPanel.Size += new Vector2(0f, __instance.m_upsalePanel.Size.Y);
+            gridBlocksPanel.Position += new Vector2(0f, __instance.m_upsalePanel.Size.Y / 2f);
+            gridBlocksPanel.BackgroundTexture = __instance.m_gridBlocksDefaultBackground;
+        }
 
         // Available space.
         // The block grid panel is nested into intermediate parent controls (a tab page, and since
@@ -82,7 +100,13 @@ public static class MyGuiScreenToolbarConfigBasePatch
         const float cellHeight = 0.07f;
         var stagingHeight = 0.208f + cellHeight * (Cfg.StagingAreaRowCount - 2f);
         var stagingLabelHeight = toolbarLabel.Size.Y;
-        var gridBlocksPanelHeight = availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight;
+        // Keep at least one complete block row accessible at the largest setting.
+        stagingHeight = Math.Min(
+            stagingHeight,
+            availableHeight - stagingLabelHeight - 2f * spacing - 0.1f
+        );
+        var gridBlocksPanelHeight =
+            availableHeight - spacing - stagingLabelHeight - spacing - stagingHeight;
 
         // Reduce the size of the original block grid to make space for the staging area.
         // Anchoring it to its top left corner keeps it in place while only its bottom edge moves up.
@@ -93,10 +117,12 @@ public static class MyGuiScreenToolbarConfigBasePatch
         // Origin to convert the absolute positions calculated below into the screen's coordinate system
         var screenCenter = __instance.GetPositionAbsoluteCenter();
         var stagingLabelTopLeft = blocksTopLeft + new Vector2(0f, gridBlocksPanelHeight + spacing);
-        var stagingPanelTopLeft = stagingLabelTopLeft + new Vector2(0f, stagingLabelHeight + spacing);
+        var stagingPanelTopLeft =
+            stagingLabelTopLeft + new Vector2(0f, stagingLabelHeight + spacing);
 
         // Staging label
         var stagingLabel = new MyGuiControlLabel();
+        stagingLabel.Name = StagingLabelName;
         stagingLabel.Text = "Staging";
         stagingLabel.AddTooltip(Config.StagingAreaDescription);
         stagingLabel.ColorMask = toolbarLabel.ColorMask;
@@ -104,10 +130,15 @@ public static class MyGuiScreenToolbarConfigBasePatch
         stagingLabel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
         stagingLabel.Position = stagingLabelTopLeft - screenCenter;
         stagingLabel.Size = new Vector2(0.15f, stagingLabelHeight);
-        
+
         // Staging grid and scrollable panel
-        var entityId = __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId ?? __instance.m_character?.EntityId ?? 0;
-        var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea) ? existingArea : StagingAreas[entityId] = new MyGuiControlGrid();
+        var entityId =
+            __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId
+            ?? __instance.m_character?.EntityId
+            ?? 0;
+        var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea)
+            ? existingArea
+            : StagingAreas[entityId] = new MyGuiControlGrid();
         if (stagingGrid.VisualStyle != MyGuiControlGridStyleEnum.Toolbar)
         {
             stagingGrid.VisualStyle = MyGuiControlGridStyleEnum.Toolbar;
@@ -116,52 +147,184 @@ public static class MyGuiScreenToolbarConfigBasePatch
             stagingGrid.ColumnsCount = 10;
             stagingGrid.RowsCount = 10;
         }
-        
+
         var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid);
-        stagingPanel.BackgroundTexture = MyGuiControlGrid.GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks).BackgroundTexture;
+        stagingPanel.BackgroundTexture = MyGuiControlGrid
+            .GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks)
+            .BackgroundTexture;
         stagingPanel.ColorMask = __instance.m_gridBlocks.ColorMask;
         stagingPanel.ScrollbarVEnabled = true;
-        stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X, 10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y);
+        stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(
+            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X,
+            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y
+        );
         stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
         stagingPanel.Position = stagingPanelTopLeft - screenCenter;
         stagingPanel.Size = new Vector2(panelWidth, stagingHeight);
-        
+
+        // The staging line falls into the gap between the two panel backgrounds, which
+        // leaves the world showing through behind the label and the DLC link. Fill it
+        // with the block panel's own background fill, so the column looks continuous.
+        var lineFill = new MyGuiControlPanel(
+            texture: (
+                gridBlocksPanel.BackgroundTexture ?? stagingPanel.BackgroundTexture
+            )?.Center.Texture
+        );
+        lineFill.Name = StagingFillName;
+        lineFill.ColorMask = gridBlocksPanel.ColorMask;
+        lineFill.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+        lineFill.Position = stagingLabelTopLeft - new Vector2(0f, spacing) - screenCenter;
+        lineFill.Size = new Vector2(panelWidth, stagingLabelHeight + 2f * spacing);
+
         toolbarLabel.Position += new Vector2(0f, 0.004f);
-        
+
         __instance.AddControl(stagingLabel);
         __instance.AddControl(stagingPanel);
-        
+        __instance.AddControl(lineFill);
+
         // Must re-insert the controls before toolbarLabel, otherwise they would be rendered in front of the context menu
         __instance.Controls.m_controls.Remove(stagingLabel);
         __instance.Controls.m_controls.Remove(stagingPanel);
         var index = __instance.Controls.m_controls.FindIndex(c => c == toolbarLabel);
         __instance.Controls.m_controls.Insert(index, stagingPanel);
         __instance.Controls.m_controls.Insert(index, stagingLabel);
-        
-        __instance.m_dragAndDrop.ItemDropped += (sender, eventArgs) => OnStagingGridOnDrop(stagingGrid, eventArgs);
-        
+
+        // The upsell panel lives on the blocks tab page, which is drawn before any
+        // screen level control, so the fill has to go first to stay behind it.
+        __instance.Controls.m_controls.Remove(lineFill);
+        __instance.Controls.m_controls.Insert(0, lineFill);
+
+        LayoutDlcUpsell(__instance, stagingLabel);
+
+        __instance.m_dragAndDrop.ItemDropped += (sender, eventArgs) =>
+            OnStagingGridOnDrop(stagingGrid, eventArgs);
+
         stagingGrid.ItemClicked += OnStagingGridItemClicked;
-        stagingGrid.ItemDragged += (sender, eventArgs) => OnStagingGridOnDrag(__instance, sender, eventArgs);
+        stagingGrid.ItemDragged += (sender, eventArgs) =>
+            OnStagingGridOnDrag(__instance, sender, eventArgs);
     }
 
     [HarmonyPrefix]
+    [HarmonyPatch("ShowDlcUpsell")]
+    private static bool ShowDlcUpsellPrefix(MyGuiScreenToolbarConfigBase __instance, string dlcName)
+    {
+        var stagingLabel =
+            __instance.Controls.GetControlByName(StagingLabelName) as MyGuiControlLabel;
+        if (stagingLabel == null)
+            return true;
+
+        var dlc = MyDLCs.GetDLC(dlcName);
+        if (dlc == null)
+            return false;
+
+        var panel = __instance.m_upsalePanel;
+        if (
+            !string.IsNullOrEmpty(dlc.ServiceFilter)
+            && dlc.ServiceFilter != MySession.GameServiceName
+        )
+        {
+            panel.Visible = false;
+            return false;
+        }
+
+        if (dlc.Name == MyDLCs.DLC_NAME_CompleteEdition)
+            panel.SetCompleteCollection(dlc);
+        else
+            panel.SetDlc(dlc);
+
+        LayoutDlcUpsell(__instance, stagingLabel);
+        panel.Visible = true;
+        return false;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch("HideDlcUpsell")]
+    private static bool HideDlcUpsellPrefix(MyGuiScreenToolbarConfigBase __instance)
+    {
+        if (__instance.Controls.GetControlByName(StagingLabelName) == null)
+            return true;
+
+        __instance.m_upsalePanel.Visible = false;
+        return false;
+    }
+
+    private static void LayoutDlcUpsell(
+        MyGuiScreenToolbarConfigBase screen,
+        MyGuiControlLabel stagingLabel
+    )
+    {
+        var panel = screen.m_upsalePanel;
+        const float gap = 0.012f;
+        var width = screen.m_gridBlocksPanel.Size.X - stagingLabel.Size.X - gap;
+        panel.BackgroundTexture = null;
+        panel.Size = new Vector2(width, stagingLabel.Size.Y);
+        panel.Position =
+            stagingLabel.GetPositionAbsoluteTopLeft()
+            + new Vector2(stagingLabel.Size.X + gap + width / 2f, stagingLabel.Size.Y / 2f)
+            - panel.Owner.GetPositionAbsoluteCenter();
+        panel.m_dlcIcon.Visible = false;
+        panel.m_separator.Visible = false;
+        panel.m_linkIcon.Visible = false;
+
+        // The DLC name is the store link itself, so Keen's separate "View in store"
+        // button carries the name and its own click handler, and the plain name label
+        // is dropped. One line, one clickable thing.
+        var link = panel.m_buyButton;
+        panel.m_dlcName.Visible = false;
+        // UrlText underlines the text and shows the hand cursor, DlcUpsaleLink does
+        // neither. Setting the style resets the text metrics, so it comes first.
+        link.VisualStyle = MyGuiControlButtonStyleEnum.UrlText;
+        link.Text = panel.m_openCompleteCollection
+            ? "Open the complete DLC collection"
+            : $"Open the {panel.m_dlcName.Text}";
+        link.TextScale = stagingLabel.TextScale;
+
+        var textSize = MeasureLink(link);
+        if (textSize.X > width && textSize.X > 0f)
+        {
+            link.TextScale *= width / textSize.X;
+            textSize = MeasureLink(link);
+        }
+
+        link.Size = textSize;
+        link.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
+        link.Position = new Vector2(-width / 2f, 0f);
+    }
+
+    private static Vector2 MeasureLink(MyGuiControlButton link) =>
+        MyGuiManager.MeasureString(
+            link.TextFont,
+            new StringBuilder(link.Text),
+            link.TextScaleWithLanguage
+        );
+
+    [HarmonyPrefix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.OnDragAndDropOnDrop))]
-    private static bool DragAndDropOnDropPrefix(MyGuiScreenToolbarConfigBase __instance, MyDragAndDropEventArgs eventArgs)
+    private static bool DragAndDropOnDropPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyDragAndDropEventArgs eventArgs
+    )
     {
         if (!Cfg.EnableStagingArea)
             return true;
-        
+
         // Handle the case of dropping configured block toolbar items from the staging area into the toolbar (no context menu is required)
         // Most of this code is a verbatim copy from MyGuiScreenToolbarConfigBase.dragAndDrop_OnDrop to avoid having to use a very complex a transpiler patch.
         // Only change is that it handles only the case when an action has already been defined for the terminal block: tb._Action != null
-        if (eventArgs.DropTo != null && !__instance.m_toolbarControl.IsToolbarGrid(eventArgs.DragFrom.Grid) && __instance.m_toolbarControl.IsToolbarGrid(eventArgs.DropTo.Grid))
+        if (
+            eventArgs.DropTo != null
+            && !__instance.m_toolbarControl.IsToolbarGrid(eventArgs.DragFrom.Grid)
+            && __instance.m_toolbarControl.IsToolbarGrid(eventArgs.DropTo.Grid)
+        )
         {
             var userData = (MyGuiScreenToolbarConfigBase.GridItemUserData)eventArgs.Item.UserData;
             var data = userData.ItemData();
             if (data is MyObjectBuilder_ToolbarItemEmpty || data == null)
                 return false;
-            if ((data is MyObjectBuilder_ToolbarItemTerminalBlock tb && tb._Action != null) ||
-                (data is MyObjectBuilder_ToolbarItemTerminalGroup tg && tg._Action != null))
+            if (
+                (data is MyObjectBuilder_ToolbarItemTerminalBlock tb && tb._Action != null)
+                || (data is MyObjectBuilder_ToolbarItemTerminalGroup tg && tg._Action != null)
+            )
             {
                 var toolbarItem = MyToolbarItemFactory.CreateToolbarItem(data);
                 if (toolbarItem is MyToolbarItemActions)
@@ -172,9 +335,16 @@ public static class MyGuiScreenToolbarConfigBasePatch
                 {
                     DropGridItemToToolbar(toolbarItem, eventArgs.DropTo.ItemIndex);
                     if (toolbarItem == null)
-                        MyLog.Default.Log(MyLogSeverity.Error, "Inconsistency between grid item and known definitions, the item won't be activated");
+                        MyLog.Default.Log(
+                            MyLogSeverity.Error,
+                            "Inconsistency between grid item and known definitions, the item won't be activated"
+                        );
                     else if (toolbarItem.WantsToBeActivated)
-                        MyToolbarComponent.CurrentToolbar.ActivateItemAtSlot(eventArgs.DropTo.ItemIndex, playActivationSound: false, userActivated: false);
+                        MyToolbarComponent.CurrentToolbar.ActivateItemAtSlot(
+                            eventArgs.DropTo.ItemIndex,
+                            playActivationSound: false,
+                            userActivated: false
+                        );
                 }
                 return false;
             }
@@ -188,11 +358,14 @@ public static class MyGuiScreenToolbarConfigBasePatch
         // Calling RequestItemParameters is skipped, so parameters are not requested.
         // We keep only the success clause, which actually sets the toolbar slot.
         // Verbatim copy of game code follows:
-        
+
         var currentToolbar = MyToolbarComponent.CurrentToolbar;
         for (var slot1 = 0; slot1 < currentToolbar.SlotCount; ++slot1)
         {
-            if (currentToolbar.GetSlotItem(slot1) != null && currentToolbar.GetSlotItem(slot1).Equals(item))
+            if (
+                currentToolbar.GetSlotItem(slot1) != null
+                && currentToolbar.GetSlotItem(slot1).Equals(item)
+            )
                 currentToolbar.SetItemAtSlot(slot1, null);
         }
 
@@ -200,14 +373,17 @@ public static class MyGuiScreenToolbarConfigBasePatch
         MyToolbarComponent.CurrentToolbar.SetItemAtSlot(slot, item);
     }
 
-    private static void OnStagingGridOnDrop(MyGuiControlGrid stagingGrid, MyDragAndDropEventArgs eventArgs)
+    private static void OnStagingGridOnDrop(
+        MyGuiControlGrid stagingGrid,
+        MyDragAndDropEventArgs eventArgs
+    )
     {
         if (eventArgs.DropTo == null)
             return;
-        
-        if (eventArgs.DropTo.Grid != stagingGrid) 
+
+        if (eventArgs.DropTo.Grid != stagingGrid)
             return;
-        
+
         var item = eventArgs.Item;
 
         // Ignore empty slots (no user data means nothing to stage)
@@ -221,12 +397,12 @@ public static class MyGuiScreenToolbarConfigBasePatch
             case MyGuiScreenToolbarConfigBase.GridItemUserData gridItemUserData:
                 userData = gridItemUserData;
                 break;
-            
+
             case MyToolbarItem toolbarItem:
                 userData = new MyGuiScreenToolbarConfigBase.GridItemUserData();
                 userData.ItemData = () => toolbarItem.GetObjectBuilder();
                 break;
-            
+
             default:
                 throw new Exception($"Unknown iter.UserData: {item.UserData.GetType().FullName}");
         }
@@ -244,7 +420,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
         {
             // Clone the item to remove the toolbar number and current state, which is not relevant in the staging area
             var clone = new MyGuiGridItem(item.Icons, item.SubIcon, item.ToolTip, userData);
-            
+
             // Copy the label text (e.g., "Vel: 1.2") from the original item
             foreach (var pair in item.TextsByAlign)
             {
@@ -252,7 +428,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
                 var text = pair.Value.ToString();
                 if (string.IsNullOrEmpty(text) || text.Contains('\n'))
                     continue;
-                
+
                 clone.AddText(new StringBuilder(text), pair.Key);
             }
 
@@ -265,7 +441,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
                     break;
                 }
             }
-            
+
             // Place the item in the staging area, overwrite the cell if it has been occupied
             stagingGrid.SetItemAt(eventArgs.DropTo.ItemIndex, clone);
         }
@@ -277,12 +453,14 @@ public static class MyGuiScreenToolbarConfigBasePatch
         {
             return false;
         }
-        
-        if (item == other) 
+
+        if (item == other)
             return true;
 
-        if (item.UserData is MyGuiScreenToolbarConfigBase.GridItemUserData itemUserData &&
-            other.UserData is MyGuiScreenToolbarConfigBase.GridItemUserData otherUserData)
+        if (
+            item.UserData is MyGuiScreenToolbarConfigBase.GridItemUserData itemUserData
+            && other.UserData is MyGuiScreenToolbarConfigBase.GridItemUserData otherUserData
+        )
         {
             var id = itemUserData.ItemData();
             var od = otherUserData.ItemData();
@@ -301,7 +479,10 @@ public static class MyGuiScreenToolbarConfigBasePatch
         return false;
     }
 
-    private static void OnStagingGridItemClicked(MyGuiControlGrid stagingGrid, MyGuiControlGrid.EventArgs eventArgs)
+    private static void OnStagingGridItemClicked(
+        MyGuiControlGrid stagingGrid,
+        MyGuiControlGrid.EventArgs eventArgs
+    )
     {
         if (eventArgs.Button == MySharedButtonsEnum.Secondary)
         {
@@ -309,27 +490,45 @@ public static class MyGuiScreenToolbarConfigBasePatch
         }
     }
 
-    private static void OnStagingGridOnDrag(MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase, MyGuiControlGrid stagingGrid, MyGuiControlGrid.EventArgs eventArgs)
+    private static void OnStagingGridOnDrag(
+        MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase,
+        MyGuiControlGrid stagingGrid,
+        MyGuiControlGrid.EventArgs eventArgs
+    )
     {
         var item = stagingGrid.GetItemAt(eventArgs.ItemIndex);
-        if (item == null || !item.Enabled) 
+        if (item == null || !item.Enabled)
             return;
-        
+
         var info = new MyDragAndDropInfo();
         info.Grid = stagingGrid;
         info.ItemIndex = eventArgs.ItemIndex;
-        myGuiScreenToolbarConfigBase.m_dragAndDrop.StartDragging(MyDropHandleType.MouseRelease, eventArgs.Button, item, info, false);
-        
+        myGuiScreenToolbarConfigBase.m_dragAndDrop.StartDragging(
+            MyDropHandleType.MouseRelease,
+            eventArgs.Button,
+            item,
+            info,
+            false
+        );
+
         stagingGrid.HideToolTip();
     }
 
-    private static void OnToolbarItemDragged(MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase, MyGuiControlGrid sender, MyGuiControlGrid.EventArgs eventArgs)
+    private static void OnToolbarItemDragged(
+        MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase,
+        MyGuiControlGrid sender,
+        MyGuiControlGrid.EventArgs eventArgs
+    )
     {
         // Disallow dragging the very last "hand" slot (it would be meaningless and would crash)
         if (eventArgs.ItemIndex == 9)
             return;
 
-        myGuiScreenToolbarConfigBase.StartDragging(MyDropHandleType.MouseRelease, sender, ref eventArgs);
+        myGuiScreenToolbarConfigBase.StartDragging(
+            MyDropHandleType.MouseRelease,
+            sender,
+            ref eventArgs
+        );
     }
 
     private static void OpenProfilesScreen(MyGuiControlButton obj)
