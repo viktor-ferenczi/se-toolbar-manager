@@ -8,7 +8,7 @@ using Sandbox.Graphics.GUI;
 using VRage.Plugins;
 
 // Define assembly version when compiled by Pulsar
-#if !DEV_BUILD
+#if !LOCAL_BUILD
 [assembly: AssemblyVersion("1.6.8.0")]
 [assembly: AssemblyFileVersion("1.6.8.0")]
 #endif

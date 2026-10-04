@@ -12,35 +12,11 @@
     <!-- Ensure SDK generates assembly attributes (no need for AssemblyInfo) -->
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 
-    <!-- Default versions; override in Directory.Build.props  -->
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <PathSeparator Condition="$([MSBuild]::IsOSPlatform('Windows'))">\</PathSeparator>
-    <PathSeparator Condition="!$([MSBuild]::IsOSPlatform('Windows'))">/</PathSeparator>
-
-    <!-- Auto-detect Bin64 by platform when not explicitly set in Directory.Build.props -->
-
-    <!-- Windows: Steam App registry key -->
-    <_SteamAppInstallLocation Condition=" '$(Bin64)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) ">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244850@InstallLocation)</_SteamAppInstallLocation>
-    <Bin64 Condition=" '$(Bin64)' == '' AND '$(_SteamAppInstallLocation)' != '' ">$(_SteamAppInstallLocation)\Bin64</Bin64>
-
-    <!-- Windows: standard Steam install path -->
-    <Bin64 Condition=" '$(Bin64)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) AND Exists('C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64') ">C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64</Bin64>
-
-    <!-- Linux: common Steam install locations under the user home -->
-    <_UserHome Condition=" '$(Bin64)' == '' AND !$([MSBuild]::IsOSPlatform('Windows')) ">$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))</_UserHome>
-    <Bin64 Condition=" '$(Bin64)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.steam/steam/steamapps/common/SpaceEngineers/Bin64') ">$(_UserHome)/.steam/steam/steamapps/common/SpaceEngineers/Bin64</Bin64>
-    <Bin64 Condition=" '$(Bin64)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.local/share/Steam/steamapps/common/SpaceEngineers/Bin64') ">$(_UserHome)/.local/share/Steam/steamapps/common/SpaceEngineers/Bin64</Bin64>
-    <Bin64 Condition=" '$(Bin64)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/SpaceEngineers/Bin64') ">$(_UserHome)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/SpaceEngineers/Bin64</Bin64>
-
-    <Bin64Dir>$(Bin64)</Bin64Dir>
-    <Bin64Dir Condition=" '$(Bin64Dir)' != '' AND !HasTrailingSlash('$(Bin64Dir)') ">$(Bin64Dir)$(PathSeparator)</Bin64Dir>
-
     <!-- Default configuration if none supplied -->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 
-    <!-- Keep original behaviour for post/pre build events -->
+    <!-- Keep original behavior for post/pre build events -->
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
 
@@ -50,7 +26,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin/Debug/</OutputPath>
-    <DefineConstants>DEBUG;TRACE;DEV_BUILD</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;PULSAR;LOCAL_BUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -60,7 +36,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin/Release/</OutputPath>
-    <DefineConstants>TRACE;DEV_BUILD</DefineConstants>
+    <DefineConstants>TRACE;PULSAR;LOCAL_BUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -280,20 +256,51 @@
     <Publicize Include="Sandbox.Graphics" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false" />
   </ItemGroup>
 
-  <Target Name="VerifyProps" BeforeTargets="BeforeBuild">
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))"
-          Command="call &quot;$(RepoRoot)verify_props.bat&quot; &quot;$(Bin64)&quot;" />
-    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows'))"
-          Command="sh &quot;$(RepoRoot)verify_props.sh&quot; &quot;$(Bin64)&quot;" />
+  <Target Name="ValidateProps" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(Bin64)' == ''"
+           Text="Could not locate the Space Engineers Bin64 folder. Set &lt;Bin64&gt; in &quot;$(RepoRoot)Directory.Build.props.user&quot;." />
+    <Error Condition="!Exists('$(Bin64)')"
+           Text="Invalid Bin64 path &quot;$(Bin64)&quot; in &quot;$(RepoRoot)Directory.Build.props[.user]&quot;." />
+    <Message Condition="'$(Pulsar)' == ''"
+             Text="Pulsar is not set, the plugin will not be deployed." />
+    <Warning Condition="'$(Pulsar)' != '' And !Exists('$(Pulsar)')"
+             Text="Pulsar folder &quot;$(Pulsar)&quot; does not exist, the plugin will not be deployed." />
   </Target>
 
-  <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(RunPostBuildEvent)' != 'Never' AND '$(TargetFramework)' != ''">
+  <!-- Copies the build output into Pulsar's Local plugin folder, but only if the Pulsar
+       property is set (see Directory.Build.props):
+         net4x (.NET Framework) -> Pulsar/Legacy/Local/$(AssemblyName)
+         net5+ (.NET)           -> Pulsar/Interim/Local/$(AssemblyName)
+       Each build lands in its own subfolder as plugin.dll next to the plugin.xml
+       metadata, so Pulsar picks up the friendly name and the runtime restrictions.
+       (Pulsar/Modern belongs to Space Engineers 2 and is never a target here.) -->
+  <Target Name="DeployPlugin" AfterTargets="Build"
+          Condition="'$(RunPostBuildEvent)' != 'Never' And '$(TargetFramework)' != '' And Exists('$(Pulsar)')">
     <PropertyGroup>
-      <DeploySourceDir>$(MSBuildProjectDirectory)$(PathSeparator)$(OutputPath)</DeploySourceDir>
+      <PulsarEdition Condition="$(TargetFramework.StartsWith('net4'))">Legacy</PulsarEdition>
+      <PulsarEdition Condition="'$(PulsarEdition)' == '' And Exists('$(Pulsar)$(PathSeparator)Interim')">Interim</PulsarEdition>
+      <!-- Without its own data folder the Interim launcher falls back to the Legacy one.
+           Deploy there only if no .NET Framework build is claiming the same folder. -->
+      <PulsarEdition Condition="'$(PulsarEdition)' == '' And '$(TargetFrameworks)' == ''">Legacy</PulsarEdition>
+
+      <PulsarEditionDir Condition="'$(PulsarEdition)' != ''">$(Pulsar)$(PathSeparator)$(PulsarEdition)</PulsarEditionDir>
+      <PulsarEdition Condition="'$(PulsarEditionDir)' != '' And !Exists('$(PulsarEditionDir)')"></PulsarEdition>
+
+      <PluginDirectory Condition="'$(PulsarEdition)' != ''">$(PulsarEditionDir)$(PathSeparator)Local$(PathSeparator)$(AssemblyName)</PluginDirectory>
+      <PluginDataFile>$(RepoRoot)$(AssemblyName).xml</PluginDataFile>
     </PropertyGroup>
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))"
-          Command="call &quot;$(MSBuildProjectDirectory)\Deploy.bat&quot; &quot;$(AssemblyName).dll&quot; &quot;$(DeploySourceDir)&quot; &quot;$(TargetFramework)&quot;" />
-    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows'))"
-          Command="sh &quot;$(MSBuildProjectDirectory)/Deploy.sh&quot; &quot;$(AssemblyName).dll&quot; &quot;$(DeploySourceDir)&quot; &quot;$(TargetFramework)&quot;" />
+
+    <Warning Condition="'$(PluginDirectory)' == ''"
+             Text="No Pulsar plugin folder for the $(TargetFramework) build under &quot;$(Pulsar)&quot;, skipping its deployment." />
+
+    <MakeDir Condition="'$(PluginDirectory)' != ''" Directories="$(PluginDirectory)" />
+    <Copy Condition="'$(PluginDirectory)' != ''"
+          SourceFiles="$(TargetPath)" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.dll" />
+    <Copy Condition="'$(PluginDirectory)' != '' And Exists('$(TargetDir)$(TargetName).pdb')"
+          SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.pdb" />
+    <Copy Condition="'$(PluginDirectory)' != '' And Exists('$(PluginDataFile)')"
+          SourceFiles="$(PluginDataFile)" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.xml" />
+    <Message Condition="'$(PluginDirectory)' != ''" Importance="high"
+             Text="Deployed the $(TargetFramework) build to &quot;$(PluginDirectory)&quot;" />
   </Target>
 </Project>

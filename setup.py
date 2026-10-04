@@ -6,7 +6,6 @@ Requires Python 3.12 or newer.
 
 import os
 import re
-import shutil
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -18,14 +17,26 @@ if sys.platform == "win32":
 
 DRY_RUN = False
 
-TEMPLATE_NAME = 'ClientPluginTemplate'
+TEMPLATE_NAME = "ClientPluginTemplate"
 
 PT_PROJECT_NAME = r"^([A-Z][a-z_0-9]+)+$"
 RX_PROJECT_NAME = re.compile(PT_PROJECT_NAME)
 
-PROJECT_NAMES = (
-    "ClientPlugin",
-)
+PROJECT_NAMES = ("ClientPlugin",)
+
+USER_PROPS = "Directory.Build.props.user"
+
+USER_PROPS_TEMPLATE = """<Project>
+  <PropertyGroup>
+    <!-- Folder containing SpaceEngineers.exe (empty = auto-detect from Steam) -->
+    <Bin64>{bin64}</Bin64>
+
+    <!-- Pulsar folder to deploy the plugin into after each build (empty = no deployment),
+         for example $(APPDATA)\\Pulsar on Windows or $(HOME)/.config/Pulsar on Linux -->
+    <Pulsar></Pulsar>
+  </PropertyGroup>
+</Project>
+"""
 
 
 def _generate_guid() -> str:
@@ -91,7 +102,7 @@ def _rename_project(name: str) -> None:
 
     def iter_paths() -> Iterator[Tuple[str, str]]:
         print("Solution:")
-        for filename in (f'{TEMPLATE_NAME}.sln', f'{TEMPLATE_NAME}.xml'):
+        for filename in (f"{TEMPLATE_NAME}.sln", f"{TEMPLATE_NAME}.xml"):
             if os.path.exists(filename):
                 yield filename, filename
 
@@ -128,7 +139,7 @@ def _rename_project(name: str) -> None:
 def _get_windows_steam_path() -> str | None:
     reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
     key = winreg.OpenKey(reg, r"SOFTWARE\WOW6432Node\Valve\Steam")
-    (path, _) = winreg.QueryValueEx(key, "InstallPath")
+    path, _ = winreg.QueryValueEx(key, "InstallPath")
     return path
 
 
@@ -252,33 +263,39 @@ def _get_install_locations(vdf_path: str, ids: list[str]) -> dict[str, str | Non
 def _update_props(
     game_dir: str | None = None,
 ) -> None:
+    """Write the detected Bin64 path into the git-ignored local overrides file."""
     if not game_dir:
         return
 
+    bin64_dir = str(Path(game_dir) / "Bin64")
+
+    if not os.path.isfile(USER_PROPS):
+        with open(USER_PROPS, "wt", encoding="utf-8") as f:
+            f.write(USER_PROPS_TEMPLATE.format(bin64=bin64_dir))
+        print(f"Created {USER_PROPS}")
+        return
+
+    # Keep any other overrides the developer may have added
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-    tree = ET.parse("Directory.Build.props", parser)
+    tree = ET.parse(USER_PROPS, parser)
     root = tree.getroot()
+
     group = root.find("PropertyGroup")
-    assert group is not None
+    if group is None:
+        group = ET.SubElement(root, "PropertyGroup")
 
     bin64 = group.find("Bin64")
-    assert bin64 is not None
-    bin64.text = str(Path(game_dir) / "Bin64")
+    if bin64 is None:
+        bin64 = ET.SubElement(group, "Bin64")
 
-    tree.write("Directory.Build.props")
+    bin64.text = bin64_dir
 
-
-def _ensure_props() -> None:
-    """Copy the template to the local Directory.Build.props if it is missing."""
-    if not os.path.isfile("Directory.Build.props"):
-        shutil.copyfile("Directory.Build.props.template", "Directory.Build.props")
-        print("Created Directory.Build.props from Directory.Build.props.template")
+    tree.write(USER_PROPS)
+    print(f"Updated {USER_PROPS}")
 
 
 def main() -> None:
     """Run the setup."""
-
-    _ensure_props()
 
     if os.path.isfile("ClientPluginTemplate.sln"):
         plugin_name = _input_plugin_name()
@@ -288,7 +305,9 @@ def main() -> None:
         else:
             print("Skipping project rename")
 
-    if _input_question("Auto-detect the install location of Space Engineers? (Y/N) [Y]: ", True):
+    if _input_question(
+        "Auto-detect the install location of Space Engineers? (Y/N) [Y]: ", True
+    ):
         steam_path = _get_steam_path()
         if steam_path is None:
             print("Could not find Steam install location.")
@@ -305,7 +324,7 @@ def main() -> None:
 
         _update_props(locations["244850"])
     else:
-        print("Please add the paths manually to 'Directory.Build.props'")
+        print(f"Please add the paths manually to '{USER_PROPS}'")
 
     input("Done. (Press any key to exit)")
 
