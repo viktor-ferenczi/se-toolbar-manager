@@ -168,10 +168,14 @@ This project is based on the
 
 ### Setting up a working copy
 
-Run `setup.py` after cloning the repository. It copies `Directory.Build.props.template` to
-`Directory.Build.props` (a local, **not committed** config file) and fills in the auto-detected
-paths, most importantly `Bin64`. Leaving a path empty falls back to the platform specific
-auto-detection in `ClientPlugin/ClientPlugin.csproj`.
+`Directory.Build.props` finds the game's `Bin64` folder through Steam. To override it, run
+`setup.py`, which writes the detected path into `Directory.Build.props.user` (a local, **not
+committed** file), or edit that file by hand.
+
+Load the working copy through a Pulsar development folder: start Pulsar with `-sources`, then
+add this repository with the Sources button. Building the solution does not deploy the plugin.
+It is copied into Pulsar's `Local` plugin folder only if `Pulsar` is set in
+`Directory.Build.props.user` or passed as `-p:Pulsar=...`.
 
 ### Plugin version
 
