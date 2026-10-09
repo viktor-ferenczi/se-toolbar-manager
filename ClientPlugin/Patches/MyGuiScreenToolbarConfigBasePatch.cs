@@ -48,9 +48,6 @@ public static class MyGuiScreenToolbarConfigBasePatch
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.RecreateControls))]
     private static void RecreateControlsPostfix(MyGuiScreenToolbarConfigBase __instance)
     {
-        if (!Cfg.EnableStagingArea)
-            return;
-
         var toolbarType = MyToolbarComponent.CurrentToolbar?.ToolbarType;
 
         var button = new MyGuiControlButton
@@ -67,6 +64,10 @@ public static class MyGuiScreenToolbarConfigBasePatch
         button.Enabled = toolbarType != null && toolbarType != MyToolbarType.None;
 
         __instance.Elements.Add(button);
+
+        // The profiles button above works without the staging area, everything below is part of it
+        if (!Cfg.EnableStagingArea)
+            return;
 
         // Allow for drag&drop reordering of toolbar items on the currently selected toolbar page
         __instance.m_toolbarControl.m_toolbarItemsGrid.ItemDragged += (sender, eventArgs) =>
