@@ -117,6 +117,21 @@ public static class MyGuiScreenToolbarConfigBasePatch
         gridBlocksPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
         gridBlocksPanel.Size = new Vector2(panelWidth, gridBlocksPanelHeight);
 
+        // The research panel on the Progression tab has the vanilla size of the block grid panel,
+        // so the staging area would cover its bottom. Shrink it the same way.
+        var researchPanel = __instance.m_researchPanel;
+        researchPanel.Position -= researchPanel.Size * 0.5f;
+        researchPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+        researchPanel.Size = new Vector2(researchPanel.Size.X, gridBlocksPanelHeight);
+
+        // The panel keeps room for its horizontal scrollbar at the bottom even while the bar is
+        // hidden, and the research graph always fits the panel's width. Drop the scrollbar and most
+        // of the bottom padding, so the graph is drawn down to the panel's bottom border.
+        researchPanel.ScrollbarHEnabled = false;
+        var padding = researchPanel.ScrolledAreaPadding;
+        padding.Bottom = 6f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y;
+        researchPanel.ScrolledAreaPadding = padding;
+
         // Origin to convert the absolute positions calculated below into the screen's coordinate system
         var screenCenter = __instance.GetPositionAbsoluteCenter();
         var stagingLabelTopLeft = blocksTopLeft + new Vector2(0f, gridBlocksPanelHeight + spacing);
