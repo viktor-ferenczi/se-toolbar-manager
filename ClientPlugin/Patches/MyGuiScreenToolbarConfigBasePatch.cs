@@ -98,10 +98,42 @@ public static class MyGuiScreenToolbarConfigBasePatch
         var panelWidth = gridBlocksPanel.Size.X;
         var availableHeight = gridBlocksPanel.Size.Y;
 
+        // Staging grid and scrollable panel
+        var entityId =
+            __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId
+            ?? __instance.m_character?.EntityId
+            ?? 0;
+        var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea)
+            ? existingArea
+            : StagingAreas[entityId] = new MyGuiControlGrid();
+        if (stagingGrid.VisualStyle != MyGuiControlGridStyleEnum.Toolbar)
+        {
+            stagingGrid.VisualStyle = MyGuiControlGridStyleEnum.Toolbar;
+            stagingGrid.ColorMask = Vector4.One;
+            stagingGrid.ItemBackgroundColorMask = __instance.m_gridBlocks.ColorMask;
+            stagingGrid.ColumnsCount = 10;
+            stagingGrid.RowsCount = 10;
+        }
+
+        var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid);
+        stagingPanel.BackgroundTexture = MyGuiControlGrid
+            .GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks)
+            .BackgroundTexture;
+        stagingPanel.ColorMask = __instance.m_gridBlocks.ColorMask;
+        stagingPanel.ScrollbarVEnabled = true;
+        stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(
+            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X,
+            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y
+        );
+        stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+
         // Sizes
         const float spacing = 0.002f;
-        const float cellHeight = 0.07f;
-        var stagingHeight = 0.208f + cellHeight * (Cfg.StagingAreaRowCount - 2f);
+        // Exactly the configured number of grid rows, with the panel's padding around them
+        var stagingHeight =
+            stagingGrid.ItemStep.Y * Cfg.StagingAreaRowCount
+            + stagingPanel.ScrolledAreaPadding.VerticalSum
+            + stagingGrid.m_styleDef.ItemMargin.Bottom;
         var stagingLabelHeight = toolbarLabel.Size.Y;
         // Keep at least one complete block row accessible at the largest setting.
         stagingHeight = Math.Min(
@@ -149,34 +181,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
         stagingLabel.Position = stagingLabelTopLeft - screenCenter;
         stagingLabel.Size = new Vector2(0.15f, stagingLabelHeight);
 
-        // Staging grid and scrollable panel
-        var entityId =
-            __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId
-            ?? __instance.m_character?.EntityId
-            ?? 0;
-        var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea)
-            ? existingArea
-            : StagingAreas[entityId] = new MyGuiControlGrid();
-        if (stagingGrid.VisualStyle != MyGuiControlGridStyleEnum.Toolbar)
-        {
-            stagingGrid.VisualStyle = MyGuiControlGridStyleEnum.Toolbar;
-            stagingGrid.ColorMask = Vector4.One;
-            stagingGrid.ItemBackgroundColorMask = __instance.m_gridBlocks.ColorMask;
-            stagingGrid.ColumnsCount = 10;
-            stagingGrid.RowsCount = 10;
-        }
-
-        var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid);
-        stagingPanel.BackgroundTexture = MyGuiControlGrid
-            .GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks)
-            .BackgroundTexture;
-        stagingPanel.ColorMask = __instance.m_gridBlocks.ColorMask;
-        stagingPanel.ScrollbarVEnabled = true;
-        stagingPanel.ScrolledAreaPadding = new MyGuiBorderThickness(
-            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.X,
-            10f / MyGuiConstants.GUI_OPTIMAL_SIZE.Y
-        );
-        stagingPanel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP;
+        // Staging panel
         stagingPanel.Position = stagingPanelTopLeft - screenCenter;
         stagingPanel.Size = new Vector2(panelWidth, stagingHeight);
 
