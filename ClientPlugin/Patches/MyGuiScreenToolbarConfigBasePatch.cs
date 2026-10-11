@@ -65,8 +65,10 @@ public static class MyGuiScreenToolbarConfigBasePatch
 
         __instance.Elements.Add(button);
 
-        // The profiles button above works without the staging area, everything below is part of it
-        if (!Cfg.EnableStagingArea)
+        // The profiles button above works without the staging area, everything below is part of it.
+        // The gamepad version of this screen hides the toolbar and binds a single gamepad slot,
+        // so there is nothing to stage there.
+        if (!Cfg.EnableStagingArea || __instance.m_gamepadSlot.HasValue)
             return;
 
         // Allow for drag&drop reordering of toolbar items on the currently selected toolbar page
@@ -551,9 +553,10 @@ public static class MyGuiScreenToolbarConfigBasePatch
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.AddGridItemToToolbar))]
-    private static bool AddGridItemToToolbarPrefix()
+    private static bool AddGridItemToToolbarPrefix(MyGuiScreenToolbarConfigBase __instance)
     {
-        if (!Cfg.PreventOverwritingSlots)
+        // The gamepad screen writes only its own gamepad slot, it never overwrites a toolbar slot
+        if (!Cfg.PreventOverwritingSlots || __instance.m_gamepadSlot.HasValue)
             return true;
 
         // SE overwrites the first block of ship toolbars or the selected block of character toolbars on
