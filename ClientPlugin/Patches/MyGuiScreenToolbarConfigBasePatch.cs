@@ -66,8 +66,8 @@ public static class MyGuiScreenToolbarConfigBasePatch
         __instance.Elements.Add(button);
 
         // The profiles button above works without the staging area, everything below is part of it.
-        // The gamepad version of this screen hides the toolbar and binds a single gamepad slot,
-        // so there is nothing to stage there.
+        // The gamepad version of this screen binds a single gamepad slot and hides the toolbar
+        // while the gamepad is in use, so there is nothing to stage there.
         if (!Cfg.EnableStagingArea || __instance.m_gamepadSlot.HasValue)
             return;
 
