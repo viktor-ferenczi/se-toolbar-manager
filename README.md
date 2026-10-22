@@ -71,6 +71,53 @@ Up to 6 backups of each profile is kept, even after deleting the profile. Renami
 also renames the backup files. Orphaned backup files (with the main profile deleted) are
 cleaned up after 90 days, but only when a profile is deleted the next time.
 
+### Groups
+
+A group puts several tools, weapons and blocks into one slot of your character toolbar.
+Using the slot equips the first available item in tile order. Pressing the slot again
+moves on to the next item: all tiers of a tool count as one, and every block is a step of
+its own. With the default group that is welder, grinder, then hand drill. Tools you don't
+carry and blocks you haven't unlocked are skipped. If none of the items can be used,
+nothing happens.
+
+While holding a tool or weapon from a group on the current toolbar page, scroll up to
+move forward through the group or down to move backward. Both inputs pick the first
+available item of each kind in tile order, regardless of its level. Scrolling in menus
+or with Ctrl, Shift or Alt held keeps the game's normal behavior.
+
+The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
+Click its tile to open the editor with that group selected. The **TG** button
+at the bottom left of the G menu turns on edit mode, where the
+staging area shows the items of the group selected above it:
+
+- Drag tools, weapons and blocks from the G menu into the group, or double click them to
+  add them at the end. The block variants on the right can be dragged in too.
+- Drag items inside the group to change their order. The first one wins, so put the one
+  you prefer first. For example, an Enhanced Welder before an Elite Welder is selected
+  when both are in your inventory. Right click removes an item.
+- **New**, **Rename** and **Delete** manage the groups. **Duplicate** asks for a name
+  and copies the selected group's items in their current order. New, Rename and
+  Duplicate reject existing group names, ignoring case and surrounding spaces,
+  and leave the naming dialog open so you can correct the name.
+- **Reset default** restores or recreates the default **Hand Tools** group without
+  changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
+  grinder and hand drill, in that order.
+- **Done** or **TG** again brings the staging area back. The group editor is also
+  available when staging is disabled; closing it returns to the normal G menu.
+
+The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
+you are in a world.
+
+Each group is saved as a separate XML file in `ToolbarManager/Groups` under the game's
+user data folder, beside the `Character`, `Ship` and other toolbar profile folders.
+Group names use the same filename sanitizing rules as toolbar profile names. Renaming
+or deleting a group renames or removes its file.
+
+Toolbar slots holding a group are saved
+with the world and in toolbar profiles. A world saved with group slots still loads without
+the plugin; those slots are just empty then. On a dedicated server the server does not keep
+group slots, so you have to put them back after reconnecting.
+
 ### Quick block selection
 
 Press the `BACKSLASH` or `PIPE` key (on English keyboard) to open the quick
@@ -195,6 +242,28 @@ The plugin version lives in `Version.Build.props`, which **is** committed and im
 The [Krafs publicizer](https://github.com/krafs/Publicizer) is enabled for `Sandbox.Game` and
 `Sandbox.Graphics`, see `ClientPlugin/Tools/GameAssembliesToPublicize.cs` and the `Publicize`
 items in `ClientPlugin/ClientPlugin.csproj`.
+
+### In-game checks
+
+`tests/item_groups_check.py` checks the groups in a headless client driven through the
+[Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, edit mode, using
+the groups with different tools in the inventory and with a block, the staging area and
+saving the world. It
+prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar`, a
+working copy of Remote with the `cubeBlock` field of the character state
+([CometWorks/remote#51](https://github.com/CometWorks/remote/pull/51); `TBM_REMOTE`,
+default `~/ws/se/se1/plugins/remote`) and a claimed
+test slot of the workspace, see `tests/rig.py`:
+
+```bash
+TBM_SLOT=15 uv run --with httpx python tests/item_groups_check.py
+```
+
+`tests/editor_modes_check.py` checks TG, Done, tile selection and editing with staging
+enabled and disabled, using the same test slot.
+
+`tests/tool_order_check.py` checks button and wheel cycling with lower levels before
+higher levels in tile order, then checks that reordering a tool changes the selection.
 
 ### Release
 

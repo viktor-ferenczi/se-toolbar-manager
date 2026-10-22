@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Sandbox;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Localization;
@@ -23,20 +24,29 @@ public class NameDialog : MyGuiScreenDebugBase
     private readonly string defaultName;
     private readonly int maxLength;
     private readonly bool moveCursorToEnd;
+    private readonly Func<string, string> validateName;
 
     public NameDialog(
         Action<string> callBack,
         string caption,
         string defaultName,
         int maxLength = 40,
-        bool moveCursorToEnd = false)
-        : base(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.28f), MyGuiConstants.SCREEN_BACKGROUND_COLOR * MySandboxGame.Config.UIBkOpacity, true)
+        bool moveCursorToEnd = false,
+        Func<string, string> validateName = null
+    )
+        : base(
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.28f),
+            MyGuiConstants.SCREEN_BACKGROUND_COLOR * MySandboxGame.Config.UIBkOpacity,
+            true
+        )
     {
         this.callBack = callBack;
         this.caption = caption;
         this.defaultName = defaultName;
         this.maxLength = maxLength;
         this.moveCursorToEnd = moveCursorToEnd;
+        this.validateName = validateName;
 
         RecreateControls(true);
 
@@ -56,17 +66,23 @@ public class NameDialog : MyGuiScreenDebugBase
         AddCaption(caption, Color.White.ToVector4(), new Vector2(0.0f, 0.003f));
 
         var controlSeparatorList1 = new MyGuiControlSeparatorList();
-        controlSeparatorList1.AddHorizontal(new Vector2(-0.39f * DialogSize.X, -0.5f * DialogSize.Y + 0.075f), DialogSize.X * 0.78f);
+        controlSeparatorList1.AddHorizontal(
+            new Vector2(-0.39f * DialogSize.X, -0.5f * DialogSize.Y + 0.075f),
+            DialogSize.X * 0.78f
+        );
         Controls.Add(controlSeparatorList1);
 
         var controlSeparatorList2 = new MyGuiControlSeparatorList();
-        controlSeparatorList2.AddHorizontal(new Vector2(-0.39f * DialogSize.X, +0.5f * DialogSize.Y - 0.123f), DialogSize.X * 0.78f);
+        controlSeparatorList2.AddHorizontal(
+            new Vector2(-0.39f * DialogSize.X, +0.5f * DialogSize.Y - 0.123f),
+            DialogSize.X * 0.78f
+        );
         Controls.Add(controlSeparatorList2);
 
         nameBox = new MyGuiControlTextbox(new Vector2(0.0f, -0.027f), maxLength: maxLength)
         {
             Text = defaultName,
-            Size = new Vector2(0.385f, 1f)
+            Size = new Vector2(0.385f, 1f),
         };
         if (moveCursorToEnd)
         {
@@ -79,8 +95,16 @@ public class NameDialog : MyGuiScreenDebugBase
 
         Controls.Add(nameBox);
 
-        okButton = new MyGuiControlButton(originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_CENTER, text: MyTexts.Get(MyCommonTexts.Ok), onButtonClick: OnOk);
-        cancelButton = new MyGuiControlButton(originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER, text: MyTexts.Get(MyCommonTexts.Cancel), onButtonClick: OnCancel);
+        okButton = new MyGuiControlButton(
+            originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_CENTER,
+            text: MyTexts.Get(MyCommonTexts.Ok),
+            onButtonClick: OnOk
+        );
+        cancelButton = new MyGuiControlButton(
+            originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
+            text: MyTexts.Get(MyCommonTexts.Cancel),
+            onButtonClick: OnCancel
+        );
 
         var okPosition = new Vector2(0.001f, 0.5f * DialogSize.Y - 0.071f);
         var halfDistance = new Vector2(0.018f, 0.0f);
@@ -105,6 +129,23 @@ public class NameDialog : MyGuiScreenDebugBase
 
     private void ReturnOk()
     {
+        var error = validateName?.Invoke(nameBox.Text);
+        if (error != null)
+        {
+            MyGuiSandbox.AddScreen(
+                MyGuiSandbox.CreateMessageBox(
+                    messageText: new StringBuilder(error),
+                    messageCaption: new StringBuilder("Invalid name"),
+                    callback: _ =>
+                    {
+                        FocusedControl = nameBox;
+                        nameBox.SelectAll();
+                    }
+                )
+            );
+            return;
+        }
+
         if (nameBox.GetTextLength() <= 0)
             return;
 
@@ -113,6 +154,7 @@ public class NameDialog : MyGuiScreenDebugBase
     }
 
     private void OnOk(MyGuiControlButton button) => ReturnOk();
+
     private void OnCancel(MyGuiControlButton button) => CloseScreen();
 
     public override string GetFriendlyName() => "NameDialog";
