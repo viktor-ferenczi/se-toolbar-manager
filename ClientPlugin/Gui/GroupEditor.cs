@@ -191,7 +191,7 @@ public class GroupEditor
         groupSelector.Position = row1 + new Vector2(0.06f, 0f) - origin;
         doneButton.Position = row1 + new Vector2(width - doneButton.Size.X - 0.02f, 0f) - origin;
 
-        var step = (width + Spacing - 0.04) / 5f;
+        var step = (width + Spacing - 0.04f) / 5f;
         var buttons = new[] { newButton, renameButton, duplicateButton, deleteButton, resetButton };
         for (var i = 0; i < buttons.Length; i++)
         {

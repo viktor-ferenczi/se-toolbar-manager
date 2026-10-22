@@ -74,17 +74,16 @@ cleaned up after 90 days, but only when a profile is deleted the next time.
 ### Groups
 
 A group puts several tools, weapons and blocks into one slot of your character toolbar.
-Using the slot equips the first item of the group you can use, so with the default
-**Hand Tools** group you always get the best welder you carry. Pressing the slot again
+Using the slot equips the first available item in tile order. Pressing the slot again
 moves on to the next item: all tiers of a tool count as one, and every block is a step of
 its own. With the default group that is welder, grinder, then hand drill. Tools you don't
 carry and blocks you haven't unlocked are skipped. If none of the items can be used,
 nothing happens.
 
 While holding a tool or weapon from a group on the current toolbar page, scroll up to
-move forward through the group or down to move backward. This uses the best available
-tier of each tool, just like pressing the slot. Scrolling in menus or with Ctrl, Shift
-or Alt held keeps the game's normal behavior.
+move forward through the group or down to move backward. Both inputs pick the first
+available item of each kind in tile order, regardless of its level. Scrolling in menus
+or with Ctrl, Shift or Alt held keeps the game's normal behavior.
 
 The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
 Click its tile to open the editor with that group selected. The **TG** button
@@ -94,7 +93,8 @@ staging area shows the items of the group selected above it:
 - Drag tools, weapons and blocks from the G menu into the group, or double click them to
   add them at the end. The block variants on the right can be dragged in too.
 - Drag items inside the group to change their order. The first one wins, so put the one
-  you prefer first. Right click removes an item.
+  you prefer first. For example, an Enhanced Welder before an Elite Welder is selected
+  when both are in your inventory. Right click removes an item.
 - **New**, **Rename** and **Delete** manage the groups. **Duplicate** asks for a name
   and copies the selected group's items in their current order. New, Rename and
   Duplicate reject existing group names, ignoring case and surrounding spaces,
@@ -261,6 +261,9 @@ TBM_SLOT=15 python tests/item_groups_check.py
 
 `tests/editor_modes_check.py` checks TG, Done, tile selection and editing with staging
 enabled and disabled, using the same test slot.
+
+`tests/tool_order_check.py` checks button and wheel cycling with lower levels before
+higher levels in tile order, then checks that reordering a tool changes the selection.
 
 ### Release
 

@@ -152,7 +152,7 @@ public class ItemGroup
         var held = Held;
         var start = held == null ? (direction > 0 ? -1 : 0) : kinds.IndexOf(held.Kind);
 
-        // The held kind comes last, so a better item of that kind is still picked up
+        // The held kind comes last, so its first available item in tile order can still be selected.
         for (var step = 1; step <= kinds.Count; step++)
         {
             var kind = kinds[(start + direction * step + kinds.Count) % kinds.Count];
