@@ -217,6 +217,19 @@ The [Krafs publicizer](https://github.com/krafs/Publicizer) is enabled for `Sand
 `Sandbox.Graphics`, see `ClientPlugin/Tools/GameAssembliesToPublicize.cs` and the `Publicize`
 items in `ClientPlugin/ClientPlugin.csproj`.
 
+### In-game checks
+
+`tests/item_groups_check.py` checks the tool groups in a headless client driven through the
+[Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, the dialog, using
+the groups with different tools in the inventory, the staging area and saving the world. It
+prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar`, a
+working copy of Remote (`TBM_REMOTE`, default `~/ws/se/se1/plugins/remote`) and a claimed
+test slot of the workspace, see `tests/rig.py`:
+
+```bash
+TBM_SLOT=15 python tests/item_groups_check.py
+```
+
 ### Release
 
 - Always make the final release from a RELEASE build and test it before publishing.
