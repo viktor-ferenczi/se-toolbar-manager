@@ -33,6 +33,14 @@ public class GroupEditor
 
     public static GroupEditor Current { get; private set; }
 
+    public static void Open(MyGuiScreenToolbarConfigBase screen, string groupId)
+    {
+        selectedGroupId = groupId;
+        editingScreen = screen;
+        Config.Save();
+        screen.RecreateControls(false);
+    }
+
     public static void Toggle(MyGuiScreenToolbarConfigBase screen)
     {
         editingScreen = IsEditing(screen) ? null : screen;
@@ -81,6 +89,7 @@ public class GroupEditor
     private readonly MyGuiControlLabel groupLabel;
     private readonly MyGuiControlButton newButton,
         renameButton,
+        duplicateButton,
         deleteButton,
         resetButton,
         doneButton;
@@ -117,17 +126,18 @@ public class GroupEditor
             Name = "GroupSelector",
             OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
         };
-        doneButton = CreateButton(
-            "Done",
-            "Leave edit mode and show the staging area again",
-            _ => Toggle(screen)
+        doneButton = CreateButton("Done", "Return to staging", _ => Toggle(screen));
+        newButton = CreateButton("New", "Create an empty group", OnNew);
+        renameButton = CreateButton("Rename", "Rename this group", OnRename);
+        duplicateButton = CreateButton(
+            "Duplicate",
+            "Copy this group under a new name",
+            OnDuplicate
         );
-        newButton = CreateButton("New", "Create a new group", OnNew);
-        renameButton = CreateButton("Rename", "Rename the selected group", OnRename);
-        deleteButton = CreateButton("Delete", "Delete the selected group", OnDelete);
+        deleteButton = CreateButton("Delete", "Delete this group", OnDelete);
         resetButton = CreateButton(
             "Reset default",
-            $"Restore the default {ItemGroup.CreateDefault().Name} group",
+            "Restore or recreate Hand Tools; keep other groups",
             OnReset
         );
     }
@@ -174,7 +184,7 @@ public class GroupEditor
         doneButton.Position = row1 + new Vector2(width - doneButton.Size.X - 0.02f, 0f) - origin;
 
         var step = (width + Spacing) / 5f;
-        var buttons = new[] { newButton, renameButton, deleteButton, resetButton };
+        var buttons = new[] { newButton, renameButton, duplicateButton, deleteButton, resetButton };
         for (var i = 0; i < buttons.Length; i++)
         {
             buttons[i].Size = new Vector2(step - Spacing, buttons[i].Size.Y);
@@ -222,6 +232,7 @@ public class GroupEditor
             groupSelector.SelectItemByKey(selected, sendEvent: false);
 
         renameButton.Enabled = selected >= 0;
+        duplicateButton.Enabled = selected >= 0;
         deleteButton.Enabled = selected >= 0;
         RefreshItems();
 
@@ -383,7 +394,8 @@ public class GroupEditor
                     RefreshGroups();
                 },
                 "New group",
-                "New Group"
+                "New Group",
+                validateName: name => ValidateName(name)
             )
         );
     }
@@ -403,7 +415,44 @@ public class GroupEditor
                     RefreshGroups();
                 },
                 "Rename group",
-                group.Name
+                group.Name,
+                validateName: name => ValidateName(name, group)
+            )
+        );
+    }
+
+    private static string ValidateName(string name, ItemGroup renamedGroup = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "Enter a group name.";
+
+        return Groups.Any(group =>
+            group != renamedGroup
+            && string.Equals(group.Name.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase)
+        )
+            ? "A group with this name already exists. Choose another name."
+            : null;
+    }
+
+    private void OnDuplicate(MyGuiControlButton _)
+    {
+        var source = SelectedGroup;
+        if (source == null)
+            return;
+
+        MyGuiSandbox.AddScreen(
+            new NameDialog(
+                name =>
+                {
+                    var copy = ItemGroup.CreateNew(name.Trim());
+                    copy.Items = source.Items.ToArray();
+                    Groups = Groups.Append(copy).ToArray();
+                    selectedGroupId = copy.Id;
+                    RefreshGroups();
+                },
+                "Duplicate group",
+                source.Name + " copy",
+                validateName: name => ValidateName(name)
             )
         );
     }

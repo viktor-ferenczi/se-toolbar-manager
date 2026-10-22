@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ClientPlugin.Gui;
 using ClientPlugin.Logic;
 using HarmonyLib;
@@ -169,6 +170,30 @@ public static class ItemGroupsToolbarConfigPatch
         IsToolCategory = true,
     };
 
+    private static void OnGroupTileReleased(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyGuiControlGrid sender,
+        MyGuiControlGrid.EventArgs eventArgs
+    )
+    {
+        if (
+            !IsCharacterToolbar(__instance)
+            || eventArgs.Button != MySharedButtonsEnum.Primary
+            || __instance.m_dragAndDrop.IsActive()
+            || !__instance.m_categoriesListbox.SelectedItems.Any(item => item.UserData == Category)
+        )
+            return;
+
+        var tile = sender.TryGetItemAt(eventArgs.RowIndex, eventArgs.ColumnIndex);
+        if (
+            tile?.UserData is not MyGuiScreenToolbarConfigBase.GridItemUserData data
+            || !ItemGroupToolbarItem.IsMarker(data.ItemData(), out var groupId)
+        )
+            return;
+
+        GroupEditor.Open(__instance, groupId);
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.RecreateBlockCategories))]
     private static void RecreateBlockCategoriesPostfix(
@@ -224,6 +249,10 @@ public static class ItemGroupsToolbarConfigPatch
     {
         if (!IsCharacterToolbar(__instance))
             return;
+
+        // Wait for release so pressing a tile can still begin a drag to the toolbar.
+        __instance.m_gridBlocks.ItemReleased += (grid, args) =>
+            OnGroupTileReleased(__instance, grid, args);
 
         var button = new MyGuiControlButton
         {

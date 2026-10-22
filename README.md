@@ -86,17 +86,22 @@ move forward through the group or down to move backward. This uses the best avai
 tier of each tool, just like pressing the slot. Scrolling in menus or with Ctrl, Shift
 or Alt held keeps the game's normal behavior.
 
-The G menu lists the groups under **Groups**. Put them on the toolbar like any other
-item. The **TG** button at the bottom left of the G menu turns on edit mode, where the
+The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
+Click its tile to open the editor with that group selected. The **TG** button
+at the bottom left of the G menu turns on edit mode, where the
 staging area shows the items of the group selected above it:
 
 - Drag tools, weapons and blocks from the G menu into the group, or double click them to
   add them at the end. The block variants on the right can be dragged in too.
 - Drag items inside the group to change their order. The first one wins, so put the one
   you prefer first. Right click removes an item.
-- **New**, **Rename** and **Delete** manage the groups, **Reset default** restores the
-  default **Hand Tools** group: the Elite, Proficient, Enhanced and basic tiers of the
-  welder, grinder and hand drill, in that order.
+- **New**, **Rename** and **Delete** manage the groups. **Duplicate** asks for a name
+  and copies the selected group's items in their current order. New, Rename and
+  Duplicate reject existing group names, ignoring case and surrounding spaces,
+  and leave the naming dialog open so you can correct the name.
+- **Reset default** restores or recreates the default **Hand Tools** group without
+  changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
+  grinder and hand drill, in that order.
 - **Done** or **TG** again brings the staging area back.
 
 The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when

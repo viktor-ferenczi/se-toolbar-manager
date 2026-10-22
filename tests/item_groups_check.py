@@ -277,6 +277,31 @@ class Game:
         self.api.control_click(text="OK", screen=names)
         self.wait_screen("NameDialog", present=False)
 
+    def retry_name(self, screen: int, button: str, invalid: str, valid: str) -> None:
+        before = self.saved_groups()
+        self.click(screen, button)
+        dialog = self.wait_screen("NameDialog")
+        self.api.control_set("Textbox", invalid, screen=dialog)
+        self.api.control_click(text="OK", screen=dialog)
+        error = self.wait_screen("MyGuiScreenMessageBox")
+        check(
+            f"{button} rejects an existing name without changing groups",
+            self.saved_groups() == before
+            and self.screen_index("NameDialog") is not None,
+        )
+        self.api.control_click(text="OK", screen=error)
+        self.wait_screen("MyGuiScreenMessageBox", present=False)
+        dialog = self.wait_screen("NameDialog")
+        self.api.control_set("Textbox", valid, screen=dialog)
+        self.api.control_click(text="OK", screen=dialog)
+        self.wait_screen("NameDialog", present=False)
+
+    def delete_group(self, screen: int) -> None:
+        self.click(screen, "DeleteGroupButton")
+        dialog = self.wait_screen("MyGuiScreenMessageBox")
+        self.api.control_click(text="Yes", screen=dialog)
+        self.wait_screen("MyGuiScreenMessageBox", present=False)
+
     def drag_to_group(self, screen: int, name: str, slot: int) -> None:
         self.drag(screen, "blocks", self.grid_names(screen).index(name), "group", slot)
 
@@ -375,6 +400,17 @@ def run(game: Game) -> None:
         game.grid_names(screen) == ["Hand Tools"],
         str(game.grid_names(screen)),
     )
+    toolbar_before = game.toolbar()
+    game.grid_click(
+        screen, "blocks", game.grid_names(screen).index("Hand Tools"), "click"
+    )
+    check(
+        "single click opens the selected group without assigning a toolbar slot",
+        game.editing(screen)
+        and game.selected_group(screen) == "Hand Tools"
+        and game.toolbar() == toolbar_before,
+    )
+    game.click(screen, "DoneGroupButton")
     game.drag_group_to_toolbar(screen, "Hand Tools", 3)
     slot = game.toolbar().get(3, {})
     check(
@@ -461,16 +497,15 @@ def run(game: Game) -> None:
     check("TG turns on edit mode", game.editing(screen))
     buttons = [
         game.control(screen, name + "GroupButton")
-        for name in ("New", "Rename", "Delete", "Resetdefault")
+        for name in ("New", "Rename", "Duplicate", "Delete", "Resetdefault")
     ]
-    done = game.control(screen, "DoneGroupButton")
     right = lambda control: control["position"]["x"] + control["size"]["x"]
     check(
-        "editor buttons align with Done and have equal gaps",
-        abs(right(buttons[-1]) - right(done)) < 0.0001
+        "five editor buttons have equal widths and gaps",
+        all(abs(b["size"]["x"] - buttons[0]["size"]["x"]) < 0.0001 for b in buttons)
         and all(
             abs(buttons[i + 1]["position"]["x"] - right(buttons[i]) - 0.006) < 0.0001
-            for i in range(3)
+            for i in range(4)
         ),
         str([(b["position"], b["size"]) for b in buttons]),
     )
@@ -486,7 +521,7 @@ def run(game: Game) -> None:
     )
 
     # A custom group of tools and a block, preferring the lower tier drill
-    game.name_dialog(screen, "NewGroupButton", "Builder")
+    game.retry_name(screen, "NewGroupButton", " hand tools ", "Builder")
     check(
         "new group created and selected",
         game.group_names(screen) == ["Hand Tools", "Builder"]
@@ -540,7 +575,25 @@ def run(game: Game) -> None:
     )
 
     # Rename and delete
+    game.retry_name(screen, "RenameGroupButton", "Hand Tools", "Builder Kit")
     game.name_dialog(screen, "RenameGroupButton", "Builder Kit")
+    original = game.saved_groups()["Builder Kit"]
+    game.retry_name(screen, "DuplicateGroupButton", " builder kit ", "Builder Copy")
+    definitions = ET.parse(game.client.config).getroot().findall(".//ItemGroup")
+    ids = [group.findtext("Id") for group in definitions]
+    check(
+        "Duplicate copies the ordered items with a new id and selects the copy",
+        game.saved_groups()["Builder Copy"] == original
+        and len(set(ids)) == len(ids)
+        and game.selected_group(screen) == "Builder Copy",
+    )
+    game.remove_from_group(screen, 0)
+    check(
+        "editing the duplicate leaves its source unchanged",
+        game.saved_groups()["Builder Kit"] == original
+        and game.saved_groups()["Builder Copy"] == original[1:],
+    )
+    game.delete_group(screen)
     game.name_dialog(screen, "NewGroupButton", "Scratch")
     game.click(screen, "DeleteGroupButton")
     box = game.wait_screen("MyGuiScreenMessageBox")
@@ -564,6 +617,21 @@ def run(game: Game) -> None:
         game.grid_names(screen) == ["Hand Tools", "Builder Kit"],
         str(game.grid_names(screen)),
     )
+    game.grid_click(
+        screen, "blocks", game.grid_names(screen).index("Builder Kit"), "click"
+    )
+    check(
+        "single click opens the chosen custom group",
+        game.editing(screen) and game.selected_group(screen) == "Builder Kit",
+    )
+    game.grid_click(
+        screen, "blocks", game.grid_names(screen).index("Hand Tools"), "click"
+    )
+    check(
+        "single click switches the group in an open editor",
+        game.editing(screen) and game.selected_group(screen) == "Hand Tools",
+    )
+    game.click(screen, "DoneGroupButton")
     game.drag_group_to_toolbar(screen, "Builder Kit", 4)
     check(
         "custom group put on the toolbar",
@@ -596,6 +664,8 @@ def run(game: Game) -> None:
     held_check(game, "edited default group: Enhanced Welder", "Welder/Welder2")
 
     screen = game.toggle_edit_mode()
+    other_groups = {k: v for k, v in game.saved_groups().items() if k != "Hand Tools"}
+    game.select_group(screen, "Builder Kit")
     game.click(screen, "ResetdefaultGroupButton")
     check(
         "reset restores the default group",
@@ -603,6 +673,21 @@ def run(game: Game) -> None:
         and game.group_items(screen)[:2] == ["Elite Welder", "Proficient Welder"]
         and game.group_names(screen) == ["Hand Tools", "Builder Kit"],
         str(game.group_items(screen)[:2]),
+    )
+    check(
+        "Reset leaves other groups unchanged even when another group was selected",
+        {k: v for k, v in game.saved_groups().items() if k != "Hand Tools"}
+        == other_groups,
+    )
+    game.delete_group(screen)
+    check("Hand Tools can be deleted", "Hand Tools" not in game.saved_groups())
+    game.click(screen, "ResetdefaultGroupButton")
+    check(
+        "Reset recreates missing Hand Tools and preserves other groups",
+        len(game.saved_groups().get("Hand Tools", [])) == 12
+        and game.selected_group(screen) == "Hand Tools"
+        and {k: v for k, v in game.saved_groups().items() if k != "Hand Tools"}
+        == other_groups,
     )
     game.click(screen, "DoneGroupButton")
     game.close_screen(TOOLBAR_CONFIG)
