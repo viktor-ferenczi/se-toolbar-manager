@@ -23,7 +23,7 @@ import rig
 GUN = "MyObjectBuilder_PhysicalGunObject"
 MARKER_TYPE = "MyObjectBuilder_ToolbarItemTerminalGroup"
 TOOLBAR_CONFIG = "MyGuiScreenCubeBuilder"
-DIALOG = "ItemGroupsDialog"
+CUBE_BLOCK = "MyObjectBuilder_CubeBlock"
 
 results: list[tuple[str, bool, str]] = []
 
@@ -104,7 +104,11 @@ class Game:
     # Character and toolbar
 
     def held(self) -> str | None:
-        weapon = self.api.get_character().get("weapon")
+        """The hand item, or the block of the cube builder in hand"""
+        state = self.api.get_character()
+        if state.get("cubeBlock"):
+            return state["cubeBlock"]
+        weapon = state.get("weapon")
         return weapon["definition"] if weapon else None
 
     def give(self, subtype: str) -> None:
@@ -154,7 +158,9 @@ class Game:
             c for c in self.controls(screen) if c["type"] == "MyGuiControlGrid"
         ):
             x, y = grid["position"]["x"], grid["position"]["y"]
-            if x < 0.3 and y < 0.5:
+            if grid.get("name") == "GroupItemsGrid":
+                found["group"] = grid
+            elif x < 0.3 and y < 0.5:
                 found.setdefault("blocks", grid)
             elif x < 0.3:
                 found.setdefault("staging", grid)
@@ -167,8 +173,10 @@ class Game:
 
     @staticmethod
     def names(grid: dict) -> list[str]:
+        # Block tooltips have more lines after the name
         return [
-            (item.get("tooltips") or [""])[0] for item in grid["properties"]["items"]
+            (item.get("tooltips") or [""])[0].split("\n")[0].strip()
+            for item in grid["properties"]["items"]
         ]
 
     def grid_names(self, screen: int) -> list[str]:
@@ -218,37 +226,68 @@ class Game:
     ) -> None:
         self.drag(screen, "staging", staging_slot, "toolbar", slot)
 
-    # The Tool Groups dialog, opened from the G menu
+    # Group edit mode of the G menu
 
-    def open_dialog(self) -> int:
+    def toggle_edit_mode(self) -> int:
         screen = self.screen_index(TOOLBAR_CONFIG)
         if screen is None:
             screen = self.open_toolbar_config()
         self.click(screen, "OpenItemGroupsButton")
-        return self.wait_screen(DIALOG)
+        time.sleep(1)
+        return screen
 
-    def close_dialog(self) -> None:
-        self.click(self.screen_index(DIALOG), "CloseButton")
-        self.wait_screen(DIALOG, present=False)
+    def editing(self, screen: int) -> bool:
+        return "group" in self.grids(screen)
 
-    def table(self, screen: int, name: str) -> list[str]:
-        rows = self.control(screen, name)["properties"]["rows"]
-        return [row["cells"][0] for row in rows]
+    def group_names(self, screen: int) -> list[str]:
+        """The groups as the selector lists them: in config order, which is saved on
+        every change. Remote shows only the selected key of a combobox."""
+        return list(self.saved_groups())
 
-    def new_group(self, dialog: int, name: str) -> None:
-        self.click(dialog, "NewButton")
+    def selected_group(self, screen: int) -> str | None:
+        key = self.control(screen, "GroupSelector")["properties"].get("selectedKey")
+        names = self.group_names(screen)
+        return names[key] if key is not None and 0 <= key < len(names) else None
+
+    def select_group(self, screen: int, name: str) -> None:
+        self.api.control_set(
+            "GroupSelector", self.group_names(screen).index(name), screen=screen
+        )
+        time.sleep(0.5)
+
+    def group_items(self, screen: int) -> list[str]:
+        return self.names(self.grids(screen)["group"])
+
+    def name_dialog(self, screen: int, button: str, name: str) -> None:
+        self.click(screen, button)
         names = self.wait_screen("NameDialog")
         self.api.control_set("Textbox", name, screen=names)
         self.api.control_click(text="OK", screen=names)
         self.wait_screen("NameDialog", present=False)
 
-    def add_item(self, dialog: int, name: str) -> None:
-        self.click(
-            dialog,
-            "AvailableTable",
-            row=self.table(dialog, "AvailableTable").index(name),
+    def drag_to_group(self, screen: int, name: str, slot: int) -> None:
+        self.drag(screen, "blocks", self.grid_names(screen).index(name), "group", slot)
+
+    def move_in_group(self, screen: int, slot: int, target_slot: int) -> None:
+        self.drag(screen, "group", slot, "group", target_slot)
+
+    def grid_click(
+        self, screen: int, grid: str, slot: int, action: str, button="left"
+    ) -> None:
+        found = self.grids(screen)[grid]
+        item = next(i for i in found["properties"]["items"] if i["slot"] == slot)
+        self.api.grid_action(
+            found["id"], slot, action, item=item["id"], button=button, screen=screen
         )
-        self.click(dialog, "AddButton")
+        time.sleep(1)
+
+    def double_click_block(self, screen: int, name: str) -> None:
+        self.grid_click(
+            screen, "blocks", self.grid_names(screen).index(name), "double-click"
+        )
+
+    def remove_from_group(self, screen: int, slot: int) -> None:
+        self.grid_click(screen, "group", slot, "click", button="right")
 
     def saved_groups(self) -> dict[str, list[str]]:
         """The groups in the plugin's config file, by name"""
@@ -316,10 +355,10 @@ def run(game: Game) -> None:
     # The new tree entry in the G menu
     screen = game.open_toolbar_config()
     categories = game.categories(screen)
-    check("G menu lists Tool Groups", "Tool Groups" in categories, str(categories[:6]))
-    game.select_category(screen, "Tool Groups")
+    check("G menu lists Groups", "Groups" in categories, str(categories[:6]))
+    game.select_category(screen, "Groups")
     check(
-        "Tool Groups shows the default group",
+        "Groups shows the default group",
         game.grid_names(screen) == ["Hand Tools"],
         str(game.grid_names(screen)),
     )
@@ -365,55 +404,99 @@ def run(game: Game) -> None:
     game.press_slot(3)
     held_check(game, "pressed again: back to the Elite Welder", "Welder/Welder4")
 
-    # A custom group made in the dialog, preferring the lower tier
-    dialog = game.open_dialog()
+    # Edit mode of the G menu: the staging area turns into the group editor
+    screen = game.toggle_edit_mode()
+    check("TG turns on edit mode", game.editing(screen))
     check(
-        "dialog lists the default group",
-        game.table(dialog, "GroupsTable") == ["Hand Tools"],
+        "editor shows the default group",
+        game.selected_group(screen) == "Hand Tools"
+        and game.group_items(screen)[:2] == ["Elite Welder", "Proficient Welder"],
+        f"{game.selected_group(screen)}: {game.group_items(screen)[:2]}",
     )
-    game.new_group(dialog, "Drills")
+
+    # A custom group of tools and a block, preferring the lower tier drill
+    game.name_dialog(screen, "NewGroupButton", "Builder")
     check(
         "new group created and selected",
-        game.table(dialog, "GroupsTable") == ["Hand Tools", "Drills"]
-        and game.table(dialog, "ItemsTable") == [],
-        str(game.table(dialog, "GroupsTable")),
+        game.group_names(screen) == ["Hand Tools", "Builder"]
+        and game.selected_group(screen) == "Builder"
+        and game.group_items(screen) == [],
+        f"{game.group_names(screen)}, {game.selected_group(screen)}",
     )
-    game.add_item(dialog, "Elite Hand Drill")
-    game.add_item(dialog, "Enhanced Hand Drill")
+    game.select_category(screen, "Character Tools")
+    game.drag_to_group(screen, "Elite Hand Drill", 0)
+    game.drag_to_group(screen, "Enhanced Hand Drill", 1)
+    game.select_category(screen, "Armor Blocks")
+    game.double_click_block(screen, "Light Armor Block")
+    game.double_click_block(screen, "Heavy Armor Block")
     check(
-        "items added in order",
-        game.table(dialog, "ItemsTable") == ["Elite Hand Drill", "Enhanced Hand Drill"],
-        str(game.table(dialog, "ItemsTable")),
+        "tools dragged in, blocks added by double click",
+        game.group_items(screen)
+        == [
+            "Elite Hand Drill",
+            "Enhanced Hand Drill",
+            "Light Armor Block",
+            "Heavy Armor Block",
+        ],
+        str(game.group_items(screen)),
     )
-    game.click(dialog, "ItemsTable", row=1)
-    game.click(dialog, "UpButton")
-    game.shot("dialog-custom-group")
+    game.move_in_group(screen, 1, 0)
+    game.remove_from_group(screen, 3)
+    game.shot("g-menu-group-editor")
     check(
-        "item moved up",
-        game.table(dialog, "ItemsTable") == ["Enhanced Hand Drill", "Elite Hand Drill"],
-        str(game.table(dialog, "ItemsTable")),
+        "item moved first, last one removed by right click",
+        game.group_items(screen)
+        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Block"],
+        str(game.group_items(screen)),
     )
-    game.close_dialog()
+    toolbar = game.toolbar()
+    check(
+        "editing left the toolbar alone",
+        set(toolbar) == {0, 1, 2, 3},
+        str({k: v["name"] for k, v in toolbar.items()}),
+    )
     saved = game.saved_groups()
     check(
         "groups saved to the config",
-        saved.get("Drills") == [f"{GUN}/HandDrill2Item", f"{GUN}/HandDrill4Item"]
+        saved.get("Builder")
+        == [
+            f"{GUN}/HandDrill2Item",
+            f"{GUN}/HandDrill4Item",
+            f"{CUBE_BLOCK}/LargeBlockArmorBlock",
+        ]
         and len(saved.get("Hand Tools", [])) == 12,
-        str(saved),
+        str(saved.get("Builder")),
     )
 
-    screen = game.wait_screen(TOOLBAR_CONFIG)
-    game.select_category(screen, "Tool Groups")
+    # Rename and delete
+    game.name_dialog(screen, "RenameGroupButton", "Builder Kit")
+    game.name_dialog(screen, "NewGroupButton", "Scratch")
+    game.click(screen, "DeleteGroupButton")
+    box = game.wait_screen("MyGuiScreenMessageBox")
+    api.control_click(text="Yes", screen=box)
+    game.wait_screen("MyGuiScreenMessageBox", present=False)
     check(
-        "Tool Groups shows both groups",
-        game.grid_names(screen) == ["Hand Tools", "Drills"],
+        "group renamed, another one created and deleted",
+        game.group_names(screen) == ["Hand Tools", "Builder Kit"],
+        str(game.group_names(screen)),
+    )
+
+    # Leaving edit mode, the group goes on the toolbar from the Groups category
+    game.click(screen, "DoneGroupButton")
+    check(
+        "Done brings the staging area back",
+        not game.editing(screen) and "staging" in game.grids(screen),
+    )
+    game.select_category(screen, "Groups")
+    check(
+        "Groups shows both groups",
+        game.grid_names(screen) == ["Hand Tools", "Builder Kit"],
         str(game.grid_names(screen)),
     )
-    game.shot("g-menu-tool-groups")
-    game.drag_group_to_toolbar(screen, "Drills", 4)
+    game.drag_group_to_toolbar(screen, "Builder Kit", 4)
     check(
         "custom group put on the toolbar",
-        game.toolbar().get(4, {}).get("name") == "Drills",
+        game.toolbar().get(4, {}).get("name") == "Builder Kit",
     )
     game.close_screen(TOOLBAR_CONFIG)
     game.holster()
@@ -421,32 +504,36 @@ def run(game: Game) -> None:
     held_check(
         game, "custom order: Enhanced Hand Drill before Elite", "HandDrill/HandDrill2"
     )
+    game.press_slot(4)
+    held_check(game, "pressed again: the block", "CubeBlock/LargeBlockArmorBlock")
+    game.press_slot(4)
+    held_check(game, "pressed again: back to the drill", "HandDrill/HandDrill2")
 
     # Editing and resetting the default group
-    dialog = game.open_dialog()
-    game.click(dialog, "GroupsTable", row=0)
-    game.click(dialog, "ItemsTable", row=0)
-    game.click(dialog, "RemoveButton")
+    screen = game.toggle_edit_mode()
+    game.select_group(screen, "Hand Tools")
+    game.remove_from_group(screen, 0)
     check(
         "Elite Welder removed from the default group",
-        "Elite Welder" not in game.table(dialog, "ItemsTable"),
-        str(game.table(dialog, "ItemsTable")[:3]),
+        game.group_items(screen)[:1] == ["Proficient Welder"],
+        str(game.group_items(screen)[:3]),
     )
-    game.close_dialog()
+    game.click(screen, "DoneGroupButton")
     game.close_screen(TOOLBAR_CONFIG)
     game.holster()
     game.press_slot(3)
     held_check(game, "edited default group: Enhanced Welder", "Welder/Welder2")
 
-    dialog = game.open_dialog()
-    game.click(dialog, "ResetButton")
+    screen = game.toggle_edit_mode()
+    game.click(screen, "ResetdefaultGroupButton")
     check(
         "reset restores the default group",
-        game.table(dialog, "ItemsTable")[:2] == ["Elite Welder", "Proficient Welder"]
-        and game.table(dialog, "GroupsTable") == ["Hand Tools", "Drills"],
-        str(game.table(dialog, "ItemsTable")[:2]),
+        game.selected_group(screen) == "Hand Tools"
+        and game.group_items(screen)[:2] == ["Elite Welder", "Proficient Welder"]
+        and game.group_names(screen) == ["Hand Tools", "Builder Kit"],
+        str(game.group_items(screen)[:2]),
     )
-    game.close_dialog()
+    game.click(screen, "DoneGroupButton")
     game.close_screen(TOOLBAR_CONFIG)
     game.holster()
     game.press_slot(3)
@@ -487,7 +574,7 @@ def run(game: Game) -> None:
     check(
         "group slots survive saving and loading the world",
         toolbar.get(5, {}).get("type") == MARKER_TYPE
-        and toolbar.get(4, {}).get("name") == "Drills",
+        and toolbar.get(4, {}).get("name") == "Builder Kit",
         str({k: v["name"] for k, v in toolbar.items()}),
     )
     game.holster()
