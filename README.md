@@ -234,7 +234,9 @@ items in `ClientPlugin/ClientPlugin.csproj`.
 the groups with different tools in the inventory and with a block, the staging area and
 saving the world. It
 prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar`, a
-working copy of Remote (`TBM_REMOTE`, default `~/ws/se/se1/plugins/remote`) and a claimed
+working copy of Remote with the `cubeBlock` field of the character state
+([CometWorks/remote#51](https://github.com/CometWorks/remote/pull/51); `TBM_REMOTE`,
+default `~/ws/se/se1/plugins/remote`) and a claimed
 test slot of the workspace, see `tests/rig.py`:
 
 ```bash
