@@ -3,7 +3,12 @@ using ClientPlugin.Settings.Elements;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System;
+using System.Linq;
+using ClientPlugin.Gui;
+using ClientPlugin.Logic;
 using ClientPlugin.Settings.Tools;
+using Sandbox.Graphics.GUI;
 using VRage.Input;
 
 
@@ -25,6 +30,8 @@ public class Config : INotifyPropertyChanged
     private string latestProfileSearchText = "";
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
+
+    private ItemGroup[] itemGroups = { ItemGroup.CreateDefault() };
 
     #endregion
 
@@ -100,6 +107,20 @@ public class Config : INotifyPropertyChanged
         get => blockSearchKey;
         set => SetField(ref blockSearchKey, value);
     }
+
+    [Separator("Tool groups")]
+
+    [Button(label: "Edit tool groups", description: "Define the groups of tools and weapons the G menu offers for the character toolbar")]
+    public static void EditItemGroups() => MyGuiSandbox.AddScreen(new ItemGroupsDialog());
+
+    // Edited in ItemGroupsDialog, which assigns a new array on every change
+    public ItemGroup[] ItemGroups
+    {
+        get => itemGroups;
+        set => SetField(ref itemGroups, value ?? Array.Empty<ItemGroup>());
+    }
+
+    public ItemGroup FindItemGroup(string id) => itemGroups.FirstOrDefault(g => g.Id == id);
 
     #endregion
 

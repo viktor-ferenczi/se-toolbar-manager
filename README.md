@@ -71,6 +71,27 @@ Up to 6 backups of each profile is kept, even after deleting the profile. Renami
 also renames the backup files. Orphaned backup files (with the main profile deleted) are
 cleaned up after 90 days, but only when a profile is deleted the next time.
 
+### Tool groups
+
+A tool group puts several hand tools or weapons into one slot of your character toolbar.
+Using the slot equips the first tool of the group you have in your inventory, so with the
+default **Hand Tools** group you always get the best welder you carry. Pressing the slot
+again switches to the next kind of tool in the group: welder, grinder, then hand drill.
+Kinds you carry none of are skipped. If you have none of the tools, nothing happens.
+
+The G menu lists the groups under **Tool Groups**. Put them on the toolbar like any other
+item. The **TG** button at the bottom left of the G menu opens the dialog where you can
+create, rename and delete groups, add tools and weapons, and change their order. The first
+tool of a kind in the list wins, so put the one you prefer first. The default **Hand Tools**
+group lists the Elite, Proficient, Enhanced and basic tiers of the welder, grinder and hand
+drill, in that order. **Reset** restores it. The dialog is also available from the plugin's
+configuration.
+
+The groups are saved in the plugin's configuration. Toolbar slots holding a group are saved
+with the world and in toolbar profiles. A world saved with group slots still loads without
+the plugin; those slots are just empty then. On a dedicated server the server does not keep
+group slots, so you have to put them back after reconnecting.
+
 ### Quick block selection
 
 Press the `BACKSLASH` or `PIPE` key (on English keyboard) to open the quick
