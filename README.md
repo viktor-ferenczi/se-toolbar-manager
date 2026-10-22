@@ -256,7 +256,7 @@ default `~/ws/se/se1/plugins/remote`) and a claimed
 test slot of the workspace, see `tests/rig.py`:
 
 ```bash
-TBM_SLOT=15 python tests/item_groups_check.py
+TBM_SLOT=15 uv run --with httpx python tests/item_groups_check.py
 ```
 
 `tests/editor_modes_check.py` checks TG, Done, tile selection and editing with staging

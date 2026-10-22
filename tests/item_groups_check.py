@@ -1,6 +1,6 @@
 """In-game checks of the tool groups, on the isolated client of rig.py.
 
-    TBM_SLOT=15 python tests/item_groups_check.py [--attach] [--keep]
+    TBM_SLOT=15 uv run --with httpx python tests/item_groups_check.py [--attach] [--keep]
 
 Starts the client and a fresh survival world whose character has no hand tools,
 then drives the G menu, the Tool Groups dialog and the toolbar through Remote with

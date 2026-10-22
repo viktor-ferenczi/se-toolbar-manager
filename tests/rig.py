@@ -3,8 +3,8 @@
 Everything comes from a parallel test slot of the workspace
 (se/testing/parallel-test-work/README.md), so other sessions can test at the same time:
 
-    TBM_SLOT=15 python tests/rig.py start [--no-render]
-    TBM_SLOT=15 python tests/rig.py stop
+    TBM_SLOT=15 uv run --with httpx python tests/rig.py start [--no-render]
+    TBM_SLOT=15 uv run --with httpx python tests/rig.py stop
 
 Client 0 of slot n gets its own Pulsar folder ~/.se-test/<task>-c0, game user data
 folder ~/.se-test/<task>-c0-data, Remote port 25000 + 10n and client id
