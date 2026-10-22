@@ -1,6 +1,6 @@
-﻿using Sandbox.Graphics.GUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Sandbox.Graphics.GUI;
 
 namespace ClientPlugin.Settings.Elements;
 
@@ -15,7 +15,11 @@ internal class TextboxAttribute : Attribute, IElement
         Description = description;
     }
 
-    public List<Control> GetControls(string name, Func<object> propertyGetter, Action<object> propertySetter)
+    public List<Control> GetControls(
+        string name,
+        Func<object> propertyGetter,
+        Action<object> propertySetter
+    )
     {
         var textBox = new MyGuiControlTextbox(defaultText: (string)propertyGetter());
         textBox.TextChanged += box => propertySetter(box.Text);
@@ -29,8 +33,5 @@ internal class TextboxAttribute : Attribute, IElement
         };
     }
 
-    public List<Type> SupportedTypes { get; } = new List<Type>()
-    {
-        typeof(string)
-    };
+    public List<Type> SupportedTypes { get; } = new List<Type>() { typeof(string) };
 }

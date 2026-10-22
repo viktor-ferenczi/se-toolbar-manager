@@ -15,7 +15,7 @@ public class Preloader
     // Full filenames of the game DLLs to patch (not full path)
     public static IEnumerable<string> TargetDLLs { get; } =
     [
-        "Sandbox.Game.dll" // Example item
+        "Sandbox.Game.dll", // Example item
     ];
 
     // Runs before any of the preloader patches of any of the plugins

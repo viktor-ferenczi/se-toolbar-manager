@@ -1,7 +1,7 @@
-﻿using Sandbox;
-using Sandbox.Graphics.GUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Sandbox;
+using Sandbox.Graphics.GUI;
 using VRageMath;
 
 namespace ClientPlugin.Settings;
@@ -18,15 +18,16 @@ internal class SettingsScreen : MyGuiScreenBase
         Func<List<MyGuiControlBase>> getControls,
         Vector2? position = null,
         Vector2? size = null
-
-    ) : base(
-        position ?? new Vector2(0.5f, 0.5f),
-        MyGuiConstants.SCREEN_BACKGROUND_COLOR,
-        size ?? new Vector2(0.3f, 0.42f),
-        false,
-        null,
-        MySandboxGame.Config.UIBkOpacity,
-        MySandboxGame.Config.UIOpacity)
+    )
+        : base(
+            position ?? new Vector2(0.5f, 0.5f),
+            MyGuiConstants.SCREEN_BACKGROUND_COLOR,
+            size ?? new Vector2(0.3f, 0.42f),
+            false,
+            null,
+            MySandboxGame.Config.UIBkOpacity,
+            MySandboxGame.Config.UIOpacity
+        )
     {
         FriendlyName = friendlyName;
         GetControls = getControls;

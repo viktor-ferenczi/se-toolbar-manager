@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ClientPlugin.Extensions;
 using LitJson;
 using Sandbox.Game.Screens.Helpers;
-using ClientPlugin.Extensions;
 using VRage.FileSystem;
 using VRage.Game;
 using VRage.Utils;
@@ -17,7 +17,8 @@ public class ProfileStorage
     private const int NumberOfBackups = 5;
     private const int DeleteOldBackupsOfDeletedProfilesAfterDays = 90;
 
-    private static string PluginDataDir => Path.Combine(MyFileSystem.UserDataPath, "ToolbarManager");
+    private static string PluginDataDir =>
+        Path.Combine(MyFileSystem.UserDataPath, "ToolbarManager");
 
     private readonly MyToolbar currentToolbar;
     private readonly string profileDir;
@@ -33,12 +34,16 @@ public class ProfileStorage
         // If there are no BuildCockpit profiles defined, then use the Character profile folder instead.
         // This is to prevent players from thinking they lost all of their character profiles while trying
         // to use the build cockpit mode (Ctrl-G).
-        if (Config.Current.UseCharacterProfilesForBuildCockpit &&
-            toolbarType == MyToolbarType.BuildCockpit)
+        if (
+            Config.Current.UseCharacterProfilesForBuildCockpit
+            && toolbarType == MyToolbarType.BuildCockpit
+        )
         {
-            var hasAnyProfiles = Directory.Exists(profileDir) &&
-                                 Directory.EnumerateFiles(profileDir)
-                                     .Any(path => path.EndsWith(".xml") || path.EndsWith(".json"));
+            var hasAnyProfiles =
+                Directory.Exists(profileDir)
+                && Directory
+                    .EnumerateFiles(profileDir)
+                    .Any(path => path.EndsWith(".xml") || path.EndsWith(".json"));
 
             if (!hasAnyProfiles && Config.Current.UseCharacterProfilesForBuildCockpit)
             {
@@ -126,7 +131,9 @@ public class ProfileStorage
         }
         catch (JsonException e)
         {
-            MyLog.Default.Warning($"ToolbarManager: Failed to load JSON toolbar file: \"{jsonPath}\" ({e})");
+            MyLog.Default.Warning(
+                $"ToolbarManager: Failed to load JSON toolbar file: \"{jsonPath}\" ({e})"
+            );
             return null;
         }
     }

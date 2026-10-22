@@ -197,9 +197,9 @@ public static class MyGuiScreenToolbarConfigBasePatch
         // leaves the world showing through behind the label and the DLC link. Fill it
         // with the block panel's own background fill, so the column looks continuous.
         var lineFill = new MyGuiControlPanel(
-            texture: (
-                gridBlocksPanel.BackgroundTexture ?? stagingPanel.BackgroundTexture
-            )?.Center.Texture
+            texture: (gridBlocksPanel.BackgroundTexture ?? stagingPanel.BackgroundTexture)
+                ?.Center
+                .Texture
         );
         lineFill.Name = StagingFillName;
         lineFill.ColorMask = gridBlocksPanel.ColorMask;

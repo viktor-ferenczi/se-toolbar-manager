@@ -51,24 +51,22 @@ public class Toolbar
 
     public static Toolbar Read(string path)
     {
-        MyObjectBuilderSerializer.DeserializeXML<MyObjectBuilder_Toolbar>(path, out var toolbarBuilder);
+        MyObjectBuilderSerializer.DeserializeXML<MyObjectBuilder_Toolbar>(
+            path,
+            out var toolbarBuilder
+        );
         return new Toolbar(toolbarBuilder);
     }
 
     public void Write(string path)
     {
-        var builder = new MyObjectBuilder_Toolbar
-        {
-            ToolbarType = type
-        };
+        var builder = new MyObjectBuilder_Toolbar { ToolbarType = type };
 
         foreach (var slot in slots)
         {
-            builder.Slots.Add(new MyObjectBuilder_Toolbar.Slot
-            {
-                Index = slot.Index,
-                Data = slot.Builder
-            });
+            builder.Slots.Add(
+                new MyObjectBuilder_Toolbar.Slot { Index = slot.Index, Data = slot.Builder }
+            );
         }
 
         MyObjectBuilderSerializer.SerializeXML(path, false, builder);
@@ -82,10 +80,7 @@ public class Toolbar
 
     private void WriteJson(StreamWriter stream)
     {
-        var d = new JsonData
-        {
-            ["ToolbarType"] = type.ToString()
-        };
+        var d = new JsonData { ["ToolbarType"] = type.ToString() };
 
         var ss = new JsonData();
         ss.SetJsonType(JsonType.Array);
@@ -98,7 +93,7 @@ public class Toolbar
                 ["Index"] = slot.Index,
                 ["Page"] = slot.Page,
                 ["Number"] = slot.Number,
-                ["IsEmpty"] = slot.IsEmpty
+                ["IsEmpty"] = slot.IsEmpty,
             };
 
             if (slot.Builder == null)
@@ -135,10 +130,7 @@ public class Toolbar
             ss.Add(s);
         }
 
-        var writer = new JsonWriter
-        {
-            PrettyPrint = true,
-        };
+        var writer = new JsonWriter { PrettyPrint = true };
         d.ToJson(writer);
         stream.Write(writer.ToString());
     }
@@ -170,7 +162,11 @@ public class Toolbar
             {
                 case MyObjectBuilder_ToolbarItemTerminalBlock blockBuilder:
                     if (MyEntities.TryGetEntityById(blockBuilder.BlockEntityId, out var block))
-                        blockBuilder.BlockEntityId = CalculateDisplayNameTextChecksum(utf8, sha1, block);
+                        blockBuilder.BlockEntityId = CalculateDisplayNameTextChecksum(
+                            utf8,
+                            sha1,
+                            block
+                        );
                     break;
 
                 case MyObjectBuilder_ToolbarItemTerminalGroup groupBuilder:
@@ -230,7 +226,11 @@ public class Toolbar
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long CalculateDisplayNameTextChecksum(Encoding encoding, HashAlgorithm hashAlgorithm, MyEntity block)
+    private static long CalculateDisplayNameTextChecksum(
+        Encoding encoding,
+        HashAlgorithm hashAlgorithm,
+        MyEntity block
+    )
     {
         var sha1Hash = hashAlgorithm.ComputeHash(encoding.GetBytes(block.DisplayNameText));
         var checksum = -Math.Abs(BitConverter.ToInt64(sha1Hash, 0));

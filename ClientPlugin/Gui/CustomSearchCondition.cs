@@ -6,14 +6,14 @@ using Sandbox.Game.Gui;
 using Sandbox.Game.Screens;
 using VRage.Game;
 
-
 namespace ClientPlugin.Gui;
 
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public class CustomSearchCondition : IMySearchCondition
 {
     private string searchText = "";
-    private readonly HashSet<MyCubeBlockDefinitionGroup> sortedBlocks = new HashSet<MyCubeBlockDefinitionGroup>();
+    private readonly HashSet<MyCubeBlockDefinitionGroup> sortedBlocks =
+        new HashSet<MyCubeBlockDefinitionGroup>();
 
     public string SearchName
     {
@@ -36,10 +36,12 @@ public class CustomSearchCondition : IMySearchCondition
     public HashSet<MyCubeBlockDefinitionGroup> GetSortedBlocks() => sortedBlocks;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MatchesCondition(MyDefinitionBase definition) => MatchesCondition(definition?.DisplayNameText);
+    public bool MatchesCondition(MyDefinitionBase definition) =>
+        MatchesCondition(definition?.DisplayNameText);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddDefinitionGroup(MyCubeBlockDefinitionGroup definitionGroup) => sortedBlocks.Add(definitionGroup);
+    public void AddDefinitionGroup(MyCubeBlockDefinitionGroup definitionGroup) =>
+        sortedBlocks.Add(definitionGroup);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MatchesCondition(string name)

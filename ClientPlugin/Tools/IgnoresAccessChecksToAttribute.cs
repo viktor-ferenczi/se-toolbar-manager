@@ -4,7 +4,7 @@
 #if !LOCAL_BUILD
 
 namespace System.Runtime.CompilerServices;
-    
+
 // This code is required in "production" when Pulsar builds the plugin
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 public sealed class IgnoresAccessChecksToAttribute : Attribute
