@@ -1,12 +1,11 @@
-﻿using ClientPlugin.Settings.Elements;
-using ClientPlugin.Settings.Layouts;
-using Sandbox.Graphics.GUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using ClientPlugin.Settings.Elements;
+using ClientPlugin.Settings.Layouts;
+using Sandbox.Graphics.GUI;
 
 namespace ClientPlugin.Settings;
 
@@ -36,7 +35,9 @@ internal class SettingsGenerator
     {
         // Reconstruct the type
         Type[] methodArgs = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-        Type type = Expression.GetDelegateType(methodArgs.Concat(new[] { methodInfo.ReturnType }).ToArray());
+        Type type = Expression.GetDelegateType(
+            methodArgs.Concat(new[] { methodInfo.ReturnType }).ToArray()
+        );
 
         // Create a delegate
         return Delegate.CreateDelegate(type, null, methodInfo);
@@ -46,7 +47,7 @@ internal class SettingsGenerator
     {
         attributes = ExtractAttributes();
         Name = Config.Current.Title;
-        ActiveLayout = new None(()=>controls);
+        ActiveLayout = new None(() => controls);
         Dialog = new SettingsScreen(Name, OnRecreateControls, size: ActiveLayout.SettingsPanelSize);
     }
 
@@ -58,9 +59,11 @@ internal class SettingsGenerator
         return controlsToRecreate;
     }
 
-    public void SetLayout<T>() where T : Layout
+    public void SetLayout<T>()
+        where T : Layout
     {
-        ActiveLayout = (T)Activator.CreateInstance(typeof(T), (Func<List<List<Control>>>)(() => controls));
+        ActiveLayout = (T)
+            Activator.CreateInstance(typeof(T), (Func<List<List<Control>>>)(() => controls));
         Dialog.UpdateSize(ActiveLayout.SettingsPanelSize);
     }
 
@@ -94,8 +97,9 @@ internal class SettingsGenerator
                     {
                         throw new Exception(
                             $"Element {element.GetType().Name} for {name} expects "
-                            + $"{string.Join("/", element.SupportedTypes)} but "
-                            + $"recieved {propertyInfo.PropertyType.FullName}");
+                                + $"{string.Join("/", element.SupportedTypes)} but "
+                                + $"recieved {propertyInfo.PropertyType.FullName}"
+                        );
                     }
 
                     var info = new AttributeInfo()
@@ -103,7 +107,7 @@ internal class SettingsGenerator
                         ElementType = element,
                         Name = name,
                         Getter = Getter,
-                        Setter = Setter
+                        Setter = Setter,
                     };
                     config.Add(info);
                 }
@@ -128,8 +132,9 @@ internal class SettingsGenerator
                     {
                         throw new Exception(
                             $"Element {element.GetType().Name} for {name} expects "
-                            + $"{string.Join("/", element.SupportedTypes)} but "
-                            + $"recieved {typeof(Delegate).FullName}");
+                                + $"{string.Join("/", element.SupportedTypes)} but "
+                                + $"recieved {typeof(Delegate).FullName}"
+                        );
                     }
 
                     var info = new AttributeInfo()
@@ -137,7 +142,7 @@ internal class SettingsGenerator
                         ElementType = element,
                         Name = name,
                         Getter = () => method,
-                        Setter = null
+                        Setter = null,
                     };
                     config.Add(info);
                 }

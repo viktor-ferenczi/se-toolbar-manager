@@ -11,14 +11,17 @@ namespace ClientPlugin.Patches;
 public static class MyGuiControlToolbarPatch
 {
     private static Config Cfg => Config.Current;
-    
+
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MyGuiControlToolbar.HandleDragAndDrop))]
-    private static bool HandleDragAndDropPrefix(MyGuiControlToolbar __instance, MyDragAndDropEventArgs eventArgs)
+    private static bool HandleDragAndDropPrefix(
+        MyGuiControlToolbar __instance,
+        MyDragAndDropEventArgs eventArgs
+    )
     {
         if (!Cfg.EnableStagingArea)
             return true;
-        
+
         // Prevent clearing the toolbar slot on cancelling drag&drop by releasing the mouse outside the toolbar
         if (eventArgs.DropTo == null || !__instance.IsToolbarGrid(eventArgs.DropTo.Grid))
             return false;

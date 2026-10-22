@@ -10,25 +10,38 @@ using VRage.Game;
 using VRage.Input;
 using VRageMath;
 
-
 namespace ClientPlugin.Gui;
 
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public class CustomToolbarConfigScreen : MyGuiScreenCubeBuilder
 {
-    private static readonly MethodInfo SearchItemTextboxTextChangedMethod = AccessTools.Method(typeof(MyGuiScreenToolbarConfigBase), "OnSearchItemTexboxTextChanged");
-    private static readonly FieldInfo FramesBeforeSearchEnabledField = AccessTools.Field(typeof(MyGuiScreenToolbarConfigBase), "m_framesBeforeSearchEnabled");
+    private static readonly MethodInfo SearchItemTextboxTextChangedMethod = AccessTools.Method(
+        typeof(MyGuiScreenToolbarConfigBase),
+        "OnSearchItemTexboxTextChanged"
+    );
+    private static readonly FieldInfo FramesBeforeSearchEnabledField = AccessTools.Field(
+        typeof(MyGuiScreenToolbarConfigBase),
+        "m_framesBeforeSearchEnabled"
+    );
 
     private readonly CustomSearchCondition customSearchCondition = new CustomSearchCondition();
     private MyGuiControlLabel searchInfoLabel;
 
-    public CustomToolbarConfigScreen(int scrollOffset = 0, MyCubeBlock owner = null, int? gamepadSlot = null) : base(scrollOffset, owner, gamepadSlot)
-    {
-    }
+    public CustomToolbarConfigScreen(
+        int scrollOffset = 0,
+        MyCubeBlock owner = null,
+        int? gamepadSlot = null
+    )
+        : base(scrollOffset, owner, gamepadSlot) { }
 
-    public CustomToolbarConfigScreen(int scrollOffset, MyCubeBlock owner, string selectedPage, bool hideOtherPages, int? gamepadSlot = null) : base(scrollOffset, owner, selectedPage, hideOtherPages, gamepadSlot)
-    {
-    }
+    public CustomToolbarConfigScreen(
+        int scrollOffset,
+        MyCubeBlock owner,
+        string selectedPage,
+        bool hideOtherPages,
+        int? gamepadSlot = null
+    )
+        : base(scrollOffset, owner, selectedPage, hideOtherPages, gamepadSlot) { }
 
     protected override void OnClosed()
     {
@@ -135,11 +148,15 @@ public class CustomToolbarConfigScreen : MyGuiScreenCubeBuilder
         base.RecreateControls(contructor);
 
         searchInfoLabel = new MyGuiControlLabel(
-            new Vector2(m_searchBox.PositionX + m_searchBox.Size.X * 0.5f + 0.02f, m_searchBox.PositionY + 0.005f),
-            new Vector2(0.2f, m_searchBox.Size.Y))
+            new Vector2(
+                m_searchBox.PositionX + m_searchBox.Size.X * 0.5f + 0.02f,
+                m_searchBox.PositionY + 0.005f
+            ),
+            new Vector2(0.2f, m_searchBox.Size.Y)
+        )
         {
             Font = m_searchBox.TextBox.TextFont,
-            Text = "Quick Search Mode"
+            Text = "Quick Search Mode",
         };
 
         Controls.Add(searchInfoLabel);

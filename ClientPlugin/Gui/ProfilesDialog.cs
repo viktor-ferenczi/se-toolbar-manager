@@ -1,17 +1,16 @@
 using System;
 using System.Linq;
 using System.Text;
+using ClientPlugin.Extensions;
+using ClientPlugin.Logic;
 using LitJson;
 using Sandbox;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
-using ClientPlugin.Extensions;
-using ClientPlugin.Logic;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
-
 
 namespace ClientPlugin.Gui;
 
@@ -20,14 +19,25 @@ public class ProfilesDialog : MyGuiScreenDebugBase
 {
     private MyGuiControlTable profilesTable;
     private MyGuiControlSearchBox searchBox;
-    private MyGuiControlButton newButton, updateButton, loadButton, mergeButton, renameButton, deleteButton, closeButton;
+    private MyGuiControlButton newButton,
+        updateButton,
+        loadButton,
+        mergeButton,
+        renameButton,
+        deleteButton,
+        closeButton;
     private readonly int[] usedSlotCounts = new int[9];
     private readonly ProfileStorage storage;
 
     public override string GetFriendlyName() => "ProfilesDialog";
 
     public ProfilesDialog(MyToolbar currentToolbar)
-        : base(new Vector2(0.5f, 0.5f), new Vector2(1f, 0.8f), MyGuiConstants.SCREEN_BACKGROUND_COLOR * MySandboxGame.Config.UIBkOpacity, true)
+        : base(
+            new Vector2(0.5f, 0.5f),
+            new Vector2(1f, 0.8f),
+            MyGuiConstants.SCREEN_BACKGROUND_COLOR * MySandboxGame.Config.UIBkOpacity,
+            true
+        )
     {
         storage = new ProfileStorage(currentToolbar);
 
@@ -79,7 +89,9 @@ public class ProfilesDialog : MyGuiScreenDebugBase
             Position = profilesTable.Position + new Vector2(-0.45f, -0.036f),
             Size = new Vector2(0.35f, 0.032f),
             OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
-            SearchText = Config.Current.KeepProfileSearchText ? Config.Current.LatestProfileSearchText : ""
+            SearchText = Config.Current.KeepProfileSearchText
+                ? Config.Current.LatestProfileSearchText
+                : "",
         };
         searchBox.OnTextChanged += OnSearchTextChange;
 
@@ -130,7 +142,8 @@ public class ProfilesDialog : MyGuiScreenDebugBase
 
     private void UpdateButtons()
     {
-        var isProfileSelected = profilesTable.SelectedRowIndex != null && profilesTable.SelectedRow?.UserData != null;
+        var isProfileSelected =
+            profilesTable.SelectedRowIndex != null && profilesTable.SelectedRow?.UserData != null;
 
         newButton.Visible = !isProfileSelected;
         updateButton.Visible = isProfileSelected;
@@ -163,43 +176,50 @@ public class ProfilesDialog : MyGuiScreenDebugBase
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("New"),
-            onButtonClick: OnNew);
+            onButtonClick: OnNew
+        );
 
         updateButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Update"),
-            onButtonClick: OnUpdate);
+            onButtonClick: OnUpdate
+        );
 
         loadButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Load"),
-            onButtonClick: OnLoad);
+            onButtonClick: OnLoad
+        );
 
         mergeButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Merge"),
-            onButtonClick: OnMerge);
+            onButtonClick: OnMerge
+        );
 
         renameButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Rename"),
-            onButtonClick: OnRename);
+            onButtonClick: OnRename
+        );
 
         deleteButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Delete"),
-            onButtonClick: OnDelete);
+            onButtonClick: OnDelete
+        );
 
         closeButton = new MyGuiControlButton(
             visualStyle: MyGuiControlButtonStyleEnum.Small,
             originAlign: MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
             text: new StringBuilder("Close"),
-            onButtonClick: OnClose);
+            onButtonClick: OnClose
+        );
 
         var y = 0.5f * (DialogSize.Y - 0.15f);
 
@@ -242,17 +262,29 @@ public class ProfilesDialog : MyGuiScreenDebugBase
             defaultName = $"{searchBox.SearchText.Trim()} ";
         }
 
-        MyGuiSandbox.AddScreen(new NameDialog(SaveAsNewProfile, "Save as new toolbar", defaultName, moveCursorToEnd: true));
+        MyGuiSandbox.AddScreen(
+            new NameDialog(
+                SaveAsNewProfile,
+                "Save as new toolbar",
+                defaultName,
+                moveCursorToEnd: true
+            )
+        );
     }
 
     private void OnUpdate(MyGuiControlButton obj)
     {
         var name = SelectedName;
         MyGuiSandbox.AddScreen(
-            MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO,
-                messageText: new StringBuilder($"Are you sure to update this saved toolbar?\r\n\r\n{name}"),
+            MyGuiSandbox.CreateMessageBox(
+                buttonType: MyMessageBoxButtonsType.YES_NO,
+                messageText: new StringBuilder(
+                    $"Are you sure to update this saved toolbar?\r\n\r\n{name}"
+                ),
                 messageCaption: new StringBuilder("Confirmation"),
-                callback: result => OnSaveConfirmation(result, name)));
+                callback: result => OnSaveConfirmation(result, name)
+            )
+        );
     }
 
     private void OnLoad(MyGuiControlButton button)
@@ -273,7 +305,13 @@ public class ProfilesDialog : MyGuiScreenDebugBase
         if (oldName == "")
             return;
 
-        MyGuiSandbox.AddScreen(new NameDialog(newName => OnNewNameSpecified(oldName, newName), "Rename saved toolbar", oldName));
+        MyGuiSandbox.AddScreen(
+            new NameDialog(
+                newName => OnNewNameSpecified(oldName, newName),
+                "Rename saved toolbar",
+                oldName
+            )
+        );
     }
 
     private void OnDelete(MyGuiControlButton _)
@@ -283,10 +321,15 @@ public class ProfilesDialog : MyGuiScreenDebugBase
             return;
 
         MyGuiSandbox.AddScreen(
-            MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO,
-                messageText: new StringBuilder($"Are you sure to delete this saved toolbar?\r\n\r\n{name}"),
+            MyGuiSandbox.CreateMessageBox(
+                buttonType: MyMessageBoxButtonsType.YES_NO,
+                messageText: new StringBuilder(
+                    $"Are you sure to delete this saved toolbar?\r\n\r\n{name}"
+                ),
                 messageCaption: new StringBuilder("Confirmation"),
-                callback: result => OnDeleteForSure(result, name)));
+                callback: result => OnDeleteForSure(result, name)
+            )
+        );
     }
 
     private void OnClose(MyGuiControlButton button)
@@ -298,8 +341,8 @@ public class ProfilesDialog : MyGuiScreenDebugBase
     {
         profilesTable.Clear();
 
-        var pattern = searchBox.SearchText?
-            .ToLower()
+        var pattern = searchBox
+            .SearchText?.ToLower()
             .Split(' ')
             .Where(part => part.Length != 0)
             .ToArray();
@@ -336,7 +379,9 @@ public class ProfilesDialog : MyGuiScreenDebugBase
         row.AddCell(new MyGuiControlTable.Cell(name));
 
         for (var i = 0; i < 9; i++)
-            row.AddCell(new MyGuiControlTable.Cell(usedSlotCounts[i] > 0 ? $"{usedSlotCounts[i]}" : "-"));
+            row.AddCell(
+                new MyGuiControlTable.Cell(usedSlotCounts[i] > 0 ? $"{usedSlotCounts[i]}" : "-")
+            );
 
         profilesTable.Add(row);
     }
@@ -374,10 +419,15 @@ public class ProfilesDialog : MyGuiScreenDebugBase
         if (storage.HasProfile(newName) && !oldName.EqualsIgnoreCase(newName))
         {
             MyGuiSandbox.AddScreen(
-                MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO,
-                    messageText: new StringBuilder($"Are you sure to overwrite this saved toolbar?\r\n\r\n{newName}"),
+                MyGuiSandbox.CreateMessageBox(
+                    buttonType: MyMessageBoxButtonsType.YES_NO,
+                    messageText: new StringBuilder(
+                        $"Are you sure to overwrite this saved toolbar?\r\n\r\n{newName}"
+                    ),
                     messageCaption: new StringBuilder("Confirmation"),
-                    callback: result => OnRenameConfirmation(result, oldName, newName)));
+                    callback: result => OnRenameConfirmation(result, oldName, newName)
+                )
+            );
         }
         else
         {
@@ -385,7 +435,11 @@ public class ProfilesDialog : MyGuiScreenDebugBase
         }
     }
 
-    private void OnRenameConfirmation(MyGuiScreenMessageBox.ResultEnum result, string oldName, string newName)
+    private void OnRenameConfirmation(
+        MyGuiScreenMessageBox.ResultEnum result,
+        string oldName,
+        string newName
+    )
     {
         if (result != MyGuiScreenMessageBox.ResultEnum.YES)
             return;
@@ -414,10 +468,15 @@ public class ProfilesDialog : MyGuiScreenDebugBase
         if (storage.HasProfile(name))
         {
             MyGuiSandbox.AddScreen(
-                MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.YES_NO,
-                    messageText: new StringBuilder($"Are you sure to overwrite this saved toolbar?\r\n\r\n{name}"),
+                MyGuiSandbox.CreateMessageBox(
+                    buttonType: MyMessageBoxButtonsType.YES_NO,
+                    messageText: new StringBuilder(
+                        $"Are you sure to overwrite this saved toolbar?\r\n\r\n{name}"
+                    ),
                     messageCaption: new StringBuilder("Confirmation"),
-                    callback: result => OnSaveConfirmation(result, name)));
+                    callback: result => OnSaveConfirmation(result, name)
+                )
+            );
         }
         else
         {

@@ -4,11 +4,12 @@
     <RootNamespace>ClientPlugin</RootNamespace>
     <AssemblyName>ToolbarManager</AssemblyName>
     <LangVersion>14</LangVersion>
-      
+
     <!-- Target platforms on Windows and Linux -->
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net48;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))"
+      >net48;net10.0</TargetFrameworks>
     <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFramework>
-      
+
     <!-- Ensure SDK generates assembly attributes (no need for AssemblyInfo) -->
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 
@@ -252,19 +253,35 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Publicize Include="Sandbox.Game" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false" />
-    <Publicize Include="Sandbox.Graphics" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false" />
+    <Publicize
+      Include="Sandbox.Game"
+      IncludeCompilerGeneratedMembers="false"
+      IncludeVirtualMembers="false"
+    />
+    <Publicize
+      Include="Sandbox.Graphics"
+      IncludeCompilerGeneratedMembers="false"
+      IncludeVirtualMembers="false"
+    />
   </ItemGroup>
 
   <Target Name="ValidateProps" BeforeTargets="PrepareForBuild">
-    <Error Condition="'$(Bin64)' == ''"
-           Text="Could not locate the Space Engineers Bin64 folder. Set &lt;Bin64&gt; in &quot;$(RepoRoot)Directory.Build.props.user&quot;." />
-    <Error Condition="!Exists('$(Bin64)')"
-           Text="Invalid Bin64 path &quot;$(Bin64)&quot; in &quot;$(RepoRoot)Directory.Build.props[.user]&quot;." />
-    <Message Condition="'$(Pulsar)' == ''"
-             Text="Pulsar is not set, the plugin will not be deployed." />
-    <Warning Condition="'$(Pulsar)' != '' And !Exists('$(Pulsar)')"
-             Text="Pulsar folder &quot;$(Pulsar)&quot; does not exist, the plugin will not be deployed." />
+    <Error
+      Condition="'$(Bin64)' == ''"
+      Text="Could not locate the Space Engineers Bin64 folder. Set &lt;Bin64&gt; in &quot;$(RepoRoot)Directory.Build.props.user&quot;."
+    />
+    <Error
+      Condition="!Exists('$(Bin64)')"
+      Text="Invalid Bin64 path &quot;$(Bin64)&quot; in &quot;$(RepoRoot)Directory.Build.props[.user]&quot;."
+    />
+    <Message
+      Condition="'$(Pulsar)' == ''"
+      Text="Pulsar is not set, the plugin will not be deployed."
+    />
+    <Warning
+      Condition="'$(Pulsar)' != '' And !Exists('$(Pulsar)')"
+      Text="Pulsar folder &quot;$(Pulsar)&quot; does not exist, the plugin will not be deployed."
+    />
   </Target>
 
   <!-- Copies the build output into Pulsar's Local plugin folder, but only if the Pulsar
@@ -274,33 +291,57 @@
        Each build lands in its own subfolder as plugin.dll next to the plugin.xml
        metadata, so Pulsar picks up the friendly name and the runtime restrictions.
        (Pulsar/Modern belongs to Space Engineers 2 and is never a target here.) -->
-  <Target Name="DeployPlugin" AfterTargets="Build"
-          Condition="'$(RunPostBuildEvent)' != 'Never' And '$(TargetFramework)' != '' And Exists('$(Pulsar)')">
+  <Target
+    Name="DeployPlugin"
+    AfterTargets="Build"
+    Condition="'$(RunPostBuildEvent)' != 'Never' And '$(TargetFramework)' != '' And Exists('$(Pulsar)')"
+  >
     <PropertyGroup>
       <PulsarEdition Condition="$(TargetFramework.StartsWith('net4'))">Legacy</PulsarEdition>
-      <PulsarEdition Condition="'$(PulsarEdition)' == '' And Exists('$(Pulsar)$(PathSeparator)Interim')">Interim</PulsarEdition>
+      <PulsarEdition
+        Condition="'$(PulsarEdition)' == '' And Exists('$(Pulsar)$(PathSeparator)Interim')"
+        >Interim</PulsarEdition>
       <!-- Without its own data folder the Interim launcher falls back to the Legacy one.
            Deploy there only if no .NET Framework build is claiming the same folder. -->
-      <PulsarEdition Condition="'$(PulsarEdition)' == '' And '$(TargetFrameworks)' == ''">Legacy</PulsarEdition>
+      <PulsarEdition Condition="'$(PulsarEdition)' == '' And '$(TargetFrameworks)' == ''"
+        >Legacy</PulsarEdition>
 
-      <PulsarEditionDir Condition="'$(PulsarEdition)' != ''">$(Pulsar)$(PathSeparator)$(PulsarEdition)</PulsarEditionDir>
-      <PulsarEdition Condition="'$(PulsarEditionDir)' != '' And !Exists('$(PulsarEditionDir)')"></PulsarEdition>
+      <PulsarEditionDir Condition="'$(PulsarEdition)' != ''"
+        >$(Pulsar)$(PathSeparator)$(PulsarEdition)</PulsarEditionDir>
+      <PulsarEdition
+        Condition="'$(PulsarEditionDir)' != '' And !Exists('$(PulsarEditionDir)')"
+      ></PulsarEdition>
 
-      <PluginDirectory Condition="'$(PulsarEdition)' != ''">$(PulsarEditionDir)$(PathSeparator)Local$(PathSeparator)$(AssemblyName)</PluginDirectory>
+      <PluginDirectory Condition="'$(PulsarEdition)' != ''"
+        >$(PulsarEditionDir)$(PathSeparator)Local$(PathSeparator)$(AssemblyName)</PluginDirectory>
       <PluginDataFile>$(RepoRoot)$(AssemblyName).xml</PluginDataFile>
     </PropertyGroup>
 
-    <Warning Condition="'$(PluginDirectory)' == ''"
-             Text="No Pulsar plugin folder for the $(TargetFramework) build under &quot;$(Pulsar)&quot;, skipping its deployment." />
+    <Warning
+      Condition="'$(PluginDirectory)' == ''"
+      Text="No Pulsar plugin folder for the $(TargetFramework) build under &quot;$(Pulsar)&quot;, skipping its deployment."
+    />
 
     <MakeDir Condition="'$(PluginDirectory)' != ''" Directories="$(PluginDirectory)" />
-    <Copy Condition="'$(PluginDirectory)' != ''"
-          SourceFiles="$(TargetPath)" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.dll" />
-    <Copy Condition="'$(PluginDirectory)' != '' And Exists('$(TargetDir)$(TargetName).pdb')"
-          SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.pdb" />
-    <Copy Condition="'$(PluginDirectory)' != '' And Exists('$(PluginDataFile)')"
-          SourceFiles="$(PluginDataFile)" DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.xml" />
-    <Message Condition="'$(PluginDirectory)' != ''" Importance="high"
-             Text="Deployed the $(TargetFramework) build to &quot;$(PluginDirectory)&quot;" />
+    <Copy
+      Condition="'$(PluginDirectory)' != ''"
+      SourceFiles="$(TargetPath)"
+      DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.dll"
+    />
+    <Copy
+      Condition="'$(PluginDirectory)' != '' And Exists('$(TargetDir)$(TargetName).pdb')"
+      SourceFiles="$(TargetDir)$(TargetName).pdb"
+      DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.pdb"
+    />
+    <Copy
+      Condition="'$(PluginDirectory)' != '' And Exists('$(PluginDataFile)')"
+      SourceFiles="$(PluginDataFile)"
+      DestinationFiles="$(PluginDirectory)$(PathSeparator)plugin.xml"
+    />
+    <Message
+      Condition="'$(PluginDirectory)' != ''"
+      Importance="high"
+      Text="Deployed the $(TargetFramework) build to &quot;$(PluginDirectory)&quot;"
+    />
   </Target>
 </Project>

@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using ClientPlugin.Gui;
 using HarmonyLib;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
-using ClientPlugin.Gui;
 using VRage.Game;
 using VRage.Input;
 
@@ -41,7 +41,12 @@ public static class MyGuiScreenGamePlayPatch
 
     public static CustomToolbarConfigScreen OpenCubeBuilder()
     {
-        if (!(MyGuiSandbox.CreateScreen(typeof(CustomToolbarConfigScreen), 0, null, null) is CustomToolbarConfigScreen dialog))
+        if (
+            !(
+                MyGuiSandbox.CreateScreen(typeof(CustomToolbarConfigScreen), 0, null, null)
+                is CustomToolbarConfigScreen dialog
+            )
+        )
             return null;
 
         MyGuiScreenGamePlay.ActiveGameplayScreen = dialog;

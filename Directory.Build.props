@@ -16,8 +16,10 @@
        Copy the first PropertyGroup of this file into Directory.Build.props.user,
        wrapped into a top-level Project element, and fill in your local paths there.
        Running setup.py writes that file for you. -->
-  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
-          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
+  <Import
+    Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
+    Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')"
+  />
 
   <!-- Repository root (this file lives in it). Used instead of $(SolutionDir), so it
        resolves whether the build is driven from the solution or a single project.
@@ -29,41 +31,54 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <SteamPath Condition="'$(SteamPath)' == ''">$(registry:HKEY_CURRENT_USER\SOFTWARE\Valve\Steam@SteamPath)</SteamPath>
+    <SteamPath Condition="'$(SteamPath)' == ''"
+      >$(registry:HKEY_CURRENT_USER\SOFTWARE\Valve\Steam@SteamPath)</SteamPath>
 
     <!-- Steam fills in InstallLocation for game apps (244850) only, it is left empty
          for tool apps like the Dedicated Server (298740). -->
-    <SteamGameDir Condition="'$(SteamGameDir)' == ''">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244850@InstallLocation)</SteamGameDir>
+    <SteamGameDir Condition="'$(SteamGameDir)' == ''"
+      >$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244850@InstallLocation)</SteamGameDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Windows')) and '$(HOME)' != ''">
-    <SteamPath Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.steam/steam/steamapps')">$(HOME)/.steam/steam</SteamPath>
-    <SteamPath Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.local/share/Steam/steamapps')">$(HOME)/.local/share/Steam</SteamPath>
-    <SteamPath Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps')">$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam</SteamPath>
+    <SteamPath Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.steam/steam/steamapps')"
+      >$(HOME)/.steam/steam</SteamPath>
+    <SteamPath Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.local/share/Steam/steamapps')"
+      >$(HOME)/.local/share/Steam</SteamPath>
+    <SteamPath
+      Condition="'$(SteamPath)' == '' and Exists('$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps')"
+      >$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam</SteamPath>
   </PropertyGroup>
 
   <!-- Locate the Steam library folder holding the game, so non-default libraries work too -->
   <PropertyGroup>
-    <SteamLibVdf Condition="'$(SteamPath)' != ''">$(SteamPath)/steamapps/libraryfolders.vdf</SteamLibVdf>
-    <SteamLibVdfText Condition="'$(SteamLibVdf)' != '' and Exists('$(SteamLibVdf)')">$([System.IO.File]::ReadAllText('$(SteamLibVdf)'))</SteamLibVdfText>
+    <SteamLibVdf Condition="'$(SteamPath)' != ''"
+      >$(SteamPath)/steamapps/libraryfolders.vdf</SteamLibVdf>
+    <SteamLibVdfText Condition="'$(SteamLibVdf)' != '' and Exists('$(SteamLibVdf)')"
+      >$([System.IO.File]::ReadAllText('$(SteamLibVdf)'))</SteamLibVdfText>
 
     <!-- Captures the "path" of the library block which lists the given app ID -->
     <SteamLibRx>(?s)^.*?&quot;path&quot;\s+&quot;([^&quot;]*)&quot;(?:(?!&quot;path&quot;).)*?&quot;</SteamLibRx>
     <SteamGameLibRx>$(SteamLibRx)244850&quot;.*$</SteamGameLibRx>
 
-    <SteamGameDir Condition="'$(SteamGameDir)' == '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(SteamLibVdfText)', '$(SteamGameLibRx)'))">$([System.Text.RegularExpressions.Regex]::Replace('$(SteamLibVdfText)', '$(SteamGameLibRx)', '$1'))/steamapps/common/SpaceEngineers</SteamGameDir>
+    <SteamGameDir
+      Condition="'$(SteamGameDir)' == '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(SteamLibVdfText)', '$(SteamGameLibRx)'))"
+      >$([System.Text.RegularExpressions.Regex]::Replace('$(SteamLibVdfText)', '$(SteamGameLibRx)', '$1'))/steamapps/common/SpaceEngineers</SteamGameDir>
 
-    <Bin64 Condition="'$(Bin64)' == '' and '$(SteamGameDir)' != ''">$([System.IO.Path]::GetFullPath('$(SteamGameDir)/Bin64'))</Bin64>
+    <Bin64 Condition="'$(Bin64)' == '' and '$(SteamGameDir)' != ''"
+      >$([System.IO.Path]::GetFullPath('$(SteamGameDir)/Bin64'))</Bin64>
   </PropertyGroup>
 
   <!-- Last resort: default Steam library layout (also covers SteamCMD installs) -->
   <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Windows')) and '$(HOME)' != ''">
-    <Bin64 Condition="'$(Bin64)' == ''">$(HOME)/.steam/steam/steamapps/common/SpaceEngineers/Bin64</Bin64>
+    <Bin64 Condition="'$(Bin64)' == ''"
+      >$(HOME)/.steam/steam/steamapps/common/SpaceEngineers/Bin64</Bin64>
   </PropertyGroup>
 
   <!-- Bin64 with a trailing directory separator, for use in HintPath -->
   <PropertyGroup>
     <Bin64Dir>$(Bin64)</Bin64Dir>
-    <Bin64Dir Condition="'$(Bin64Dir)' != '' and !HasTrailingSlash('$(Bin64Dir)')">$(Bin64Dir)$(PathSeparator)</Bin64Dir>
+    <Bin64Dir Condition="'$(Bin64Dir)' != '' and !HasTrailingSlash('$(Bin64Dir)')"
+      >$(Bin64Dir)$(PathSeparator)</Bin64Dir>
   </PropertyGroup>
 </Project>
