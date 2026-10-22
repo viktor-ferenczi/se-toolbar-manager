@@ -184,10 +184,14 @@ def ensure_pulsar(c: Client) -> None:
 
 
 def write_configs(c: Client) -> None:
-    """Remote's port, experimental mode for the test world, and no Toolbar Manager
-    config, so the plugin starts with its defaults"""
+    """Remote settings, experimental mode, and optional staging override for tests."""
     c.appdata.mkdir(parents=True, exist_ok=True)
     c.config.unlink(missing_ok=True)
+    if os.environ.get("TBM_STAGING_DISABLED") == "1":
+        c.config.parent.mkdir(parents=True, exist_ok=True)
+        c.config.write_text(
+            "<Config><EnableStagingArea>false</EnableStagingArea></Config>"
+        )
     (c.appdata / "Remote.cfg").write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<PluginConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '

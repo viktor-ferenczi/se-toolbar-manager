@@ -102,8 +102,8 @@ staging area shows the items of the group selected above it:
 - **Reset default** restores or recreates the default **Hand Tools** group without
   changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
   grinder and hand drill, in that order.
-- **Done** brings the staging area back. **TG** opens the editor and keeps it open
-  if it is already open.
+- **Done** or **TG** again brings the staging area back. The group editor is also
+  available when staging is disabled; closing it returns to the normal G menu.
 
 The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
 you are in a world.
@@ -258,6 +258,9 @@ test slot of the workspace, see `tests/rig.py`:
 ```bash
 TBM_SLOT=15 python tests/item_groups_check.py
 ```
+
+`tests/editor_modes_check.py` checks TG, Done, tile selection and editing with staging
+enabled and disabled, using the same test slot.
 
 ### Release
 

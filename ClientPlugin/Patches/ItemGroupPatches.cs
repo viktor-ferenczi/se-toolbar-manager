@@ -261,9 +261,13 @@ public static class ItemGroupsToolbarConfigPatch
             VisualStyle = MyGuiControlButtonStyleEnum.Square,
             Position = new Vector2(-0.405f, 0.425f),
         };
-        button.SetToolTip("Edit groups");
+        button.SetToolTip(
+            GroupEditor.IsEditing(__instance)
+                ? (Config.Current.EnableStagingArea ? "Return to staging" : "Close group editor")
+                : "Edit groups"
+        );
         button.Checked = GroupEditor.IsEditing(__instance);
-        button.ButtonClicked += _ => GroupEditor.Open(__instance);
+        button.ButtonClicked += _ => GroupEditor.Toggle(__instance);
         __instance.Controls.Add(button);
     }
 

@@ -130,7 +130,11 @@ public class GroupEditor
             Name = "GroupSelector",
             OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
         };
-        doneButton = CreateButton("Done", "Return to staging", _ => Toggle(screen));
+        doneButton = CreateButton(
+            "Done",
+            Config.Current.EnableStagingArea ? "Return to staging" : "Close group editor",
+            _ => Toggle(screen)
+        );
         newButton = CreateButton("New", "Create an empty group", OnNew);
         renameButton = CreateButton("Rename", "Rename this group", OnRename);
         duplicateButton = CreateButton(

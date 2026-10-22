@@ -505,7 +505,12 @@ def run(game: Game) -> None:
     selected = game.selected_group(screen)
     game.click(screen, "OpenItemGroupsButton")
     check(
-        "TG keeps the editor open and preserves the selected group",
+        "TG returns to the staging area",
+        not game.editing(screen) and "staging" in game.grids(screen),
+    )
+    game.click(screen, "OpenItemGroupsButton")
+    check(
+        "TG reopens the editor and preserves the selected group",
         game.editing(screen) and game.selected_group(screen) == selected,
     )
     buttons = [
