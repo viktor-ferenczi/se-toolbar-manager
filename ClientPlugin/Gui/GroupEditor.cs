@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using ClientPlugin.Extensions;
 using ClientPlugin.Logic;
 using ClientPlugin.Patches;
 using Sandbox.Definitions;
@@ -212,11 +213,7 @@ public class GroupEditor
     private static ItemGroup[] Groups
     {
         get => Config.Current.ItemGroups;
-        set
-        {
-            Config.Current.ItemGroups = value;
-            Config.Save();
-        }
+        set { Config.Current.ItemGroups = value; }
     }
 
     private static ItemGroup SelectedGroup => Config.Current.FindItemGroup(selectedGroupId);
@@ -391,7 +388,7 @@ public class GroupEditor
             new NameDialog(
                 name =>
                 {
-                    var group = ItemGroup.CreateNew(name.Trim());
+                    var group = ItemGroup.CreateNew(name.SanitizeFileName());
                     Groups = Groups.Append(group).ToArray();
                     selectedGroupId = group.Id;
                     RefreshGroups();
@@ -413,7 +410,7 @@ public class GroupEditor
             new NameDialog(
                 name =>
                 {
-                    group.Name = name.Trim();
+                    group.Name = name.SanitizeFileName();
                     Groups = Groups;
                     RefreshGroups();
                 },
@@ -426,12 +423,17 @@ public class GroupEditor
 
     private static string ValidateName(string name, ItemGroup renamedGroup = null)
     {
+        name = name.SanitizeFileName();
         if (string.IsNullOrWhiteSpace(name))
             return "Enter a group name.";
 
         return Groups.Any(group =>
             group != renamedGroup
-            && string.Equals(group.Name.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                group.Name.SanitizeFileName(),
+                name,
+                StringComparison.OrdinalIgnoreCase
+            )
         )
             ? "A group with this name already exists. Choose another name."
             : null;
@@ -447,7 +449,7 @@ public class GroupEditor
             new NameDialog(
                 name =>
                 {
-                    var copy = ItemGroup.CreateNew(name.Trim());
+                    var copy = ItemGroup.CreateNew(name.SanitizeFileName());
                     copy.Items = source.Items.ToArray();
                     Groups = Groups.Append(copy).ToArray();
                     selectedGroupId = copy.Id;

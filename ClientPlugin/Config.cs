@@ -1,16 +1,16 @@
-using ClientPlugin.Settings;
-using ClientPlugin.Settings.Elements;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using ClientPlugin.Gui;
 using ClientPlugin.Logic;
+using ClientPlugin.Settings;
+using ClientPlugin.Settings.Elements;
 using ClientPlugin.Settings.Tools;
 using Sandbox.Graphics.GUI;
 using VRage.Input;
-
 
 namespace ClientPlugin;
 
@@ -31,7 +31,7 @@ public class Config : INotifyPropertyChanged
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
 
-    private ItemGroup[] itemGroups = { ItemGroup.CreateDefault() };
+    private ItemGroup[] itemGroups;
 
     #endregion
 
@@ -39,10 +39,10 @@ public class Config : INotifyPropertyChanged
 
     public readonly string Title = "Toolbar Manager";
 
-    public const string StagingAreaDescription = "The staging area allows for the convenient reordering of toolbar items,\nincluding moving them between toolbar pages.\n\nThe staging areas are preserved for the character\nand each block with a toolbar in-memory during gameplay,\nbut NOT SAVED over sessions (world loads) and game restarts.\nPlease save your toolbars into profiles after editing.";
+    public const string StagingAreaDescription =
+        "The staging area allows for the convenient reordering of toolbar items,\nincluding moving them between toolbar pages.\n\nThe staging areas are preserved for the character\nand each block with a toolbar in-memory during gameplay,\nbut NOT SAVED over sessions (world loads) and game restarts.\nPlease save your toolbars into profiles after editing.";
 
     [Separator("Functionality")]
-
     [Checkbox(label: "Enable staging area", description: StagingAreaDescription)]
     public bool EnableStagingArea
     {
@@ -50,21 +50,34 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref enableStagingArea, value);
     }
 
-    [Slider(1f, 8f, 1f, SliderAttribute.SliderType.Integer, label: "Staging rows", description: "Number of rows visible in the staging area [1..8]")]
+    [Slider(
+        1f,
+        8f,
+        1f,
+        SliderAttribute.SliderType.Integer,
+        label: "Staging rows",
+        description: "Number of rows visible in the staging area [1..8]"
+    )]
     public int StagingAreaRowCount
     {
         get => stagingAreaRowCount;
         set => SetField(ref stagingAreaRowCount, value);
     }
 
-    [Checkbox(label: "Prevent overwriting slots", description: "Prevent overwriting the selected or first toolbar slot on double-clicking blocks")]
+    [Checkbox(
+        label: "Prevent overwriting slots",
+        description: "Prevent overwriting the selected or first toolbar slot on double-clicking blocks"
+    )]
     public bool PreventOverwritingSlots
     {
         get => preventOverwritingSlots;
         set => SetField(ref preventOverwritingSlots, value);
     }
 
-    [Checkbox(label: "Build cockpit is character", description: "Building from cockpit (Ctrl-G) uses the character profiles")]
+    [Checkbox(
+        label: "Build cockpit is character",
+        description: "Building from cockpit (Ctrl-G) uses the character profiles"
+    )]
     public bool UseCharacterProfilesForBuildCockpit
     {
         get => useCharacterProfilesForBuildCockpit;
@@ -72,7 +85,6 @@ public class Config : INotifyPropertyChanged
     }
 
     [Separator("Recent searches")]
-
     [Checkbox(description: "Keep the search text between subsequent uses of the block search")]
     public bool KeepBlockSearchText
     {
@@ -100,7 +112,6 @@ public class Config : INotifyPropertyChanged
     }
 
     [Separator("Hotkeys")]
-
     [Keybind(description: "Key to open the G menu and activate block search")]
     public Binding BlockSearchKey
     {
@@ -109,18 +120,22 @@ public class Config : INotifyPropertyChanged
     }
 
     [Separator("Groups")]
-
     [Button(label: "Edit groups", description: "Opens the G menu in group edit mode, in a world")]
     public static void EditItemGroups() => GroupEditor.OpenFromSettings();
 
-    // Edited in GroupEditor, which assigns a new array on every change
+    [XmlIgnore]
     public ItemGroup[] ItemGroups
     {
-        get => itemGroups;
-        set => SetField(ref itemGroups, value ?? Array.Empty<ItemGroup>());
+        get => itemGroups ?? (itemGroups = ItemGroupStorage.Load());
+        set
+        {
+            var groups = value ?? Array.Empty<ItemGroup>();
+            ItemGroupStorage.Save(groups);
+            itemGroups = groups;
+        }
     }
 
-    public ItemGroup FindItemGroup(string id) => itemGroups.FirstOrDefault(g => g.Id == id);
+    public ItemGroup FindItemGroup(string id) => ItemGroups.FirstOrDefault(g => g.Id == id);
 
     #endregion
 
@@ -143,7 +158,8 @@ public class Config : INotifyPropertyChanged
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return false;
         field = value;
         OnPropertyChanged(propertyName);
         return true;

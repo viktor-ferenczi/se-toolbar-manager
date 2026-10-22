@@ -97,6 +97,10 @@ class Client:
         return self.appdata / "Storage" / "ToolbarManager.cfg"
 
     @property
+    def groups(self) -> Path:
+        return self.appdata / "ToolbarManager" / "Groups"
+
+    @property
     def url(self) -> str:
         return f"http://127.0.0.1:{self.port}"
 
@@ -381,6 +385,8 @@ def load_world(api: RemoteAPI, world: Path) -> None:
 
 def start(c: Client, render: bool = True) -> RemoteAPI:
     """Starts the client and loads a fresh copy of the test world"""
+    if c.groups.exists():
+        shutil.rmtree(c.groups)
     launch(c, render)
     api = wait_api(c)
     load_world(api, prepare_world(c.world))

@@ -252,7 +252,7 @@ class Game:
         return "group" in self.grids(screen)
 
     def group_names(self, screen: int) -> list[str]:
-        """The groups as the selector lists them: in config order, which is saved on
+        """The groups as the selector lists them: in editor order, which is saved on
         every change. Remote shows only the selected key of a combobox."""
         return list(self.saved_groups())
 
@@ -327,11 +327,12 @@ class Game:
         self.grid_click(screen, "group", slot, "click", button="right")
 
     def saved_groups(self) -> dict[str, list[str]]:
-        """The groups in the plugin's config file, by name"""
-        root = ET.parse(self.client.config).getroot()
+        """The group files in editor order, by name."""
+        groups = [ET.parse(path).getroot() for path in self.client.groups.glob("*.xml")]
+        groups.sort(key=lambda group: int(group.findtext("Order", "0")))
         return {
             group.findtext("Name"): [item.text for item in group.iter("string")]
-            for group in root.iter("ItemGroup")
+            for group in groups
         }
 
     def exception_count(self) -> int:
@@ -360,6 +361,7 @@ def main() -> int:
     try:
         run(game)
         if not attach:
+            run_after_restart(game)
             run_without_plugin(client)
     except Exception as e:  # noqa: BLE001 -- report and fall through to the summary
         check("run completed", False, f"{type(e).__name__}: {e}")
@@ -411,6 +413,11 @@ def run(game: Game) -> None:
         and game.toolbar() == toolbar_before,
     )
     game.click(screen, "DoneGroupButton")
+    check(
+        "groups are individual files beside toolbar profile folders, outside the config",
+        (game.client.groups / "Hand Tools.xml").is_file()
+        and ET.parse(game.client.config).getroot().find("ItemGroups") is None,
+    )
     game.drag_group_to_toolbar(screen, "Hand Tools", 3)
     slot = game.toolbar().get(3, {})
     check(
@@ -569,7 +576,7 @@ def run(game: Game) -> None:
     )
     saved = game.saved_groups()
     check(
-        "groups saved to the config",
+        "groups saved to individual XML files",
         saved.get("Builder")
         == [
             f"{GUN}/HandDrill2Item",
@@ -585,7 +592,9 @@ def run(game: Game) -> None:
     game.name_dialog(screen, "RenameGroupButton", "Builder Kit")
     original = game.saved_groups()["Builder Kit"]
     game.retry_name(screen, "DuplicateGroupButton", " builder kit ", "Builder Copy")
-    definitions = ET.parse(game.client.config).getroot().findall(".//ItemGroup")
+    definitions = [
+        ET.parse(path).getroot() for path in game.client.groups.glob("*.xml")
+    ]
     ids = [group.findtext("Id") for group in definitions]
     check(
         "Duplicate copies the ordered items with a new id and selects the copy",
@@ -600,6 +609,27 @@ def run(game: Game) -> None:
         and game.saved_groups()["Builder Copy"] == original[1:],
     )
     game.delete_group(screen)
+    game.name_dialog(screen, "NewGroupButton", "Path/Group")
+    check(
+        "group names use toolbar filename sanitizing",
+        game.selected_group(screen) == "Path-Group"
+        and (game.client.groups / "Path-Group.xml").is_file(),
+    )
+    game.name_dialog(screen, "RenameGroupButton", "Path?Group")
+    check(
+        "renaming updates the filename and removes the old file",
+        (game.client.groups / "Path.Group.xml").is_file()
+        and not (game.client.groups / "Path-Group.xml").exists(),
+    )
+    game.retry_name(screen, "DuplicateGroupButton", "Path:Group", "Sanitized Copy")
+    game.delete_group(screen)
+    game.select_group(screen, "Path.Group")
+    game.delete_group(screen)
+    check(
+        "deleting groups removes their files",
+        not (game.client.groups / "Path.Group.xml").exists()
+        and not (game.client.groups / "Sanitized Copy.xml").exists(),
+    )
     game.name_dialog(screen, "NewGroupButton", "Scratch")
     game.click(screen, "DeleteGroupButton")
     box = game.wait_screen("MyGuiScreenMessageBox")
@@ -772,6 +802,33 @@ def run(game: Game) -> None:
         game.exception_count() == errors_before,
         f"{game.exception_count() - errors_before} new",
     )
+
+
+def run_after_restart(game: Game) -> None:
+    expected = game.saved_groups()
+    rig.stop(game.client)
+    rig.launch(game.client)
+    api = rig.wait_api(game.client)
+    rig.load_world(api, game.client.world)
+    restarted = Game(api, game.client)
+    screen = restarted.open_edit_mode()
+    check(
+        "group files reload after restarting the game",
+        restarted.saved_groups() == expected
+        and restarted.selected_group(screen) == "Hand Tools"
+        and len(restarted.group_items(screen)) == 12,
+    )
+    restarted.select_group(screen, "Builder Kit")
+    check(
+        "custom group order and items survive restart",
+        restarted.group_items(screen)
+        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Block"],
+    )
+    restarted.click(screen, "DoneGroupButton")
+    restarted.close_screen(TOOLBAR_CONFIG)
+    restarted.holster()
+    restarted.press_slot(4)
+    held_check(restarted, "group id survives restart", "HandDrill/HandDrill2")
 
 
 def run_without_plugin(client: rig.Client) -> None:

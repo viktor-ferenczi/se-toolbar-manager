@@ -20,6 +20,8 @@ public class ItemGroup
 
     public string Name = "";
 
+    public int Order;
+
     // Definition ids, like MyObjectBuilder_PhysicalGunObject/Welder4Item for a tool or
     // MyObjectBuilder_CubeBlock/LargeBlockArmorBlock for a block. The order decides which
     // of the equivalent items is picked first.

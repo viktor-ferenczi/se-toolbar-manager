@@ -108,7 +108,12 @@ staging area shows the items of the group selected above it:
 The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
 you are in a world.
 
-The groups are saved in the plugin's configuration. Toolbar slots holding a group are saved
+Each group is saved as a separate XML file in `ToolbarManager/Groups` under the game's
+user data folder, beside the `Character`, `Ship` and other toolbar profile folders.
+Group names use the same filename sanitizing rules as toolbar profile names. Renaming
+or deleting a group renames or removes its file.
+
+Toolbar slots holding a group are saved
 with the world and in toolbar profiles. A world saved with group slots still loads without
 the plugin; those slots are just empty then. On a dedicated server the server does not keep
 group slots, so you have to put them back after reconnecting.
