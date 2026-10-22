@@ -68,7 +68,11 @@ public static class MyGuiScreenToolbarConfigBasePatch
         // The profiles button above works without the staging area, everything below is part of it.
         // The gamepad version of this screen binds a single gamepad slot and hides the toolbar
         // while the gamepad is in use, so there is nothing to stage there.
-        if (!Cfg.EnableStagingArea || __instance.m_gamepadSlot.HasValue)
+        // The group editor takes the place of the staging area while editing groups.
+        var editor = GroupEditor.IsEditing(__instance)
+            ? new GroupEditor(__instance, __instance.m_gridBlocks.ColorMask)
+            : null;
+        if ((!Cfg.EnableStagingArea && editor == null) || __instance.m_gamepadSlot.HasValue)
             return;
 
         // Allow for drag&drop reordering of toolbar items on the currently selected toolbar page
@@ -103,9 +107,13 @@ public static class MyGuiScreenToolbarConfigBasePatch
             __instance.m_toolbarControl?.m_shownToolbar?.Owner?.EntityId
             ?? __instance.m_character?.EntityId
             ?? 0;
-        var stagingGrid = StagingAreas.TryGetValue(entityId, out var existingArea)
-            ? existingArea
-            : StagingAreas[entityId] = new MyGuiControlGrid();
+        var stagingGrid =
+            editor?.Grid
+            ?? (
+                StagingAreas.TryGetValue(entityId, out var existingArea)
+                    ? existingArea
+                    : StagingAreas[entityId] = new MyGuiControlGrid()
+            );
         if (stagingGrid.VisualStyle != MyGuiControlGridStyleEnum.Toolbar)
         {
             stagingGrid.VisualStyle = MyGuiControlGridStyleEnum.Toolbar;
@@ -134,7 +142,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
             stagingGrid.ItemStep.Y * Cfg.StagingAreaRowCount
             + stagingPanel.ScrolledAreaPadding.VerticalSum
             + stagingGrid.m_styleDef.ItemMargin.Bottom;
-        var stagingLabelHeight = toolbarLabel.Size.Y;
+        var stagingLabelHeight = editor?.HeaderHeight ?? toolbarLabel.Size.Y;
         // Keep at least one complete block row accessible at the largest setting.
         stagingHeight = Math.Min(
             stagingHeight,
@@ -201,7 +209,8 @@ public static class MyGuiScreenToolbarConfigBasePatch
 
         toolbarLabel.Position += new Vector2(0f, 0.004f);
 
-        __instance.AddControl(stagingLabel);
+        if (editor == null)
+            __instance.AddControl(stagingLabel);
         __instance.AddControl(stagingPanel);
         __instance.AddControl(lineFill);
 
@@ -210,12 +219,21 @@ public static class MyGuiScreenToolbarConfigBasePatch
         __instance.Controls.m_controls.Remove(stagingPanel);
         var index = __instance.Controls.m_controls.FindIndex(c => c == toolbarLabel);
         __instance.Controls.m_controls.Insert(index, stagingPanel);
-        __instance.Controls.m_controls.Insert(index, stagingLabel);
+        if (editor == null)
+            __instance.Controls.m_controls.Insert(index, stagingLabel);
 
         // The upsell panel lives on the blocks tab page, which is drawn before any
         // screen level control, so the fill has to go first to stay behind it.
         __instance.Controls.m_controls.Remove(lineFill);
         __instance.Controls.m_controls.Insert(0, lineFill);
+
+        if (editor != null)
+        {
+            // The header takes the line of the staging label and the DLC link
+            __instance.m_upsalePanel.Visible = false;
+            editor.AddHeader(stagingLabelTopLeft, panelWidth);
+            return;
+        }
 
         LayoutDlcUpsell(__instance, stagingLabel);
 
@@ -231,6 +249,12 @@ public static class MyGuiScreenToolbarConfigBasePatch
     [HarmonyPatch("ShowDlcUpsell")]
     private static bool ShowDlcUpsellPrefix(MyGuiScreenToolbarConfigBase __instance, string dlcName)
     {
+        if (GroupEditor.IsEditing(__instance))
+        {
+            __instance.m_upsalePanel.Visible = false;
+            return false;
+        }
+
         var stagingLabel =
             __instance.Controls.GetControlByName(StagingLabelName) as MyGuiControlLabel;
         if (stagingLabel == null)
@@ -573,8 +597,18 @@ public static class MyGuiScreenToolbarConfigBasePatch
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.AddGridItemToToolbar))]
-    private static bool AddGridItemToToolbarPrefix(MyGuiScreenToolbarConfigBase __instance)
+    private static bool AddGridItemToToolbarPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyObjectBuilder_ToolbarItem data
+    )
     {
+        // While editing groups a double click adds the item to the group, not to the toolbar
+        if (GroupEditor.IsEditing(__instance))
+        {
+            GroupEditor.Current?.Append(data);
+            return false;
+        }
+
         // The gamepad screen writes only its own gamepad slot, it never overwrites a toolbar slot
         if (!Cfg.PreventOverwritingSlots || __instance.m_gamepadSlot.HasValue)
             return true;

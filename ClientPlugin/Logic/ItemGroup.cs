@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Sandbox.Definitions;
-using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Screens.Helpers;
 using VRage.Game;
-using VRage.ObjectBuilders;
+using VRage.Game.Entity;
 
 namespace ClientPlugin.Logic;
 
-// A player defined group of hand items (tools, weapons), which goes on the character toolbar
-// as a single slot. Using it equips the first item of the group the character has.
+// A player defined group of tools, weapons and blocks, which goes on the character toolbar
+// as a single slot. Using it equips the first item of the group the character can use.
 public class ItemGroup
 {
     public const string DefaultId = "tools";
@@ -20,20 +20,48 @@ public class ItemGroup
 
     public string Name = "";
 
-    // Physical item definition ids, like MyObjectBuilder_PhysicalGunObject/Welder4Item.
-    // The order decides which of the equivalent items is picked first.
+    // Definition ids, like MyObjectBuilder_PhysicalGunObject/Welder4Item for a tool or
+    // MyObjectBuilder_CubeBlock/LargeBlockArmorBlock for a block. The order decides which
+    // of the equivalent items is picked first.
     public string[] Items
     {
         get => items;
         set
         {
             items = value ?? Array.Empty<string>();
-            definitions = null;
+            members = null;
         }
     }
 
     private string[] items = Array.Empty<string>();
-    private List<MyPhysicalItemDefinition> definitions;
+    private List<Member> members;
+
+    // An item of the group, as the vanilla toolbar item a slot of its own would hold.
+    // Updating that item tells whether it can be used now and whether it is in the hand,
+    // the same way the game decides it for a toolbar slot.
+    public class Member
+    {
+        public readonly MyDefinitionBase Definition;
+        public readonly MyToolbarItem Item;
+
+        // All tiers of a hand tool are one kind, every block is a kind of its own
+        public readonly string Kind;
+
+        public Member(MyDefinitionBase definition, MyToolbarItem item)
+        {
+            Definition = definition;
+            Item = item;
+            Kind =
+                definition is MyPhysicalItemDefinition
+                && MyDefinitionManager.Static.TryGetHandItemForPhysicalItem(definition.Id)
+                    is { } handItem
+                    ? handItem.Id.TypeId.ToString()
+                    : definition.Id.ToString();
+        }
+
+        public bool Available => Item.Enabled;
+        public bool Held => Item.WantsToBeSelected;
+    }
 
     // Mimics the Tools Switcher plugin: welder, grinder and drill, the best tier first
     public static ItemGroup CreateDefault()
@@ -54,82 +82,81 @@ public class ItemGroup
     public static ItemGroup CreateNew(string name) =>
         new ItemGroup { Id = Guid.NewGuid().ToString("N"), Name = name };
 
-    public ItemGroup Clone() =>
-        new ItemGroup
-        {
-            Id = Id,
-            Name = Name,
-            Items = (string[])Items.Clone(),
-        };
+    // Tools, weapons and blocks can be in a group, as the toolbar item a slot would hold
+    public static MyToolbarItem CreateMemberItem(MyDefinitionBase definition)
+    {
+        var builder = MyToolbarItemFactory.ObjectBuilderFromDefinition(definition);
+        if (
+            !(builder is MyObjectBuilder_ToolbarItemWeapon)
+            && !(builder is MyObjectBuilder_ToolbarItemCubeBlock)
+        )
+            return null;
+
+        return MyToolbarItemFactory.CreateToolbarItem(builder);
+    }
+
+    public static MyDefinitionBase FindDefinition(string id)
+    {
+        if (!MyDefinitionId.TryParse(id, out var definitionId))
+            return null;
+
+        // Cube blocks are not in the generic definition dictionary
+        if (MyDefinitionManager.Static.TryGetDefinition(definitionId, out MyDefinitionBase found))
+            return found;
+
+        return MyDefinitionManager.Static.TryGetCubeBlockDefinition(definitionId, out var block)
+            ? block
+            : null;
+    }
 
     // The items of the group which exist in the loaded game content, in group order
     [XmlIgnore]
-    public List<MyPhysicalItemDefinition> Definitions
+    public List<Member> Members
     {
         get
         {
-            if (definitions != null)
-                return definitions;
+            if (members != null)
+                return members;
 
-            definitions = new List<MyPhysicalItemDefinition>(items.Length);
-            foreach (var item in items)
+            members = new List<Member>(items.Length);
+            foreach (var id in items)
             {
-                if (
-                    MyDefinitionId.TryParse(item, out var id)
-                    && MyDefinitionManager.Static.TryGetDefinition(
-                        id,
-                        out MyPhysicalItemDefinition definition
-                    )
-                )
-                    definitions.Add(definition);
+                var definition = FindDefinition(id);
+                var item = definition == null ? null : CreateMemberItem(definition);
+                if (item != null)
+                    members.Add(new Member(definition, item));
             }
 
-            return definitions;
+            return members;
         }
     }
 
-    // Equivalent items are held the same way, like all tiers of the hand drill
-    public static MyObjectBuilderType KindOf(MyPhysicalItemDefinition item) =>
-        MyDefinitionManager.Static.TryGetHandItemForPhysicalItem(item.Id)?.Id.TypeId
-        ?? item.Id.TypeId;
-
-    // The same check the game's own tool slots use to enable themselves
-    public static bool IsAvailable(MyCharacter character, MyPhysicalItemDefinition item) =>
-        character.FindWeaponItemByDefinition(item.Id).HasValue
-        || !character.WeaponTakesBuilderFromInventory(item.Id);
-
-    public static MyPhysicalItemDefinition Held(MyCharacter character)
+    public void Update(MyEntity owner, long playerID)
     {
-        var weapon = character.CurrentWeapon;
-        return weapon == null
-            ? null
-            : MyDefinitionManager.Static.GetPhysicalItemForHandItem(weapon.DefinitionId);
+        foreach (var member in Members)
+            member.Item.Update(owner, playerID);
     }
 
-    public bool Contains(MyPhysicalItemDefinition item) =>
-        item != null && Definitions.Contains(item);
+    public Member Held => Members.FirstOrDefault(m => m.Held);
 
-    public bool AnyAvailable(MyCharacter character) =>
-        Definitions.Any(item => IsAvailable(character, item));
+    public bool AnyAvailable => Members.Any(m => m.Available);
 
     // The item to equip on using the group: the first available one of the first kind,
     // or of the next kind while the character holds an item of this group.
-    // Null if the character has none of the items.
-    public MyPhysicalItemDefinition PickNext(MyCharacter character)
+    // Null if none of the items can be used. Needs Update first.
+    public Member PickNext()
     {
-        var kinds = Definitions.Select(KindOf).Distinct().ToList();
-        var held = Held(character);
-        var start = Contains(held) ? kinds.IndexOf(KindOf(held)) : -1;
+        var kinds = Members.Select(m => m.Kind).Distinct().ToList();
+        var held = Held;
+        var start = held == null ? -1 : kinds.IndexOf(held.Kind);
 
         // The held kind comes last, so a better item of that kind is still picked up
         for (var step = 1; step <= kinds.Count; step++)
         {
             var kind = kinds[(start + step) % kinds.Count];
-            var item = Definitions.FirstOrDefault(d =>
-                KindOf(d) == kind && IsAvailable(character, d)
-            );
-            if (item != null)
-                return item;
+            var member = Members.FirstOrDefault(m => m.Kind == kind && m.Available);
+            if (member != null)
+                return member;
         }
 
         return null;

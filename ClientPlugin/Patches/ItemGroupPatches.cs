@@ -80,7 +80,7 @@ public static class ItemGroupsToolbarConfigPatch
     private static readonly MyGuiBlockCategoryDefinition Category = new MyGuiBlockCategoryDefinition
     {
         Name = "Groups",
-        DisplayNameString = "Tool Groups",
+        DisplayNameString = "Groups",
         ItemIds = new HashSet<string>(),
         SearchBlocks = false,
         IsToolCategory = true,
@@ -108,18 +108,19 @@ public static class ItemGroupsToolbarConfigPatch
             return;
 
         var character = __instance.m_character;
+        var playerId = MySession.Static.LocalPlayerId;
         foreach (var group in Config.Current.ItemGroups)
         {
             var matches = searchCondition is MySearchByCategoryCondition byCategory
                 ? byCategory.SelectedCategories.Contains(Category)
                 : searchCondition == null || searchCondition.MatchesCondition(group.Name);
-            if (!matches || group.Definitions.Count == 0)
+            if (!matches || group.Members.Count == 0)
                 continue;
 
             // Shows the item using the group would equip, but stays enabled without any,
             // so the group can be put on the toolbar before getting the tools
             var item = new ItemGroupToolbarItem(group.Id);
-            item.Update(character);
+            item.Update(character, playerId);
             var gridItem = new MyGuiGridItem(
                 item.Icons,
                 null,
@@ -148,14 +149,17 @@ public static class ItemGroupsToolbarConfigPatch
             VisualStyle = MyGuiControlButtonStyleEnum.Square,
             Position = new Vector2(-0.41f, 0.425f),
         };
-        button.SetToolTip("Edit tool groups");
-        button.ButtonClicked += _ => MyGuiSandbox.AddScreen(new ItemGroupsDialog());
+        button.SetToolTip(
+            GroupEditor.IsEditing(__instance) ? "Leave group editing" : "Edit groups"
+        );
+        button.Checked = GroupEditor.IsEditing(__instance);
+        button.ButtonClicked += _ => GroupEditor.Toggle(__instance);
         __instance.Controls.Add(button);
     }
 
     // Groups go only on the character's own toolbar, not on block toolbars
     // and not on the single gamepad slot
-    private static bool IsCharacterToolbar(MyGuiScreenToolbarConfigBase screen) =>
+    public static bool IsCharacterToolbar(MyGuiScreenToolbarConfigBase screen) =>
         screen.m_character != null
         && !screen.m_gamepadSlot.HasValue
         && MyToolbarComponent.CurrentToolbar?.ToolbarType == MyToolbarType.Character;

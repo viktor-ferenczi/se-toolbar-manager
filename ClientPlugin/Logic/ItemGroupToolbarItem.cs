@@ -1,3 +1,4 @@
+using System.Linq;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Gui;
@@ -10,7 +11,7 @@ using VRage.ObjectBuilders.Private;
 
 namespace ClientPlugin.Logic;
 
-// An item group in a slot of the character toolbar.
+// A group of tools, weapons and blocks in a slot of the character toolbar.
 //
 // It is saved as a vanilla terminal group object builder with a marker name and no block,
 // so worlds and toolbar profiles stay loadable without the plugin: the game drops a terminal
@@ -32,7 +33,7 @@ public class ItemGroupToolbarItem : MyToolbarItem
         var variantTexture = MyHud.HudDefinition?.Toolbar?.ItemStyle?.VariantTexture;
         if (variantTexture != null)
             SetSubIcon(MyGuiTextures.Static.GetTexture(variantTexture.Value).Path);
-        SetIcons(Group?.Definitions.Count > 0 ? Group.Definitions[0].Icons : null);
+        SetIcons(Group?.Members.FirstOrDefault()?.Item.Icons);
     }
 
     public static bool IsMarker(MyObjectBuilder_ToolbarItem builder, out string groupId)
@@ -68,25 +69,17 @@ public class ItemGroupToolbarItem : MyToolbarItem
 
     public override bool Activate()
     {
-        if (!(MySession.Static.ControlledEntity is MyCharacter character))
+        var group = Group;
+        if (group == null || !(MySession.Static.ControlledEntity is MyCharacter character))
             return false;
 
-        var item = Group?.PickNext(character);
-        if (item == null || item == ItemGroup.Held(character))
+        group.Update(character, MySession.Static.LocalPlayerId);
+        var member = group.PickNext();
+        if (member == null || member == group.Held)
             return false;
 
-        if (
-            !(
-                MyToolbarItemFactory.CreateToolbarItem(
-                    MyToolbarItemFactory.ObjectBuilderFromDefinition(item)
-                )
-                is MyToolbarItemWeapon weapon
-            )
-        )
-            return false;
-
-        // The game's own tool slot activation, which also syncs the change in multiplayer
-        character.SwitchToWeapon(weapon);
+        // The game's own activation of a tool or block slot, which also syncs it in multiplayer
+        member.Item.Activate();
         WantsToBeActivated = true;
         return true;
     }
@@ -94,23 +87,20 @@ public class ItemGroupToolbarItem : MyToolbarItem
     public override ChangeInfo Update(MyEntity owner, long playerID = 0, bool anyoneCanUse = false)
     {
         var group = Group;
-        var character = MySession.Static.LocalCharacter;
-        var onFoot = character != null && MySession.Static.ControlledEntity == character;
-
         var changes = SetDisplayName(group?.Name ?? "Missing group");
-        changes |= SetEnabled(onFoot && group != null && group.AnyAvailable(character));
+        if (group == null)
+            return changes | SetEnabled(false);
+
+        group.Update(owner, playerID);
+        changes |= SetEnabled(group.AnyAvailable);
 
         // Show the held item of the group, or else the one using the group would equip
-        var held = onFoot ? ItemGroup.Held(character) : null;
-        var shown =
-            group?.Contains(held) == true ? held
-            : onFoot ? group?.PickNext(character)
-            : null;
-        shown ??= group?.Definitions.Count > 0 ? group.Definitions[0] : null;
+        var held = group.Held;
+        var shown = held ?? group.PickNext() ?? group.Members.FirstOrDefault();
         if (shown != null)
-            changes |= SetIcons(shown.Icons);
+            changes |= SetIcons(shown.Item.Icons);
 
-        WantsToBeSelected = group?.Contains(held) == true;
+        WantsToBeSelected = held != null;
         return changes;
     }
 

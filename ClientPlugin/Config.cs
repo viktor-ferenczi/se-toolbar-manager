@@ -108,12 +108,12 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref blockSearchKey, value);
     }
 
-    [Separator("Tool groups")]
+    [Separator("Groups")]
 
-    [Button(label: "Edit tool groups", description: "Define the groups of tools and weapons the G menu offers for the character toolbar")]
-    public static void EditItemGroups() => MyGuiSandbox.AddScreen(new ItemGroupsDialog());
+    [Button(label: "Edit groups", description: "Opens the G menu in group edit mode, in a world")]
+    public static void EditItemGroups() => GroupEditor.OpenFromSettings();
 
-    // Edited in ItemGroupsDialog, which assigns a new array on every change
+    // Edited in GroupEditor, which assigns a new array on every change
     public ItemGroup[] ItemGroups
     {
         get => itemGroups;

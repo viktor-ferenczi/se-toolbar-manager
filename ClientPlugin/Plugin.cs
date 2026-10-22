@@ -50,6 +50,10 @@ public class Plugin : IPlugin
     private void OnSessionLoading()
     {
         MyGuiScreenToolbarConfigBasePatch.OnSessionLoading();
+
+        // Another world may load other mods, so the definitions behind the group items change
+        foreach (var group in Config.Current.ItemGroups)
+            group.Items = group.Items;
     }
 
     // ReSharper disable once UnusedMember.Global

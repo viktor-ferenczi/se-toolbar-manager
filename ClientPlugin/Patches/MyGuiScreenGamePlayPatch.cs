@@ -39,12 +39,13 @@ public static class MyGuiScreenGamePlayPatch
         return false;
     }
 
-    private static void OpenCubeBuilder()
+    public static CustomToolbarConfigScreen OpenCubeBuilder()
     {
         if (!(MyGuiSandbox.CreateScreen(typeof(CustomToolbarConfigScreen), 0, null, null) is CustomToolbarConfigScreen dialog))
-            return;
+            return null;
 
         MyGuiScreenGamePlay.ActiveGameplayScreen = dialog;
         MyGuiSandbox.AddScreen(dialog);
+        return dialog;
     }
 }

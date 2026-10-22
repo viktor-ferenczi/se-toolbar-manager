@@ -71,21 +71,31 @@ Up to 6 backups of each profile is kept, even after deleting the profile. Renami
 also renames the backup files. Orphaned backup files (with the main profile deleted) are
 cleaned up after 90 days, but only when a profile is deleted the next time.
 
-### Tool groups
+### Groups
 
-A tool group puts several hand tools or weapons into one slot of your character toolbar.
-Using the slot equips the first tool of the group you have in your inventory, so with the
-default **Hand Tools** group you always get the best welder you carry. Pressing the slot
-again switches to the next kind of tool in the group: welder, grinder, then hand drill.
-Kinds you carry none of are skipped. If you have none of the tools, nothing happens.
+A group puts several tools, weapons and blocks into one slot of your character toolbar.
+Using the slot equips the first item of the group you can use, so with the default
+**Hand Tools** group you always get the best welder you carry. Pressing the slot again
+moves on to the next item: all tiers of a tool count as one, and every block is a step of
+its own. With the default group that is welder, grinder, then hand drill. Tools you don't
+carry and blocks you haven't unlocked are skipped. If none of the items can be used,
+nothing happens.
 
-The G menu lists the groups under **Tool Groups**. Put them on the toolbar like any other
-item. The **TG** button at the bottom left of the G menu opens the dialog where you can
-create, rename and delete groups, add tools and weapons, and change their order. The first
-tool of a kind in the list wins, so put the one you prefer first. The default **Hand Tools**
-group lists the Elite, Proficient, Enhanced and basic tiers of the welder, grinder and hand
-drill, in that order. **Reset** restores it. The dialog is also available from the plugin's
-configuration.
+The G menu lists the groups under **Groups**. Put them on the toolbar like any other
+item. The **TG** button at the bottom left of the G menu turns on edit mode, where the
+staging area shows the items of the group selected above it:
+
+- Drag tools, weapons and blocks from the G menu into the group, or double click them to
+  add them at the end. The block variants on the right can be dragged in too.
+- Drag items inside the group to change their order. The first one wins, so put the one
+  you prefer first. Right click removes an item.
+- **New**, **Rename** and **Delete** manage the groups, **Reset default** restores the
+  default **Hand Tools** group: the Elite, Proficient, Enhanced and basic tiers of the
+  welder, grinder and hand drill, in that order.
+- **Done** or **TG** again brings the staging area back.
+
+The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
+you are in a world.
 
 The groups are saved in the plugin's configuration. Toolbar slots holding a group are saved
 with the world and in toolbar profiles. A world saved with group slots still loads without
@@ -219,9 +229,10 @@ items in `ClientPlugin/ClientPlugin.csproj`.
 
 ### In-game checks
 
-`tests/item_groups_check.py` checks the tool groups in a headless client driven through the
-[Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, the dialog, using
-the groups with different tools in the inventory, the staging area and saving the world. It
+`tests/item_groups_check.py` checks the groups in a headless client driven through the
+[Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, edit mode, using
+the groups with different tools in the inventory and with a block, the staging area and
+saving the world. It
 prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar`, a
 working copy of Remote (`TBM_REMOTE`, default `~/ws/se/se1/plugins/remote`) and a claimed
 test slot of the workspace, see `tests/rig.py`:
