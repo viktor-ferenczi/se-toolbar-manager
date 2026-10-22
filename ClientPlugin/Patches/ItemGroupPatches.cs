@@ -11,6 +11,7 @@ using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
 using VRage.Game;
+using VRage.Input;
 using VRageMath;
 
 namespace ClientPlugin.Patches;
@@ -18,6 +19,88 @@ namespace ClientPlugin.Patches;
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedType.Global
 // ReSharper disable InconsistentNaming
+
+[HarmonyPatch(typeof(MyToolbar))]
+public static class ItemGroupActivationPatch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(MyToolbar.ActivateItemAtIndex))]
+    private static bool ActivateItemAtIndexPrefix(
+        MyToolbar __instance,
+        int index,
+        bool checkIfWantsToBeActivated,
+        ref bool __result
+    )
+    {
+        if (!(__instance.GetItemAtIndex(index) is ItemGroupToolbarItem item))
+            return true;
+
+        if (
+            __instance.StagedSelectedSlot.HasValue
+            && __instance.SlotToIndex(__instance.StagedSelectedSlot.Value) != index
+        )
+            __instance.StagedSelectedSlot = null;
+
+        __result = false;
+        if (!item.Enabled || (checkIfWantsToBeActivated && !item.WantsToBeActivated))
+            return false;
+
+        // Unselect would holster the current tool before the group can identify it.
+        // Another slot containing that tool can be selected instead of this group.
+        __result = item.Activate();
+        __instance.OnItemActivated?.Invoke(item);
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(MyToolbarComponent))]
+public static class ItemGroupScrollPatch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(MyToolbarComponent.HandleInput))]
+    private static bool HandleInputPrefix()
+    {
+        var input = MyInput.Static;
+        var delta = input.DeltaMouseScrollWheelValue();
+        var toolbar = MyToolbarComponent.CurrentToolbar;
+        if (
+            delta == 0
+            || toolbar?.ToolbarType != MyToolbarType.Character
+            || !toolbar.CanPlayerActivateItems
+            || !(MySession.Static?.ControlledEntity is MyCharacter character)
+            || MySession.Static.IsCameraUserControlledSpectator()
+            || MyGuiScreenGamePlay.DisableInput
+            || MyGuiScreenGamePlay.ActiveGameplayScreen != null
+            || MyScreenManager.GetScreenWithFocus() != MyGuiScreenGamePlay.Static
+            || input.IsAnyCtrlKeyPressed()
+            || input.IsAnyShiftKeyPressed()
+            || input.IsAnyAltKeyPressed()
+        )
+            return true;
+
+        // Prefer the selected group; an ordinary tool slot may also be selected.
+        var item = toolbar.SelectedItem as ItemGroupToolbarItem;
+        for (var slot = 0; slot < toolbar.SlotCount; slot++)
+        {
+            var candidate = item ?? toolbar.GetSlotItem(slot) as ItemGroupToolbarItem;
+            if (candidate == null)
+                continue;
+
+            var group = Config.Current.FindItemGroup(candidate.GroupId);
+            group?.Update(character, MySession.Static.LocalPlayerId);
+            if (group?.Held?.Item is MyToolbarItemWeapon)
+            {
+                candidate.Activate(delta > 0 ? 1 : -1);
+                return false;
+            }
+
+            if (item != null)
+                break;
+        }
+
+        return true;
+    }
+}
 
 // Turns the saved form of an item group slot back into the group, wherever the game or
 // the profiles create toolbar items: world load, multiplayer join, G menu, profile load.

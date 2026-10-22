@@ -50,6 +50,18 @@ class Game:
     def __init__(self, api, client: rig.Client):
         self.api = api
         self.client = client
+        self.wheel = 0
+
+    def scroll(self, delta: int) -> None:
+        # UpdateStates takes an absolute wheel counter. Remote's scroll helper resets
+        # it to zero on the next frame, producing an unwanted turn in the other direction.
+        self.wheel += delta
+        self.api.set_input_state(scroll=self.wheel)
+        time.sleep(1)
+
+    def clear_scroll(self) -> None:
+        self.api.clear_input_state()
+        self.wheel = 0
 
     # Screens and controls
 
@@ -384,16 +396,30 @@ def run(game: Game) -> None:
     game.give("Welder2Item")
     game.press_slot(3)
     held_check(game, "only the lower tier: Enhanced Welder", "Welder/Welder2")
+    for delta in (120, -120):
+        game.scroll(delta)
+        held_check(game, f"one available kind, wheel {delta}", "Welder/Welder2")
+    game.clear_scroll()
 
     game.give("Welder4Item")
     game.holster()
     game.press_slot(3)
     held_check(game, "both tiers: Elite Welder", "Welder/Welder4")
 
+    game.give("AngleGrinder4Item")
+    for delta, expected in (
+        (120, "AngleGrinder/AngleGrinder4"),
+        (120, "Welder/Welder4"),
+        (-120, "AngleGrinder/AngleGrinder4"),
+        (-120, "Welder/Welder4"),
+    ):
+        game.scroll(delta)
+        held_check(game, f"wheel {delta} skips missing drill: {expected}", expected)
+    game.clear_scroll()
+
     # Every kind of the group, pressing the slot again moves to the next kind
     for subtype in (
         "AngleGrinder2Item",
-        "AngleGrinder4Item",
         "HandDrill2Item",
         "HandDrill4Item",
     ):
@@ -405,9 +431,53 @@ def run(game: Game) -> None:
     game.press_slot(3)
     held_check(game, "pressed again: back to the Elite Welder", "Welder/Welder4")
 
+    # A later ordinary slot wins the game's selected-slot scan when its tool is held.
+    api.set_toolbar_slot(7, f"{GUN}/AngleGrinder4Item")
+    forward = ("AngleGrinder/AngleGrinder4", "HandDrill/HandDrill4", "Welder/Welder4")
+    for cycle in range(2):
+        for expected in forward:
+            game.press_slot(3)
+            held_check(
+                game, f"overlapping slot, cycle {cycle + 1}: {expected}", expected
+            )
+
+    for delta, sequence in (
+        (120, forward),
+        (-120, (forward[1], forward[0], forward[2])),
+    ):
+        for expected in sequence:
+            game.scroll(delta)
+            held_check(game, f"wheel {delta}: {expected}", expected)
+    game.clear_scroll()
+    api.set_toolbar_slot(7, None)
+
+    game.holster()
+    game.scroll(120)
+    held_check(game, "wheel with no held group leaves hands empty", None)
+    game.clear_scroll()
+
     # Edit mode of the G menu: the staging area turns into the group editor
     screen = game.toggle_edit_mode()
     check("TG turns on edit mode", game.editing(screen))
+    buttons = [
+        game.control(screen, name + "GroupButton")
+        for name in ("New", "Rename", "Delete", "Resetdefault")
+    ]
+    done = game.control(screen, "DoneGroupButton")
+    right = lambda control: control["position"]["x"] + control["size"]["x"]
+    check(
+        "editor buttons align with Done and have equal gaps",
+        abs(right(buttons[-1]) - right(done)) < 0.0001
+        and all(
+            abs(buttons[i + 1]["position"]["x"] - right(buttons[i]) - 0.006) < 0.0001
+            for i in range(3)
+        ),
+        str([(b["position"], b["size"]) for b in buttons]),
+    )
+    before_scroll = game.held()
+    game.scroll(-120)
+    check("wheel in editor does not switch tools", game.held() == before_scroll)
+    game.clear_scroll()
     check(
         "editor shows the default group",
         game.selected_group(screen) == "Hand Tools"

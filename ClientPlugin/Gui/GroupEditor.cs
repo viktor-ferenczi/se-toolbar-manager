@@ -145,6 +145,19 @@ public class GroupEditor
         );
         button.Name = text.Replace(" ", "") + "GroupButton";
         button.SetToolTip(toolTip);
+        // Small has a fixed SizeOverride, reapplied on resize, hover and focus.
+        var style = MyGuiControlButton.GetVisualStyle(MyGuiControlButtonStyleEnum.Small);
+        button.CustomStyle = new MyGuiControlButton.StyleDefinition
+        {
+            NormalTexture = style.NormalTexture,
+            HighlightTexture = style.HighlightTexture,
+            FocusTexture = style.FocusTexture,
+            ActiveTexture = style.ActiveTexture,
+            NormalFont = style.NormalFont,
+            HighlightFont = style.HighlightFont,
+            Padding = style.Padding,
+            TextColorFocus = style.TextColorFocus,
+        };
         return button;
     }
 
@@ -159,7 +172,7 @@ public class GroupEditor
         groupSelector.Position = row1 + new Vector2(0.06f, 0f) - origin;
         doneButton.Position = row1 + new Vector2(width - doneButton.Size.X, 0f) - origin;
 
-        var step = width / 4f;
+        var step = (width + Spacing) / 4f;
         var buttons = new[] { newButton, renameButton, deleteButton, resetButton };
         for (var i = 0; i < buttons.Length; i++)
         {

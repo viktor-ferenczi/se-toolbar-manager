@@ -81,6 +81,11 @@ its own. With the default group that is welder, grinder, then hand drill. Tools 
 carry and blocks you haven't unlocked are skipped. If none of the items can be used,
 nothing happens.
 
+While holding a tool or weapon from a group on the current toolbar page, scroll up to
+move forward through the group or down to move backward. This uses the best available
+tier of each tool, just like pressing the slot. Scrolling in menus or with Ctrl, Shift
+or Alt held keeps the game's normal behavior.
+
 The G menu lists the groups under **Groups**. Put them on the toolbar like any other
 item. The **TG** button at the bottom left of the G menu turns on edit mode, where the
 staging area shows the items of the group selected above it:

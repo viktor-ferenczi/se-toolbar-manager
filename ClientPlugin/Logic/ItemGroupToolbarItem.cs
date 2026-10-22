@@ -67,19 +67,22 @@ public class ItemGroupToolbarItem : MyToolbarItem
     public override bool AllowedInToolbarType(MyToolbarType type) =>
         type == MyToolbarType.Character;
 
-    public override bool Activate()
+    public override bool Activate() => Activate(1);
+
+    public bool Activate(int direction)
     {
         var group = Group;
         if (group == null || !(MySession.Static.ControlledEntity is MyCharacter character))
             return false;
 
         group.Update(character, MySession.Static.LocalPlayerId);
-        var member = group.PickNext();
+        var member = group.PickNext(direction);
         if (member == null || member == group.Held)
             return false;
 
         // The game's own activation of a tool or block slot, which also syncs it in multiplayer
-        member.Item.Activate();
+        if (!member.Item.Activate())
+            return false;
         WantsToBeActivated = true;
         return true;
     }

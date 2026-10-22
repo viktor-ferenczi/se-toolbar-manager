@@ -144,16 +144,16 @@ public class ItemGroup
     // The item to equip on using the group: the first available one of the first kind,
     // or of the next kind while the character holds an item of this group.
     // Null if none of the items can be used. Needs Update first.
-    public Member PickNext()
+    public Member PickNext(int direction = 1)
     {
         var kinds = Members.Select(m => m.Kind).Distinct().ToList();
         var held = Held;
-        var start = held == null ? -1 : kinds.IndexOf(held.Kind);
+        var start = held == null ? (direction > 0 ? -1 : 0) : kinds.IndexOf(held.Kind);
 
         // The held kind comes last, so a better item of that kind is still picked up
         for (var step = 1; step <= kinds.Count; step++)
         {
-            var kind = kinds[(start + step) % kinds.Count];
+            var kind = kinds[(start + direction * step + kinds.Count) % kinds.Count];
             var member = Members.FirstOrDefault(m => m.Kind == kind && m.Available);
             if (member != null)
                 return member;
