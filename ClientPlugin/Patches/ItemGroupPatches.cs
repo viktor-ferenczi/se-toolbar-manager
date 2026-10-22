@@ -230,7 +230,7 @@ public static class ItemGroupsToolbarConfigPatch
             Text = "TG",
             Name = "OpenItemGroupsButton",
             VisualStyle = MyGuiControlButtonStyleEnum.Square,
-            Position = new Vector2(-0.41f, 0.425f),
+            Position = new Vector2(-0.405f, 0.425f),
         };
         button.SetToolTip(
             GroupEditor.IsEditing(__instance) ? "Leave group editing" : "Edit groups"

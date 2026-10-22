@@ -110,6 +110,7 @@ public class GroupEditor
         groupLabel = new MyGuiControlLabel(text: "Group")
         {
             OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
+            Position = new Vector2(0.005f, 0f),
         };
         groupSelector = new MyGuiControlCombobox(size: new Vector2(0.25f, 0.04f))
         {
@@ -165,14 +166,14 @@ public class GroupEditor
     public void AddHeader(Vector2 topLeft, float width)
     {
         var origin = screen.GetPositionAbsoluteCenter();
-        var row1 = topLeft + new Vector2(0f, RowHeight / 2f);
+        var row1 = topLeft + new Vector2(0.01f, RowHeight / 2f);
         var row2 = row1 + new Vector2(0f, RowHeight + Spacing);
 
         groupLabel.Position = row1 - origin;
         groupSelector.Position = row1 + new Vector2(0.06f, 0f) - origin;
-        doneButton.Position = row1 + new Vector2(width - doneButton.Size.X, 0f) - origin;
+        doneButton.Position = row1 + new Vector2(width - doneButton.Size.X - 0.02f, 0f) - origin;
 
-        var step = (width + Spacing) / 4f;
+        var step = (width + Spacing) / 5f;
         var buttons = new[] { newButton, renameButton, deleteButton, resetButton };
         for (var i = 0; i < buttons.Length; i++)
         {
