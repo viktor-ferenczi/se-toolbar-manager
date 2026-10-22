@@ -102,7 +102,8 @@ staging area shows the items of the group selected above it:
 - **Reset default** restores or recreates the default **Hand Tools** group without
   changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
   grinder and hand drill, in that order.
-- **Done** or **TG** again brings the staging area back.
+- **Done** brings the staging area back. **TG** opens the editor and keeps it open
+  if it is already open.
 
 The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
 you are in a world.

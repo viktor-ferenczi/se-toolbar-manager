@@ -261,11 +261,9 @@ public static class ItemGroupsToolbarConfigPatch
             VisualStyle = MyGuiControlButtonStyleEnum.Square,
             Position = new Vector2(-0.405f, 0.425f),
         };
-        button.SetToolTip(
-            GroupEditor.IsEditing(__instance) ? "Leave group editing" : "Edit groups"
-        );
+        button.SetToolTip("Edit groups");
         button.Checked = GroupEditor.IsEditing(__instance);
-        button.ButtonClicked += _ => GroupEditor.Toggle(__instance);
+        button.ButtonClicked += _ => GroupEditor.Open(__instance);
         __instance.Controls.Add(button);
     }
 

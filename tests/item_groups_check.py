@@ -240,7 +240,7 @@ class Game:
 
     # Group edit mode of the G menu
 
-    def toggle_edit_mode(self) -> int:
+    def open_edit_mode(self) -> int:
         screen = self.screen_index(TOOLBAR_CONFIG)
         if screen is None:
             screen = self.open_toolbar_config()
@@ -493,8 +493,14 @@ def run(game: Game) -> None:
     game.clear_scroll()
 
     # Edit mode of the G menu: the staging area turns into the group editor
-    screen = game.toggle_edit_mode()
+    screen = game.open_edit_mode()
     check("TG turns on edit mode", game.editing(screen))
+    selected = game.selected_group(screen)
+    game.click(screen, "OpenItemGroupsButton")
+    check(
+        "TG keeps the editor open and preserves the selected group",
+        game.editing(screen) and game.selected_group(screen) == selected,
+    )
     buttons = [
         game.control(screen, name + "GroupButton")
         for name in ("New", "Rename", "Duplicate", "Delete", "Resetdefault")
@@ -649,7 +655,7 @@ def run(game: Game) -> None:
     held_check(game, "pressed again: back to the drill", "HandDrill/HandDrill2")
 
     # Editing and resetting the default group
-    screen = game.toggle_edit_mode()
+    screen = game.open_edit_mode()
     game.select_group(screen, "Hand Tools")
     game.remove_from_group(screen, 0)
     check(
@@ -663,7 +669,7 @@ def run(game: Game) -> None:
     game.press_slot(3)
     held_check(game, "edited default group: Enhanced Welder", "Welder/Welder2")
 
-    screen = game.toggle_edit_mode()
+    screen = game.open_edit_mode()
     other_groups = {k: v for k, v in game.saved_groups().items() if k != "Hand Tools"}
     game.select_group(screen, "Builder Kit")
     game.click(screen, "ResetdefaultGroupButton")

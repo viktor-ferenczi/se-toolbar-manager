@@ -33,9 +33,12 @@ public class GroupEditor
 
     public static GroupEditor Current { get; private set; }
 
-    public static void Open(MyGuiScreenToolbarConfigBase screen, string groupId)
+    public static void Open(MyGuiScreenToolbarConfigBase screen, string groupId = null)
     {
-        selectedGroupId = groupId;
+        if (IsEditing(screen) && (groupId == null || groupId == selectedGroupId))
+            return;
+
+        selectedGroupId = groupId ?? selectedGroupId;
         editingScreen = screen;
         Config.Save();
         screen.RecreateControls(false);
