@@ -306,6 +306,7 @@ class Game:
                 line
                 for line in text.splitlines()
                 if "Exception" in line
+                and not line.lstrip().startswith("at ")
                 and "SocketException" not in line
                 and "MyLoadingNeedXMLException" not in line
                 and "[LinuxCompat]" not in line
@@ -538,6 +539,31 @@ def run(game: Game) -> None:
     game.holster()
     game.press_slot(3)
     held_check(game, "reset default group: Elite Welder", "Welder/Welder4")
+
+    # Edit groups in the plugin settings: the G menu opens in edit mode, alone on top
+    rig.focus_gameplay(api)
+    api.key("OemQuestion", ["LeftControl", "LeftAlt"])
+    plugins = game.wait_screen("ConfigurePlugin")
+    rows = game.control(plugins, "Table")["properties"]["rows"]
+    row = next(r["index"] for r in rows if r["cells"][0] == "Toolbar Manager")
+    api.control_click(name="Table", screen=plugins, row=row, double_click=True)
+    settings = game.wait_screen("SettingsScreen")
+    api.control_click(text="Edit groups", screen=settings)
+    # The settings close first and shift the screen indexes
+    game.wait_screen("SettingsScreen", present=False)
+    game.wait_screen("ConfigurePlugin", present=False)
+    screen = game.wait_screen("CustomToolbarConfigScreen")
+    time.sleep(1)
+    screen = game.screen_index("CustomToolbarConfigScreen")
+    kinds = [s["type"] for s in game.screens() if s.get("state") != "HIDDEN"]
+    check(
+        "Edit groups in the settings opens the G menu in edit mode",
+        game.editing(screen)
+        and kinds == ["MyGuiScreenGamePlay", "CustomToolbarConfigScreen"],
+        str(kinds),
+    )
+    game.click(screen, "DoneGroupButton")
+    game.close_screen("CustomToolbarConfigScreen")
 
     # The staging area takes a group and gives it back
     screen = game.open_toolbar_config()

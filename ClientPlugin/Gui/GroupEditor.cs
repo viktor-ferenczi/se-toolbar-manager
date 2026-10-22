@@ -4,6 +4,7 @@ using System.Text;
 using ClientPlugin.Logic;
 using ClientPlugin.Patches;
 using Sandbox.Definitions;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Gui;
 using Sandbox.Game.GUI;
 using Sandbox.Game.Screens.Helpers;
@@ -59,9 +60,20 @@ public class GroupEditor
             return;
         }
 
-        var screen = MyGuiScreenGamePlayPatch.OpenCubeBuilder();
-        if (screen != null && !IsEditing(screen))
-            Toggle(screen);
+        // The settings and the plugin list would stay below the G menu, and the HUD drawn
+        // over it, so they go first and the G menu opens in the next frame
+        foreach (var other in MyScreenManager.Screens.ToList())
+        {
+            if (!(other is MyGuiScreenGamePlay) && !(other is MyGuiScreenHudBase))
+                other.CloseScreen();
+        }
+
+        MyEntities.InvokeLater(() =>
+        {
+            var screen = MyGuiScreenGamePlayPatch.OpenCubeBuilder();
+            if (screen != null && !IsEditing(screen))
+                Toggle(screen);
+        });
     }
 
     private readonly MyGuiScreenToolbarConfigBase screen;
