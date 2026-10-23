@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using ClientPlugin.Logic;
 using ClientPlugin.Patches;
 using ClientPlugin.Settings;
 using ClientPlugin.Settings.Layouts;
@@ -51,6 +52,7 @@ public class Plugin : IPlugin
     private void OnSessionLoading()
     {
         MyGuiScreenToolbarConfigBasePatch.OnSessionLoading();
+        ItemGroupToolbarItem.OnSessionLoading();
 
         // Another world may load other mods, so the definitions behind the group items change
         foreach (var group in Config.Current.ItemGroups)

@@ -80,8 +80,12 @@ its own. With the default group that is welder, grinder, then hand drill. Tools 
 carry and blocks you haven't unlocked are skipped. If none of the items can be used,
 nothing happens.
 
-While holding a tool or weapon from a group on the current toolbar page, scroll up to
-move forward through the group or down to move backward. Both inputs pick the first
+Several groups can be on the toolbar at the same time, on any slots and pages, and they
+may share items. Each slot steps only through its own group. Going back to a group's
+slot equips the item it was on last, and pressing it again moves on from there.
+
+While holding a tool or weapon from the group used last, with that group on the current
+toolbar page, scroll up to move forward through the group or down to move backward. Both inputs pick the first
 available item of each kind in tile order, regardless of its level. Scrolling in menus
 or with Ctrl, Shift or Alt held keeps the game's normal behavior.
 
@@ -266,6 +270,10 @@ enabled and disabled, using the same test slot.
 
 `tests/tool_order_check.py` checks button and wheel cycling with lower levels before
 higher levels in tile order, then checks that reordering a tool changes the selection.
+
+`tests/separate_groups_check.py` puts a tool group, a block group, a mixed group and
+two groups sharing tools on separate slots of two toolbar pages, and checks that each
+slot steps only through its own group and continues it where it was.
 
 `tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
 double click in edit mode only, and that the group equips them once they are in the

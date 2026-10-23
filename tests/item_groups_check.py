@@ -788,6 +788,15 @@ def run(game: Game) -> None:
     )
     game.close_screen(TOOLBAR_CONFIG)
 
+    # Pressing a toolbar slot in the G menu uses it, so the drag above moved the group on.
+    # Bring it back to the welder, the group continues there after loading.
+    game.holster()
+    for _ in range(3):
+        game.press_slot(5)
+        if game.held() == "MyObjectBuilder_Welder/Welder4":
+            break
+    game.holster()
+
     # Saved with the world
     api.save()
     time.sleep(8)

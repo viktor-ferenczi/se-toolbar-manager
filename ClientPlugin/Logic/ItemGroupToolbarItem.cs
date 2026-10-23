@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities.Character;
@@ -22,7 +23,22 @@ public class ItemGroupToolbarItem : MyToolbarItem
 
     public readonly string GroupId;
 
+    // Groups on separate slots share the hand, so the held item alone can't tell which
+    // group is in use or where each one is. Each group remembers the kind it equipped last,
+    // and only the group used last steps on from the held item.
+    private static readonly Dictionary<string, string> Positions = new();
+    private static string activeGroupId;
+
+    // Loading a world activates its saved selected slot, which must not step that group on
+    public static void OnSessionLoading() => activeGroupId = null;
+
     private ItemGroup Group => Config.Current.FindItemGroup(GroupId);
+
+    private string Position => Positions.TryGetValue(GroupId, out var kind) ? kind : null;
+
+    // Whether this group is the one in use, so using it again moves to its next kind
+    private bool IsCurrent(ItemGroup.Member held) =>
+        activeGroupId == GroupId && held != null && held.Kind == Position;
 
     public ItemGroupToolbarItem(string groupId)
     {
@@ -76,15 +92,31 @@ public class ItemGroupToolbarItem : MyToolbarItem
             return false;
 
         group.Update(character, MySession.Static.LocalPlayerId);
-        var member = group.PickNext(direction);
-        if (member == null || member == group.Held)
+        var held = group.Held;
+        var current = IsCurrent(held);
+        var member = current ? group.Pick(held.Kind, direction, true) : group.Pick(Position);
+        if (member == null || (current && member == held))
             return false;
 
-        // The game's own activation of a tool or block slot, which also syncs it in multiplayer
-        if (!member.Item.Activate())
+        // The game's own activation of a tool or block slot, which also syncs it in multiplayer.
+        // Switching to a group whose item is already in the hand only makes it the current one.
+        if (member != held && !member.Item.Activate())
             return false;
+        Positions[GroupId] = member.Kind;
+        activeGroupId = GroupId;
         WantsToBeActivated = true;
         return true;
+    }
+
+    // Whether the mouse wheel should step through this group: it is in use with a hand item
+    public bool ScrollsWith(MyCharacter character)
+    {
+        var group = Group;
+        if (group == null)
+            return false;
+
+        group.Update(character, MySession.Static.LocalPlayerId);
+        return IsCurrent(group.Held) && group.Held.Item is MyToolbarItemWeapon;
     }
 
     public override ChangeInfo Update(MyEntity owner, long playerID = 0, bool anyoneCanUse = false)
@@ -97,13 +129,15 @@ public class ItemGroupToolbarItem : MyToolbarItem
         group.Update(owner, playerID);
         changes |= SetEnabled(group.AnyAvailable);
 
-        // Show the held item of the group, or else the one using the group would equip
+        // Show the held item of the group in use, or else the one using the group would equip
         var held = group.Held;
-        var shown = held ?? group.PickNext() ?? group.Members.FirstOrDefault();
+        var current = IsCurrent(held);
+        var shown =
+            (current ? held : null) ?? group.Pick(Position) ?? group.Members.FirstOrDefault();
         if (shown != null)
             changes |= SetIcons(shown.Item.Icons);
 
-        WantsToBeSelected = held != null;
+        WantsToBeSelected = current;
         return changes;
     }
 

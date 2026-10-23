@@ -143,20 +143,23 @@ public class ItemGroup
 
     public bool AnyAvailable => Members.Any(m => m.Available);
 
-    // The item to equip on using the group: the first available one of the first kind,
-    // or of the next kind while the character holds an item of this group.
+    // The first available item of the kind, or of the kinds after it in the direction.
+    // Starts after the kind with next, and at the first kind when the group has no such kind.
     // Null if none of the items can be used. Needs Update first.
-    public Member PickNext(int direction = 1)
+    public Member Pick(string kind, int direction = 1, bool next = false)
     {
         var kinds = Members.Select(m => m.Kind).Distinct().ToList();
-        var held = Held;
-        var start = held == null ? (direction > 0 ? -1 : 0) : kinds.IndexOf(held.Kind);
+        var index = kinds.IndexOf(kind);
+        var start =
+            index < 0 ? (direction > 0 ? -1 : 0)
+            : next ? index
+            : index - direction;
 
-        // The held kind comes last, so its first available item in tile order can still be selected.
+        // With next the given kind comes last, so its first available item can still be picked
         for (var step = 1; step <= kinds.Count; step++)
         {
-            var kind = kinds[(start + direction * step + kinds.Count) % kinds.Count];
-            var member = Members.FirstOrDefault(m => m.Kind == kind && m.Available);
+            var candidate = kinds[(start + direction * step + 2 * kinds.Count) % kinds.Count];
+            var member = Members.FirstOrDefault(m => m.Kind == candidate && m.Available);
             if (member != null)
                 return member;
         }
