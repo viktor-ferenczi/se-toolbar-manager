@@ -305,7 +305,11 @@ class Fit:
         self.game.wheel += delta
         self.api.set_input_state(keys=["LeftShift"], scroll=self.game.wheel)
         time.sleep(0.3)
-        self.api.set_input_state(scroll=self.game.wheel)
+        # Without keys set_input_state leaves Shift held
+        self.api._post(
+            "/v1/input/state",
+            {"keyboard": {"keys": []}, "mouse": {"scroll": self.game.wheel}},
+        )
         time.sleep(1.0)
 
     def no_fit_shown(self) -> bool:
@@ -457,7 +461,10 @@ def run_vanilla(fit: Fit) -> None:
     """A block from an ordinary slot: the middle button paints, the block stays"""
     game = fit.game
     fit.paste([cube(DOWN)])
+    # Resetting the wheel counter is a wheel turn, which must not reach the plain block
     game.holster()
+    game.clear_scroll()
+    time.sleep(1)
     game.press_slot(PLAIN_SLOT)
     fit.aim(DOWN)
     before = fit.cubes()[add(TARGET, DOWN)]["colorMaskHsv"]
