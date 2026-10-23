@@ -271,6 +271,121 @@ public static class ItemGroupsToolbarConfigPatch
         __instance.Controls.Add(button);
     }
 
+    // The game greys out tools, weapons and blocks the player doesn't have or hasn't researched
+    // and refuses to drag or double click them. While editing a group they can still be added,
+    // the game decides at use time whether the group's item is usable.
+    private static bool IsGreyedOutWhileEditing(
+        MyGuiScreenToolbarConfigBase screen,
+        MyGuiGridItem item
+    ) => item is { Enabled: false } && GroupEditor.IsEditing(screen);
+
+    [HarmonyPrefix]
+    [HarmonyPatch(
+        "StartDragging",
+        new[]
+        {
+            typeof(MyDropHandleType),
+            typeof(MyGuiControlGrid),
+            typeof(MyGuiControlGrid.EventArgs),
+        },
+        new[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Ref }
+    )]
+    private static bool StartDraggingGridPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyDropHandleType dropHandlingType,
+        MyGuiControlGrid grid,
+        ref MyGuiControlGrid.EventArgs args
+    )
+    {
+        var item = grid.GetItemAt(args.ItemIndex);
+        if (!IsGreyedOutWhileEditing(__instance, item))
+            return true;
+
+        __instance.m_dragAndDrop.StartDragging(
+            dropHandlingType,
+            args.Button,
+            item,
+            new MyDragAndDropInfo { Grid = grid, ItemIndex = args.ItemIndex },
+            false
+        );
+        grid.HideToolTip();
+        return false;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(
+        "StartDragging",
+        typeof(MyDropHandleType),
+        typeof(MyGuiControlResearchGraph),
+        typeof(MyGuiGridItem)
+    )]
+    private static bool StartDraggingResearchPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyDropHandleType dropHandlingType,
+        MyGuiControlResearchGraph graph,
+        MyGuiGridItem draggingItem
+    )
+    {
+        if (!IsGreyedOutWhileEditing(__instance, draggingItem))
+            return true;
+
+        __instance.m_dragAndDrop.StartDragging(
+            dropHandlingType,
+            MySharedButtonsEnum.Primary,
+            draggingItem,
+            new MyDragAndDropInfo(),
+            false
+        );
+        graph.HideToolTip();
+        return false;
+    }
+
+    // Only a drop on the group grid takes a greyed out item, the toolbar keeps refusing it
+    [HarmonyPrefix]
+    [HarmonyPriority(Priority.First)]
+    [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.OnDragAndDropOnDrop))]
+    private static bool OnDragAndDropOnDropPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyDragAndDropEventArgs eventArgs
+    ) => !IsGreyedOutWhileEditing(__instance, eventArgs.Item);
+
+    [HarmonyPrefix]
+    [HarmonyPatch(
+        "OnGridItemDoubleClicked",
+        typeof(MyGuiControlGrid),
+        typeof(MyGuiControlGrid.EventArgs),
+        typeof(bool)
+    )]
+    private static bool OnGridItemDoubleClickedPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        MyGuiControlGrid sender,
+        MyGuiControlGrid.EventArgs eventArgs
+    ) =>
+        !AppendGreyedOut(
+            __instance,
+            sender.TryGetItemAt(eventArgs.RowIndex, eventArgs.ColumnIndex)
+        );
+
+    [HarmonyPrefix]
+    [HarmonyPatch("OnResearchGraphItemDoubleClicked")]
+    private static bool OnResearchGraphItemDoubleClickedPrefix(
+        MyGuiScreenToolbarConfigBase __instance,
+        object sender
+    ) => !AppendGreyedOut(__instance, (sender as MyGuiControlResearchGraph)?.SelectedItem);
+
+    private static bool AppendGreyedOut(MyGuiScreenToolbarConfigBase screen, MyGuiGridItem item)
+    {
+        if (!IsGreyedOutWhileEditing(screen, item))
+            return false;
+
+        var data = (
+            item.UserData as MyGuiScreenToolbarConfigBase.GridItemUserData
+        )?.ItemData?.Invoke();
+        if (data != null && !(data is MyObjectBuilder_ToolbarItemEmpty))
+            GroupEditor.Current?.Append(data);
+        return true;
+    }
+
     // Groups go only on the character's own toolbar, not on block toolbars
     // and not on the single gamepad slot
     public static bool IsCharacterToolbar(MyGuiScreenToolbarConfigBase screen) =>
