@@ -4,6 +4,7 @@ using ClientPlugin.Gui;
 using ClientPlugin.Logic;
 using HarmonyLib;
 using Sandbox.Definitions;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
@@ -61,8 +62,19 @@ public static class ItemGroupScrollPatch
     [HarmonyPatch(nameof(MyToolbarComponent.HandleInput))]
     private static bool HandleInputPrefix()
     {
+        var item = ScrollingGroup(out var delta);
+        if (item == null)
+            return true;
+
+        item.Activate(delta > 0 ? 1 : -1);
+        return false;
+    }
+
+    // The group the mouse wheel steps through now, if any
+    public static ItemGroupToolbarItem ScrollingGroup(out int delta)
+    {
         var input = MyInput.Static;
-        var delta = input.DeltaMouseScrollWheelValue();
+        delta = input.DeltaMouseScrollWheelValue();
         var toolbar = MyToolbarComponent.CurrentToolbar;
         if (
             delta == 0
@@ -77,18 +89,30 @@ public static class ItemGroupScrollPatch
             || input.IsAnyShiftKeyPressed()
             || input.IsAnyAltKeyPressed()
         )
-            return true;
+            return null;
 
         // The group in use, even when an ordinary slot holding the same tool is selected
-        var item = Enumerable
+        return Enumerable
             .Range(0, toolbar.SlotCount)
             .Select(toolbar.GetSlotItem)
             .OfType<ItemGroupToolbarItem>()
             .FirstOrDefault(candidate => candidate.ScrollsWith(character));
-        if (item == null)
+    }
+}
+
+// The cube builder handles the wheel before the toolbar does, cycling the block in the hand
+// through its game block group. A group's block leaves the wheel to the group.
+[HarmonyPatch(typeof(MyCubeBuilder))]
+public static class ItemGroupBlockVariantsPatch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch("HandleBlockVariantsInput")]
+    private static bool HandleBlockVariantsInputPrefix(ref bool __result)
+    {
+        if (ItemGroupScrollPatch.ScrollingGroup(out _) == null)
             return true;
 
-        item.Activate(delta > 0 ? 1 : -1);
+        __result = false;
         return false;
     }
 }

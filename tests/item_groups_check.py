@@ -551,16 +551,16 @@ def run(game: Game) -> None:
     game.drag_to_group(screen, "Elite Hand Drill", 0)
     game.drag_to_group(screen, "Enhanced Hand Drill", 1)
     game.select_category(screen, "Armor Blocks")
-    game.double_click_block(screen, "Light Armor Block")
-    game.double_click_block(screen, "Heavy Armor Block")
+    game.double_click_block(screen, "Light Armor Slope")
+    game.double_click_block(screen, "Heavy Armor Slope")
     check(
         "tools dragged in, blocks added by double click",
         game.group_items(screen)
         == [
             "Elite Hand Drill",
             "Enhanced Hand Drill",
-            "Light Armor Block",
-            "Heavy Armor Block",
+            "Light Armor Slope",
+            "Heavy Armor Slope",
         ],
         str(game.group_items(screen)),
     )
@@ -570,7 +570,7 @@ def run(game: Game) -> None:
     check(
         "item moved first, last one removed by right click",
         game.group_items(screen)
-        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Block"],
+        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Slope"],
         str(game.group_items(screen)),
     )
     toolbar = game.toolbar()
@@ -586,7 +586,7 @@ def run(game: Game) -> None:
         == [
             f"{GUN}/HandDrill2Item",
             f"{GUN}/HandDrill4Item",
-            f"{CUBE_BLOCK}/LargeBlockArmorBlock",
+            f"{CUBE_BLOCK}/LargeBlockArmorSlope",
         ]
         and len(saved.get("Hand Tools", [])) == 12,
         str(saved.get("Builder")),
@@ -685,7 +685,7 @@ def run(game: Game) -> None:
         game, "custom order: Enhanced Hand Drill before Elite", "HandDrill/HandDrill2"
     )
     game.press_slot(4)
-    held_check(game, "pressed again: the block", "CubeBlock/LargeBlockArmorBlock")
+    held_check(game, "pressed again: the block", "CubeBlock/LargeBlockArmorSlope")
     game.press_slot(4)
     held_check(game, "pressed again: back to the drill", "HandDrill/HandDrill2")
 
@@ -836,7 +836,7 @@ def run_after_restart(game: Game) -> None:
     check(
         "custom group order and items survive restart",
         restarted.group_items(screen)
-        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Block"],
+        == ["Enhanced Hand Drill", "Elite Hand Drill", "Light Armor Slope"],
     )
     restarted.click(screen, "DoneGroupButton")
     restarted.close_screen(TOOLBAR_CONFIG)

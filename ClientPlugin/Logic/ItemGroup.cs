@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Sandbox.Definitions;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Screens.Helpers;
 using VRage.Game;
 using VRage.Game.Entity;
@@ -62,7 +63,15 @@ public class ItemGroup
         }
 
         public bool Available => Item.Enabled;
-        public bool Held => Item.WantsToBeSelected;
+
+        // The game tells the block in the hand by the first block of its game block group, so
+        // after the group's first block the others would look held too. The block itself counts.
+        public bool Held =>
+            Item is MyToolbarItemCubeBlock
+                ? MyCubeBuilder.Static is { IsActivated: true } builder
+                    && builder.CurrentBlockDefinition?.BlockPairName
+                        == ((MyCubeBlockDefinition)Definition).BlockPairName
+                : Item.WantsToBeSelected;
     }
 
     // Mimics the Tools Switcher plugin: welder, grinder and drill, the best tier first

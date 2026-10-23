@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Screens.Helpers;
@@ -98,6 +99,11 @@ public class ItemGroupToolbarItem : MyToolbarItem
         if (member == null || (current && member == held))
             return false;
 
+        // The game takes a block of the game block group in hand for the same slot pressed
+        // again, and switches the grid size instead of the block
+        if (member != held && member.Item is MyToolbarItemCubeBlock)
+            MyCubeBuilder.Static?.CubeBuilderState?.CurrentBlockDefinitionStages.Clear();
+
         // The game's own activation of a tool or block slot, which also syncs it in multiplayer.
         // Switching to a group whose item is already in the hand only makes it the current one.
         if (member != held && !member.Item.Activate())
@@ -109,6 +115,7 @@ public class ItemGroupToolbarItem : MyToolbarItem
     }
 
     // Whether the mouse wheel should step through this group: it is in use with a hand item
+    // or a block, which the game would otherwise cycle through its own block variants with
     public bool ScrollsWith(MyCharacter character)
     {
         var group = Group;
@@ -116,7 +123,9 @@ public class ItemGroupToolbarItem : MyToolbarItem
             return false;
 
         group.Update(character, MySession.Static.LocalPlayerId);
-        return IsCurrent(group.Held) && group.Held.Item is MyToolbarItemWeapon;
+        var held = group.Held;
+        return IsCurrent(held)
+            && (held.Item is MyToolbarItemWeapon || held.Item is MyToolbarItemCubeBlock);
     }
 
     public override ChangeInfo Update(MyEntity owner, long playerID = 0, bool anyoneCanUse = false)
