@@ -25,8 +25,8 @@ from item_groups_check import (
 WELDER = "Welder/Welder4"
 GRINDER = "AngleGrinder/AngleGrinder4"
 DRILL = "HandDrill/HandDrill4"
-LIGHT = "CubeBlock/LargeBlockArmorBlock"
-HEAVY = "CubeBlock/LargeHeavyBlockArmorBlock"
+LIGHT = "CubeBlock/LargeBlockArmorSlope"
+HEAVY = "CubeBlock/LargeHeavyBlockArmorSlope"
 
 # Group name, then the G menu category and name of each of its items
 GROUPS = {
@@ -35,12 +35,12 @@ GROUPS = {
         ("Character Tools", "Elite Hand Drill"),
     ],
     "Armor": [
-        ("Armor Blocks", "Light Armor Block"),
-        ("Armor Blocks", "Heavy Armor Block"),
+        ("Armor Blocks", "Light Armor Slope"),
+        ("Armor Blocks", "Heavy Armor Slope"),
     ],
     "Mixed": [
         ("Character Tools", "Elite Welder"),
-        ("Armor Blocks", "Light Armor Block"),
+        ("Armor Blocks", "Light Armor Slope"),
     ],
 }
 

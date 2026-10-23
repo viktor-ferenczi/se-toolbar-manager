@@ -84,9 +84,11 @@ Several groups can be on the toolbar at the same time, on any slots and pages, a
 may share items. Each slot steps only through its own group. Going back to a group's
 slot equips the item it was on last, and pressing it again moves on from there.
 
-While holding a tool or weapon from the group used last, with that group on the current
-toolbar page, scroll up to move forward through the group or down to move backward. Both inputs pick the first
-available item of each kind in tile order, regardless of its level. Scrolling in menus
+While holding a tool, weapon or block from the group used last, with that group on the
+current toolbar page, scroll up to move forward through the group or down to move backward.
+Both inputs pick the first available item of each kind in tile order, regardless of its
+level. With a block of the group in hand the wheel steps through the group instead of the
+game's block variants. Scrolling in menus
 or with Ctrl, Shift or Alt held keeps the game's normal behavior.
 
 The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
@@ -98,6 +100,12 @@ staging area shows the items of the group selected above it:
   add them at the end. The block variants on the right can be dragged in too. Greyed out
   items, which you don't have or haven't researched yet, can be added as well, so a group
   can be set up before you get every tier of a tool.
+- A game block group, a block tile with a `+` in its corner like the Light Armor Block,
+  adds its blocks one by one, in the order the game cycles through them. Blocks already
+  in the group stay where they are. This way the group can mix blocks of several game
+  groups, and single blocks can be moved or removed. To add only one block of a game
+  group, drag it from the block variants on the right. A group saved before version 1.7.4
+  keeps such a tile as its first block only; add the tile again to get the others.
 - Drag items inside the group to change their order. The first one wins, so put the one
   you prefer first. For example, an Enhanced Welder before an Elite Welder is selected
   when both are in your inventory. Right click removes an item.

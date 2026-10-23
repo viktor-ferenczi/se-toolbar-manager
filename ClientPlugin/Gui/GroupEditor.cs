@@ -305,7 +305,7 @@ public class GroupEditor
     }
 
     // Puts the item at the index, moving it there if the group already has it
-    private void Insert(MyDefinitionBase definition, int index)
+    private void Insert(MyDefinitionBase definition, int index, bool expandVariants)
     {
         var group = SelectedGroup;
         if (group == null)
@@ -317,11 +317,49 @@ public class GroupEditor
             return;
         }
 
-        var id = definition.Id.ToString();
-        var items = ListedItems(group).Where(i => i != id).ToList();
-        items.Insert(Math.Min(index, items.Count), id);
-        SetItems(group, items);
+        var listed = ListedItems(group).ToList();
+        var variants = expandVariants ? VariantsOf(definition) : null;
+        if (variants == null)
+        {
+            var id = definition.Id.ToString();
+            listed.Remove(id);
+            listed.Insert(Math.Min(index, listed.Count), id);
+        }
+        else
+        {
+            // Blocks already in the group stay where they are
+            var added = variants.Where(id => !listed.Contains(id)).ToList();
+            listed.InsertRange(Math.Min(index, listed.Count), added);
+        }
+
+        SetItems(group, listed);
         MyGuiAudio.PlaySound(MyGuiSounds.HudItem);
+    }
+
+    // The blocks of a game block group, the tiles with a + in the block grid, in the order the
+    // game cycles through them. On the toolbar such a tile would take the mouse wheel to cycle
+    // its own variants, so the group gets its blocks one by one instead. Blocks not unlocked
+    // yet are kept, like greyed out items. Null for a block without variants.
+    private static string[] VariantsOf(MyDefinitionBase definition)
+    {
+        if (
+            !(definition is MyCubeBlockDefinition block)
+            || block.BlockVariantsGroup == null
+            || block.BlockStages == null
+            || block.BlockStages.Length == 0
+        )
+            return null;
+
+        return block
+            .BlockStages.Select(id =>
+                MyDefinitionManager.Static.TryGetCubeBlockDefinition(id, out var variant)
+                    ? variant
+                    : null
+            )
+            .Prepend(block)
+            .Where(variant => variant != null && variant.Public)
+            .Select(variant => variant.Id.ToString())
+            .ToArray();
     }
 
     // Double click in the block grid while editing
@@ -330,7 +368,8 @@ public class GroupEditor
             DefinitionOf(
                 new MyGuiScreenToolbarConfigBase.GridItemUserData { ItemData = () => data }
             ),
-            int.MaxValue
+            int.MaxValue,
+            true
         );
 
     // Item ids as listed, dropping any whose definition is not loaded
@@ -353,7 +392,12 @@ public class GroupEditor
         )
             return;
 
-        Insert(DefinitionOf(eventArgs.Item.UserData), eventArgs.DropTo.ItemIndex);
+        // Only the block grid has game block groups, the variant panel lists single blocks
+        Insert(
+            DefinitionOf(eventArgs.Item.UserData),
+            eventArgs.DropTo.ItemIndex,
+            eventArgs.DragFrom?.Grid == screen.m_gridBlocks
+        );
     }
 
     private void OnItemClicked(MyGuiControlGrid grid, MyGuiControlGrid.EventArgs eventArgs)
