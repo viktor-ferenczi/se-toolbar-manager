@@ -91,7 +91,9 @@ at the bottom left of the G menu turns on edit mode, where the
 staging area shows the items of the group selected above it:
 
 - Drag tools, weapons and blocks from the G menu into the group, or double click them to
-  add them at the end. The block variants on the right can be dragged in too.
+  add them at the end. The block variants on the right can be dragged in too. Greyed out
+  items, which you don't have or haven't researched yet, can be added as well, so a group
+  can be set up before you get every tier of a tool.
 - Drag items inside the group to change their order. The first one wins, so put the one
   you prefer first. For example, an Enhanced Welder before an Elite Welder is selected
   when both are in your inventory. Right click removes an item.
@@ -264,6 +266,10 @@ enabled and disabled, using the same test slot.
 
 `tests/tool_order_check.py` checks button and wheel cycling with lower levels before
 higher levels in tile order, then checks that reordering a tool changes the selection.
+
+`tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
+double click in edit mode only, and that the group equips them once they are in the
+inventory. It needs a Remote build whose grid gestures reach disabled items.
 
 ### Release
 
