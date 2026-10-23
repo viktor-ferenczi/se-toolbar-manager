@@ -279,64 +279,50 @@ public static class ItemGroupsToolbarConfigPatch
         MyGuiGridItem item
     ) => item is { Enabled: false } && GroupEditor.IsEditing(screen);
 
+    // The drag handlers, not the StartDragging they call: the JIT may inline that small
+    // method into them, which would skip a patch on it
     [HarmonyPrefix]
-    [HarmonyPatch(
-        "StartDragging",
-        new[]
-        {
-            typeof(MyDropHandleType),
-            typeof(MyGuiControlGrid),
-            typeof(MyGuiControlGrid.EventArgs),
-        },
-        new[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Ref }
-    )]
-    private static bool StartDraggingGridPrefix(
+    [HarmonyPatch(nameof(MyGuiScreenToolbarConfigBase.OnGridDrag))]
+    private static bool OnGridDragPrefix(
         MyGuiScreenToolbarConfigBase __instance,
-        MyDropHandleType dropHandlingType,
-        MyGuiControlGrid grid,
-        ref MyGuiControlGrid.EventArgs args
+        MyGuiControlGrid sender,
+        MyGuiControlGrid.EventArgs eventArgs
     )
     {
-        var item = grid.GetItemAt(args.ItemIndex);
+        var item = sender.GetItemAt(eventArgs.ItemIndex);
         if (!IsGreyedOutWhileEditing(__instance, item))
             return true;
 
         __instance.m_dragAndDrop.StartDragging(
-            dropHandlingType,
-            args.Button,
+            MyDropHandleType.MouseRelease,
+            eventArgs.Button,
             item,
-            new MyDragAndDropInfo { Grid = grid, ItemIndex = args.ItemIndex },
+            new MyDragAndDropInfo { Grid = sender, ItemIndex = eventArgs.ItemIndex },
             false
         );
-        grid.HideToolTip();
+        sender.HideToolTip();
         return false;
     }
 
     [HarmonyPrefix]
-    [HarmonyPatch(
-        "StartDragging",
-        typeof(MyDropHandleType),
-        typeof(MyGuiControlResearchGraph),
-        typeof(MyGuiGridItem)
-    )]
-    private static bool StartDraggingResearchPrefix(
+    [HarmonyPatch("OnResearchGraphItemDragged")]
+    private static bool OnResearchGraphItemDraggedPrefix(
         MyGuiScreenToolbarConfigBase __instance,
-        MyDropHandleType dropHandlingType,
-        MyGuiControlResearchGraph graph,
-        MyGuiGridItem draggingItem
+        object sender,
+        MyGuiGridItem item
     )
     {
-        if (!IsGreyedOutWhileEditing(__instance, draggingItem))
+        if (!IsGreyedOutWhileEditing(__instance, item))
             return true;
 
         __instance.m_dragAndDrop.StartDragging(
-            dropHandlingType,
+            MyDropHandleType.MouseRelease,
             MySharedButtonsEnum.Primary,
-            draggingItem,
+            item,
             new MyDragAndDropInfo(),
             false
         );
-        graph.HideToolTip();
+        (sender as MyGuiControlResearchGraph)?.HideToolTip();
         return false;
     }
 
