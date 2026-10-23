@@ -132,6 +132,33 @@ with the world and in toolbar profiles. A world saved with group slots still loa
 the plugin; those slots are just empty then. On a dedicated server the server does not keep
 group slots, so you have to put them back after reconnecting.
 
+#### Fitting blocks
+
+With a block of a group in hand and the placement box on a grid, press the middle mouse
+button to select the next block of the group that fits there, turned the way it fits.
+Pressing again moves on to the next fitting block, and after the last one it starts over.
+For example, with the light armor blocks in a group it picks the cube for a hole in a
+wall, the slope for a gap in a row of slopes and the corner at the corner of a sloped
+roof. If nothing in the group fits, a short message says so and the block in hand stays.
+
+A block fits when its faces match the faces of the blocks around it. A face that would
+stick out where the neighbor has none, like a full face against the slanted side of a
+slope, counts more than leaving part of the neighbor's face uncovered. The blocks of the
+group that match best are the ones that fit. The shapes come from the blocks' mount points.
+
+Conveyor blocks fit by their ports instead: every port of a neighbor pointing into the
+cell has to be met by a port of the same size, no port may run into a block that has no
+port there, and at least one port has to connect. So a tube is not offered against the
+middle of another tube. A block without ports fits an open conveyor end only as a cap,
+mounted on that end alone.
+
+The middle button paints blocks in the game. With a group's block in hand and the
+placement box on a grid, a plain middle button press selects instead of painting.
+Ctrl, Shift or Alt with the middle button paints as usual, and so does the middle button
+with a block from an ordinary slot. The plugin's
+configuration can switch the button to one of the extra mouse buttons or turn it off,
+and can add a keyboard key for it.
+
 ### Quick block selection
 
 Press the `BACKSLASH` or `PIPE` key (on English keyboard) to open the quick

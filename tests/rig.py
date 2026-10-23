@@ -15,6 +15,9 @@ Remote and Toolbar Manager from their working copies as dev folders.
 The client is headless, but renders by default: without rendering MyHud.HudDefinition
 stays null, and the game's own G menu throws on it in survival (the research graph).
 
+TBM_STEAM=1 launches with Steam instead, for DLC blocks, waiting for the machine's
+single SE1 Steam slot.
+
 TBM_REMOTE points to the Remote working copy (default ~/ws/se/se1/plugins/remote),
 SE_WORKSPACE to the workspace (default: three levels above this repository).
 """
@@ -276,21 +279,27 @@ def launch(c: Client, render: bool = True) -> None:
     c.log.unlink(missing_ok=True)
     args = [
         "-multiInstance", "-lazySteam", "-noprompt", "-noupdate", "-nosplash",
-        "-stablelogs", "-sources", "--no-steam", "-appdata", str(c.appdata),
-        "--client-id", str(c.client_id), "--quality", "minimal",
+        "-stablelogs", "-sources", "-appdata", str(c.appdata), "--quality", "minimal",
         "--resolution", "1280x720", "--no-audio", "--headless",
     ]  # fmt: skip
+    # TBM_STEAM=1 runs with the machine's Steam account, which owns the DLCs, through the
+    # single Steam slot of the game (testing/game-test-instance-modes/README.md, mode C)
+    steam = os.environ.get("TBM_STEAM") == "1"
+    command = [str(c.launcher), *args]
+    if steam:
+        command = [str(PARALLEL / "steam-slot.sh"), "se1", str(c.appdata), "--", *command]
+    else:
+        command += ["--no-steam", "--client-id", str(c.client_id)]
     env = {}
     if not render:
-        args.append("--no-render")
+        command.append("--no-render")
         env["PULSAR_NO_RENDER"] = "true"
     process = subprocess.Popen(
         [
             str(PARALLEL / "run-test.sh"),
             str(NEED_GIB["render" if render else "no-render"]),
             "--",
-            str(c.launcher),
-            *args,
+            *command,
         ],
         cwd=c.pulsar,
         env={**os.environ, **env},

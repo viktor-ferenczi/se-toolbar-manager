@@ -5,7 +5,9 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.Gui;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.SessionComponents;
 using Sandbox.Game.World;
 using VRage.Game;
 using VRage.Game.Models;
@@ -66,13 +68,19 @@ public static class FittingBlock
         // The group's blocks in the size of the grid, as the cube builder would place them
         var members = new List<ItemGroup.Member>();
         var definitions = new List<MyCubeBlockDefinition>();
+        var dlc = MySession.Static.GetComponent<MySessionComponentDLC>();
         foreach (var candidate in group.Members)
         {
             if (!candidate.Available || !(candidate.Definition is MyCubeBlockDefinition definition))
                 continue;
             var pair = MyDefinitionManager.Static.GetDefinitionGroup(definition.BlockPairName);
             definition = grid.GridSizeEnum == MyCubeSize.Large ? pair?.Large : pair?.Small;
-            if (definition == null || definitions.Contains(definition))
+            // The game refuses to equip a block of a DLC the player doesn't own
+            if (
+                definition == null
+                || definitions.Contains(definition)
+                || dlc?.GetFirstMissingDefinitionDLC(definition, Sync.MyId) != null
+            )
                 continue;
             members.Add(candidate);
             definitions.Add(definition);
