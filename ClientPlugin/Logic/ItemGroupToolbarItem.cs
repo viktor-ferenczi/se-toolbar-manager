@@ -99,10 +99,11 @@ public class ItemGroupToolbarItem : MyToolbarItem
         if (member == null || (current && member == held))
             return false;
 
-        // The game takes a block of the game block group in hand for the same slot pressed
-        // again, and switches the grid size instead of the block
-        if (member != held && member.Item is MyToolbarItemCubeBlock)
-            MyCubeBuilder.Static?.CubeBuilderState?.CurrentBlockDefinitionStages.Clear();
+        // Like the game's toolbar, put the cube builder away before switching from a block.
+        // Switching in place skips the builder's reset: the placement box could lose the grid
+        // in view, and a block of the same game block group would switch the grid size.
+        if (member != held && MyCubeBuilder.Static is { IsActivated: true })
+            character.SwitchToWeapon(null);
 
         // The game's own activation of a tool or block slot, which also syncs it in multiplayer.
         // Switching to a group whose item is already in the hand only makes it the current one.

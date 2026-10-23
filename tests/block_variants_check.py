@@ -144,8 +144,7 @@ def run_after_restart(game: Game, group: list[str]) -> None:
     restarted.select_group(screen, "Armor")
     check(
         "the group reloads with its single blocks",
-        items(restarted) == group
-        and len(restarted.group_items(screen)) == len(group),
+        items(restarted) == group and len(restarted.group_items(screen)) == len(group),
         str(restarted.group_items(screen)[:4]),
     )
     restarted.click(screen, "DoneGroupButton")
