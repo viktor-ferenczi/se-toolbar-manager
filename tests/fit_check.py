@@ -415,7 +415,10 @@ def main() -> int:
             api.set_build_color(index, 0.0, 0.5, 0.5)
         setup_toolbar(game)
         fit = Fit(game)
+        only = os.environ.get("TBM_FIT_CASES")
         for case in CASES:
+            if only and case.name not in only.split(","):
+                continue
             try:
                 run_case(fit, case)
             except (

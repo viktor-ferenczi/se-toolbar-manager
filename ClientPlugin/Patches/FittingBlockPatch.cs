@@ -20,6 +20,8 @@ public static class FittingBlockPatch
     [HarmonyPatch(nameof(MyCubeBuilder.HandleGameInput))]
     private static bool HandleGameInputPrefix(ref bool __result)
     {
+        FittingBlock.ApplyRotation();
+
         var input = MyInput.Static;
         if (holdingButton && !input.IsMousePressed(MyMouseButtonsEnum.Middle))
             holdingButton = false;

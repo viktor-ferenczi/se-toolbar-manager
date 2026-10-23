@@ -26,6 +26,11 @@ public static class FittingBlock
 
     private static MyHudNotification noFit;
 
+    // The rotation to give the picked block once the cube builder holds it on the grid
+    private static MyDefinitionId pendingBlock;
+    private static Matrix pendingRotation;
+    private static int pendingFrames;
+
     public static bool IsPressed(IMyInput input)
     {
         var config = Config.Current;
@@ -124,11 +129,37 @@ public static class FittingBlock
         if (member != held && !item.Equip(character, member, held))
             return true;
 
-        // Like a rotation by the player, so aligning to the default mount point leaves it be
+        pendingBlock = picked.Id;
+        pendingRotation = matrix;
+        pendingFrames = RotationFrames;
+        ApplyRotation();
+        return true;
+    }
+
+    // Equipping the block activates the cube builder anew, and taking up the grid again
+    // aligns the block to its default mount point. So the rotation is applied on a few
+    // frames, as a rotation by the player, which the alignment leaves be.
+    private const int RotationFrames = 10;
+
+    public static void ApplyRotation()
+    {
+        if (pendingFrames == 0)
+            return;
+        pendingFrames--;
+
+        var builder = MyCubeBuilder.Static;
+        if (
+            builder is not { IsActivated: true }
+            || builder.m_currentGrid == null
+            || builder.CurrentBlockDefinition?.Id != pendingBlock
+        )
+            return;
+
+        var space = builder.m_gizmo.SpaceDefault;
+        var matrix = pendingRotation;
         matrix.Translation = space.m_localMatrixAdd.Translation;
         space.m_localMatrixAdd = matrix;
         builder.m_customRotation = true;
-        return true;
     }
 
     private static Placed Neighbor(
