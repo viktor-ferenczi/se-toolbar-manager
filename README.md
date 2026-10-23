@@ -77,7 +77,7 @@ A group puts several tools, weapons and blocks into one slot of your character t
 Using the slot equips the first available item in tile order. Pressing the slot again
 moves on to the next item: all tiers of a tool count as one, and every block is a step of
 its own. With the default group that is welder, grinder, then hand drill. Tools you don't
-carry and blocks you haven't unlocked are skipped. If none of the items can be used,
+carry, blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the items can be used,
 nothing happens.
 
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
@@ -134,12 +134,15 @@ group slots, so you have to put them back after reconnecting.
 
 #### Fitting blocks
 
-With a block of a group in hand and the placement box on a grid, press the middle mouse
-button to select the next block of the group that fits there, turned the way it fits.
-Pressing again moves on to the next fitting block, and after the last one it starts over.
-For example, with the light armor blocks in a group it picks the cube for a hole in a
-wall, the slope for a gap in a row of slopes and the corner at the corner of a sloped
-roof. If nothing in the group fits, a short message says so and the block in hand stays.
+With a block of a group in hand and the placement box on a grid, hold Shift and turn the
+mouse wheel to step through only the blocks of the group that fit there, each turned the
+way it fits. The extra mouse buttons do the same without the wheel: the forward button
+(mouse 5) selects the next fitting block, the back button (mouse 4) the previous one.
+After the last fitting block it starts over. For example, with the light armor blocks in
+a group it picks the cube for a hole in a wall, the slope for a gap in a row of slopes
+and the corner at the corner of a sloped roof. If nothing in the group fits, the game's
+sound of a refused placement plays, a short message says so and the block in hand stays.
+The wheel without Shift steps through the whole group as before.
 
 A block fits when its faces match the faces of the blocks around it. A face that would
 stick out where the neighbor has none, like a full face against the slanted side of a
@@ -152,12 +155,10 @@ port there, and at least one port has to connect. So a tube is not offered again
 middle of another tube. A block without ports fits an open conveyor end only as a cap,
 mounted on that end alone.
 
-The middle button paints blocks in the game. With a group's block in hand and the
-placement box on a grid, a plain middle button press selects instead of painting.
-Ctrl, Shift or Alt with the middle button paints as usual, and so does the middle button
-with a block from an ordinary slot. The plugin's
-configuration can switch the button to one of the extra mouse buttons or turn it off,
-and can add a keyboard key for it.
+The plugin's configuration can change the wheel's modifier key to Ctrl or Alt or turn it
+off, assign the next and previous actions to other mouse buttons, and add keyboard keys
+for them. When the middle button is assigned, a plain middle button press that selects a
+block doesn't paint; otherwise it paints as in the game.
 
 ### Quick block selection
 

@@ -3,13 +3,14 @@
     TBM_SLOT=16 uv run --with httpx python tests/fit_check.py [--attach] [--keep]
 
 Starts the client with block groups written before the launch, pastes small static
-grids with a gap, aims the cube builder into the gap and presses the middle mouse
-button with a block of a group in hand. Each press must select the expected block,
-and a left click must place it in the expected rotation. Without a group in hand the
-middle button must paint as in the vanilla game. These are the in-game counterparts of
-the offline cases in tests/BlockFit.Tests. Prints PASS or FAIL per check and exits
-non-zero on a failure. --attach uses a client this script started before with --keep,
-which leaves it running.
+grids with a gap, aims the cube builder into the gap and presses the next fitting block
+button (extra mouse button 2) with a block of a group in hand. Each press must select the
+expected block, and a left click must place it in the expected rotation. Shift and the
+wheel, and the previous button, step through the fitting blocks too. The middle button
+must paint as in the vanilla game. These are the in-game counterparts of the offline
+cases in tests/BlockFit.Tests. TBM_FIT_CASES=name,... runs only those cases ("wheel" for
+the wheel checks). Prints PASS or FAIL per check and exits non-zero on a failure.
+--attach uses a client this script started before with --keep, which leaves it running.
 """
 
 from __future__ import annotations
@@ -300,6 +301,13 @@ class Fit:
         self.api.set_input_state(scroll=self.game.wheel)
         time.sleep(1.0)
 
+    def shift_scroll(self, delta: int) -> None:
+        self.game.wheel += delta
+        self.api.set_input_state(keys=["LeftShift"], scroll=self.game.wheel)
+        time.sleep(0.3)
+        self.api.set_input_state(scroll=self.game.wheel)
+        time.sleep(1.0)
+
     def no_fit_shown(self) -> bool:
         data = self.api.get_hud_notifications(self.notifications)
         self.notifications = data.get("latest", self.notifications)
@@ -344,7 +352,7 @@ def run_case(fit: Fit, case: Case) -> None:
     colors = {cell: c["colorMaskHsv"] for cell, c in fit.cubes().items()}
     before = len(colors)
     for press, expected in enumerate(case.presses, 1):
-        fit.button(mouse_middle=True)
+        fit.button(mouse_xbutton2=True)
         if expected is None:
             check(
                 f"{case.name}: press {press} finds no fit",
@@ -382,6 +390,66 @@ def run_case(fit: Fit, case: Case) -> None:
         and (case.forward is None or placed["forward"] == case.forward)
         and (case.up is None or placed["up"] == case.up),
         detail,
+    )
+
+
+def run_dlc_skip(fit: Fit) -> None:
+    """Without Steam no DLC is owned: the slot and the wheel skip the beams"""
+    game = fit.game
+    game.holster()
+    held = []
+    for _ in range(3):
+        game.press_slot(GROUP_SLOTS["Beams"])
+        held.append(fit.held())
+    game.scroll(120)
+    held.append(fit.held())
+    game.scroll(-120)
+    held.append(fit.held())
+    check(
+        "dlc: the Beams slot and the wheel keep to the cube",
+        held == ["LargeBlockArmorBlock"] * len(held),
+        str(held),
+    )
+
+
+def run_wheel(fit: Fit) -> None:
+    """Shift and the wheel step through the fitting blocks only, both ways, the previous
+    button steps back, the plain wheel steps through the whole group, and the middle
+    button paints with a group's block in hand"""
+    game = fit.game
+    fit.paste([tube(DOWN), tube((0, -2, 0))])
+    case = Case("wheel", "Conveyors", "LargeBlockArmorBlock", [], DOWN, [])
+    if not check("wheel: holds LargeBlockArmorBlock", hold(fit, case), str(fit.held())):
+        return
+    fit.aim(DOWN)
+    steps = []
+    for name, action in [
+        ("Shift+wheel up", lambda: fit.shift_scroll(120)),
+        ("Shift+wheel up", lambda: fit.shift_scroll(120)),
+        ("Shift+wheel down", lambda: fit.shift_scroll(-120)),
+        ("previous button", lambda: fit.button(mouse_xbutton1=True)),
+        ("plain wheel up", lambda: game.scroll(120)),
+    ]:
+        action()
+        steps.append(f"{name}: {fit.held()}")
+    expected = [
+        "Shift+wheel up: LargeBlockConveyorCap",
+        "Shift+wheel up: ConveyorTube",
+        "Shift+wheel down: LargeBlockConveyorCap",
+        "previous button: ConveyorTubeCurved",
+        "plain wheel up: LargeBlockArmorBlock",
+    ]
+    for got, want in zip(steps, expected):
+        check(f"wheel: {want}", got == want, got)
+
+    tube_cell = add(TARGET, DOWN)
+    before = fit.cubes()[tube_cell]["colorMaskHsv"]
+    fit.button(mouse_middle=True)
+    color = fit.cubes()[tube_cell]["colorMaskHsv"]
+    check(
+        "wheel: the middle button paints with a group's block in hand",
+        color != before and fit.held() == "LargeBlockArmorBlock",
+        f"{before} -> {color}, holds {fit.held()}",
     )
 
 
@@ -426,6 +494,10 @@ def main() -> int:
             ) as e:  # noqa: BLE001 -- report and go on with the next case
                 check(f"{case.name}: completed", False, f"{type(e).__name__}: {e}")
             game.shot(case.name.replace(" ", "-"))
+        if not only or "wheel" in only.split(","):
+            run_wheel(fit)
+        if not STEAM:
+            run_dlc_skip(fit)
         run_vanilla(fit)
         fit.clear()
         check(

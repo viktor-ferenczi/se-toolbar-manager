@@ -4,11 +4,13 @@ using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.GUI;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.SessionComponents;
 using Sandbox.Game.World;
+using VRage.Audio;
 using VRage.Game;
 using VRage.Game.Models;
 using VRage.Input;
@@ -31,28 +33,65 @@ public static class FittingBlock
     private static Matrix pendingRotation;
     private static int pendingFrames;
 
-    public static bool IsPressed(IMyInput input)
+    // 1 for the next fitting block, -1 for the previous one, 0 if not asked for
+    public static int Direction(IMyInput input, out bool middleButton)
     {
         var config = Config.Current;
-        if (config.FitBlockKey.HasPressed(input))
-            return true;
+        middleButton = false;
 
-        var button = config.FitBlockButton switch
+        var delta = input.DeltaMouseScrollWheelValue();
+        if (delta != 0 && config.FitScrollModifier != Config.FitModifier.None)
+        {
+            var ctrl = input.IsAnyCtrlKeyPressed();
+            var shift = input.IsAnyShiftKeyPressed();
+            var alt = input.IsAnyAltKeyPressed();
+            var held = config.FitScrollModifier switch
+            {
+                Config.FitModifier.Shift => shift && !ctrl && !alt,
+                Config.FitModifier.Ctrl => ctrl && !shift && !alt,
+                _ => alt && !ctrl && !shift,
+            };
+            if (held)
+                return delta > 0 ? 1 : -1;
+        }
+
+        if (
+            config.NextFitKey.HasPressed(input)
+            || Pressed(input, config.NextFitButton, ref middleButton)
+        )
+            return 1;
+        if (
+            config.PreviousFitKey.HasPressed(input)
+            || Pressed(input, config.PreviousFitButton, ref middleButton)
+        )
+            return -1;
+        return 0;
+    }
+
+    private static bool Pressed(IMyInput input, Config.FitMouseButton choice, ref bool middleButton)
+    {
+        var button = choice switch
         {
             Config.FitMouseButton.MiddleButton => MyMouseButtonsEnum.Middle,
             Config.FitMouseButton.ExtraButton1 => MyMouseButtonsEnum.XButton1,
             Config.FitMouseButton.ExtraButton2 => MyMouseButtonsEnum.XButton2,
             _ => MyMouseButtonsEnum.None,
         };
-        return button != MyMouseButtonsEnum.None
-            && input.IsNewMousePressed(button)
-            && !input.IsAnyCtrlKeyPressed()
-            && !input.IsAnyShiftKeyPressed()
-            && !input.IsAnyAltKeyPressed();
+        if (
+            button == MyMouseButtonsEnum.None
+            || !input.IsNewMousePressed(button)
+            || input.IsAnyCtrlKeyPressed()
+            || input.IsAnyShiftKeyPressed()
+            || input.IsAnyAltKeyPressed()
+        )
+            return false;
+
+        middleButton = button == MyMouseButtonsEnum.Middle;
+        return true;
     }
 
     // Whether the press was for this, with a group's block in hand aiming at a grid cell
-    public static bool Select(ItemGroupToolbarItem item, MyCharacter character)
+    public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
     {
         var builder = MyCubeBuilder.Static;
         var group = item.Group;
@@ -99,12 +138,15 @@ public static class FittingBlock
         var pick = Next(
             candidates,
             members.IndexOf(held),
+            direction,
             RotationOf(space.m_localMatrixAdd),
             new Int3(position.X, position.Y, position.Z),
             cell => Neighbor(grid, cell, placed)
         );
         if (!pick.HasValue)
         {
+            // The sound of a placement the game refuses
+            MyGuiAudio.PlaySound(MyGuiSounds.HudUnable);
             noFit ??= new MyHudNotification(
                 MyStringId.GetOrCompute("No block of the group fits here"),
                 1500,

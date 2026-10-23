@@ -9,8 +9,9 @@ namespace ClientPlugin.Patches;
 // ReSharper disable UnusedType.Global
 // ReSharper disable InconsistentNaming
 
-// The fitting block button runs before the cube builder's input. The middle button also
-// paints the aimed block in the game, which a press selecting a block must not do.
+// The fitting block inputs run before the cube builder's input. The middle button, when
+// bound to it, also paints the aimed block in the game, which a press selecting a block
+// must not do.
 [HarmonyPatch(typeof(MyCubeBuilder))]
 public static class FittingBlockPatch
 {
@@ -26,14 +27,15 @@ public static class FittingBlockPatch
         if (holdingButton && !input.IsMousePressed(MyMouseButtonsEnum.Middle))
             holdingButton = false;
 
-        if (!FittingBlock.IsPressed(input))
+        var direction = FittingBlock.Direction(input, out var middleButton);
+        if (direction == 0)
             return true;
 
         var item = ItemGroupScrollPatch.GroupInUse(out var character);
-        if (item == null || !FittingBlock.Select(item, character))
+        if (item == null || !FittingBlock.Select(item, character, direction))
             return true;
 
-        holdingButton = input.IsMousePressed(MyMouseButtonsEnum.Middle);
+        holdingButton = middleButton;
         __result = true;
         return false;
     }

@@ -4,7 +4,10 @@ using System.Linq;
 using System.Xml.Serialization;
 using Sandbox.Definitions;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.SessionComponents;
+using Sandbox.Game.World;
 using VRage.Game;
 using VRage.Game.Entity;
 
@@ -62,7 +65,15 @@ public class ItemGroup
                     : definition.Id.ToString();
         }
 
-        public bool Available => Item.Enabled;
+        // The game refuses to equip a block of a DLC the player doesn't own
+        public bool Available =>
+            Item.Enabled
+            && !(
+                Definition is MyCubeBlockDefinition block
+                && MySession
+                    .Static?.GetComponent<MySessionComponentDLC>()
+                    ?.GetFirstMissingDefinitionDLC(block, Sync.MyId) != null
+            );
 
         // The game tells the block in the hand by the first block of its game block group, so
         // after the group's first block the others would look held too. The block itself counts.

@@ -30,8 +30,11 @@ public class Config : INotifyPropertyChanged
     private string latestProfileSearchText = "";
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
-    private FitMouseButton fitBlockButton = FitMouseButton.MiddleButton;
-    private Binding fitBlockKey = new Binding(MyKeys.None);
+    private FitModifier fitScrollModifier = FitModifier.Shift;
+    private FitMouseButton nextFitButton = FitMouseButton.ExtraButton2;
+    private Binding nextFitKey = new Binding(MyKeys.None);
+    private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
+    private Binding previousFitKey = new Binding(MyKeys.None);
 
     private ItemGroup[] itemGroups;
 
@@ -126,20 +129,44 @@ public class Config : INotifyPropertyChanged
     public static void EditItemGroups() => GroupEditor.OpenFromSettings();
 
     public const string FitBlockDescription =
-        "With a block of a group in hand and aiming at a grid, selects the next block\nof the group whose faces and conveyor ports fit the aimed position";
+        "With a block of a group in hand and aiming at a grid, selects the next or previous\nblock of the group whose faces and conveyor ports fit the aimed position";
 
-    [Dropdown(label: "Fitting block button", description: FitBlockDescription)]
-    public FitMouseButton FitBlockButton
+    [Dropdown(
+        label: "Fitting blocks wheel",
+        description: "Modifier key which makes the mouse wheel step through\nonly the blocks of the group that fit the aimed position"
+    )]
+    public FitModifier FitScrollModifier
     {
-        get => fitBlockButton;
-        set => SetField(ref fitBlockButton, value);
+        get => fitScrollModifier;
+        set => SetField(ref fitScrollModifier, value);
     }
 
-    [Keybind(label: "Fitting block key", description: FitBlockDescription)]
-    public Binding FitBlockKey
+    [Dropdown(label: "Next fitting block", description: FitBlockDescription)]
+    public FitMouseButton NextFitButton
     {
-        get => fitBlockKey;
-        set => SetField(ref fitBlockKey, value);
+        get => nextFitButton;
+        set => SetField(ref nextFitButton, value);
+    }
+
+    [Keybind(label: "Next fitting block key", description: FitBlockDescription)]
+    public Binding NextFitKey
+    {
+        get => nextFitKey;
+        set => SetField(ref nextFitKey, value);
+    }
+
+    [Dropdown(label: "Previous fitting block", description: FitBlockDescription)]
+    public FitMouseButton PreviousFitButton
+    {
+        get => previousFitButton;
+        set => SetField(ref previousFitButton, value);
+    }
+
+    [Keybind(label: "Previous fitting block key", description: FitBlockDescription)]
+    public Binding PreviousFitKey
+    {
+        get => previousFitKey;
+        set => SetField(ref previousFitKey, value);
     }
 
     [XmlIgnore]
@@ -158,7 +185,16 @@ public class Config : INotifyPropertyChanged
 
     #endregion
 
-    // Pressed without Ctrl, Shift or Alt, which keep the game's block painting on the middle button
+    // Held alone, without the other two
+    public enum FitModifier
+    {
+        None,
+        Shift,
+        Ctrl,
+        Alt,
+    }
+
+    // Pressed without Ctrl, Shift or Alt
     public enum FitMouseButton
     {
         None,

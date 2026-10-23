@@ -27,6 +27,9 @@ var left = new Int3(-1, 0, 0);
 var right = new Int3(1, 0, 0);
 var identity = Rotation.All[0];
 
+// The direction Presses steps in
+var step = 1;
+
 // Rotation of a block facing forward with its top up, as MyBlockOrientation has it
 Rotation Facing(Int3 f, Int3 u)
 {
@@ -106,7 +109,7 @@ void Presses(
     var rotation = identity;
     for (var press = 0; press < Math.Max(expected.Length, 1); press++)
     {
-        var pick = Next(candidates, current, rotation, origin, Lookup(grid));
+        var pick = Next(candidates, current, step, rotation, origin, Lookup(grid));
         var got = pick.HasValue ? group[pick.Value.Index] : null;
         var want = expected.Length == 0 ? null : expected[press].name;
         var ok = got == want;
@@ -280,12 +283,27 @@ Presses(
     ("LargeBlockConveyorPipeSeamless", identity)
 );
 
+// Stepping backward visits the same fits in the opposite order
+step = -1;
+Presses(
+    "conveyor: open end, backward",
+    Grid(("ConveyorTube", down, identity), ("ConveyorTube", new Int3(0, -2, 0), identity)),
+    conveyors,
+    "LargeBlockArmorBlock",
+    ("ConveyorTubeCurved", null),
+    ("ConveyorTube", identity),
+    ("LargeBlockConveyorCap", identity),
+    ("ConveyorTubeCurved", null)
+);
+step = 1;
+
 // The current rotation stays when it fits as well as any other
 {
     var turned = Facing(left, up);
     var pick = Next(
         Group(armor),
         0,
+        1,
         turned,
         origin,
         Lookup(Grid(("LargeBlockArmorBlock", down, identity)))

@@ -387,22 +387,25 @@ public static class BlockFit
         return picks;
     }
 
-    // The first fitting candidate after the current one, wrapping around to the current
-    // one itself. Null if none fits.
+    // The first fitting candidate after the current one in the direction, wrapping around
+    // to the current one itself. Null if none fits.
     public static Pick? Next(
         IList<Candidate> candidates,
         int current,
+        int direction,
         Rotation rotation,
         Int3 position,
         Func<Int3, Placed> grid
     )
     {
+        var count = candidates.Count;
+        if (current < 0)
+            current = direction > 0 ? -1 : count;
+
         var picks = Evaluate(candidates, position, rotation, grid);
-        for (var step = 1; step <= candidates.Count; step++)
+        for (var step = 1; step <= count; step++)
         {
-            var pick = picks[
-                ((current + step) % candidates.Count + candidates.Count) % candidates.Count
-            ];
+            var pick = picks[((current + direction * step) % count + count) % count];
             if (pick.HasValue)
                 return pick;
         }
