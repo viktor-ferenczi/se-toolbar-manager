@@ -124,8 +124,10 @@ public static class FittingBlock
         if (member != held && !item.Equip(character, member, held))
             return true;
 
+        // Like a rotation by the player, so aligning to the default mount point leaves it be
         matrix.Translation = space.m_localMatrixAdd.Translation;
         space.m_localMatrixAdd = matrix;
+        builder.m_customRotation = true;
         return true;
     }
 

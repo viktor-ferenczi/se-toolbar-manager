@@ -84,6 +84,8 @@ class Case:
     # Forward and up the placed block must have, None for any
     forward: str | None = None
     up: str | None = None
+    # Meters to move the aimed point by, to hit the solid part of a slanted face
+    offset: tuple[float, float, float] = (0, 0, 0)
 
 
 def cube(cell, subtype="LargeBlockArmorBlock", forward="Forward", up="Up"):
@@ -117,7 +119,8 @@ CASES = [
             cube(LEFT, "LargeBlockArmorSlope"),
             cube(RIGHT, "LargeBlockArmorSlope"),
         ],
-        DOWN,
+        # Aligning to the default mount point would put the bottom on the wall
+        FORWARD,
         ["LargeBlockArmorSlope", "LargeBlockArmorSlope"],
         "Forward",
         "Up",
@@ -131,10 +134,11 @@ CASES = [
             cube(RIGHT, "LargeBlockArmorSlope"),
             cube(FORWARD, "LargeBlockArmorSlope", forward="Right"),
         ],
-        DOWN,
+        RIGHT,
         ["LargeBlockArmorCorner"],
         "Forward",
         "Up",
+        (0, -0.6, 0),
     ),
     Case(
         "beam end",
@@ -276,11 +280,11 @@ class Fit:
             self.grid = None
             time.sleep(1)
 
-    def aim(self, direction) -> None:
+    def aim(self, direction, offset=(0, 0, 0)) -> None:
         """Faces the face between the gap and its neighbor in the direction from 6 m"""
         gap = self.world(TARGET)
         neighbor = self.world(add(TARGET, direction))
-        face = tuple((a + b) / 2 for a, b in zip(gap, neighbor))
+        face = tuple((a + b) / 2 + o for a, b, o in zip(gap, neighbor, offset))
         away = tuple(a - b for a, b in zip(gap, neighbor))
         length = sum(x * x for x in away) ** 0.5
         stand = tuple(g + 6 * a / length for g, a in zip(gap, away))
@@ -335,7 +339,7 @@ def run_case(fit: Fit, case: Case) -> None:
     fit.paste(case.blocks)
     if not check(f"{case.name}: holds {case.held}", hold(fit, case), str(fit.held())):
         return
-    fit.aim(case.aim)
+    fit.aim(case.aim, case.offset)
     fit.no_fit_shown()
     colors = {cell: c["colorMaskHsv"] for cell, c in fit.cubes().items()}
     before = len(colors)
