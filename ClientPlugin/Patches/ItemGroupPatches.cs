@@ -79,27 +79,17 @@ public static class ItemGroupScrollPatch
         )
             return true;
 
-        // Prefer the selected group; an ordinary tool slot may also be selected.
-        var item = toolbar.SelectedItem as ItemGroupToolbarItem;
-        for (var slot = 0; slot < toolbar.SlotCount; slot++)
-        {
-            var candidate = item ?? toolbar.GetSlotItem(slot) as ItemGroupToolbarItem;
-            if (candidate == null)
-                continue;
+        // The group in use, even when an ordinary slot holding the same tool is selected
+        var item = Enumerable
+            .Range(0, toolbar.SlotCount)
+            .Select(toolbar.GetSlotItem)
+            .OfType<ItemGroupToolbarItem>()
+            .FirstOrDefault(candidate => candidate.ScrollsWith(character));
+        if (item == null)
+            return true;
 
-            var group = Config.Current.FindItemGroup(candidate.GroupId);
-            group?.Update(character, MySession.Static.LocalPlayerId);
-            if (group?.Held?.Item is MyToolbarItemWeapon)
-            {
-                candidate.Activate(delta > 0 ? 1 : -1);
-                return false;
-            }
-
-            if (item != null)
-                break;
-        }
-
-        return true;
+        item.Activate(delta > 0 ? 1 : -1);
+        return false;
     }
 }
 
