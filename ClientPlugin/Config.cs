@@ -30,6 +30,8 @@ public class Config : INotifyPropertyChanged
     private string latestProfileSearchText = "";
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
+    private FitMouseButton fitBlockButton = FitMouseButton.MiddleButton;
+    private Binding fitBlockKey = new Binding(MyKeys.None);
 
     private ItemGroup[] itemGroups;
 
@@ -123,6 +125,23 @@ public class Config : INotifyPropertyChanged
     [Button(label: "Edit groups", description: "Opens the G menu in group edit mode, in a world")]
     public static void EditItemGroups() => GroupEditor.OpenFromSettings();
 
+    public const string FitBlockDescription =
+        "With a block of a group in hand and aiming at a grid, selects the next block\nof the group whose faces and conveyor ports fit the aimed position";
+
+    [Dropdown(label: "Fitting block button", description: FitBlockDescription)]
+    public FitMouseButton FitBlockButton
+    {
+        get => fitBlockButton;
+        set => SetField(ref fitBlockButton, value);
+    }
+
+    [Keybind(label: "Fitting block key", description: FitBlockDescription)]
+    public Binding FitBlockKey
+    {
+        get => fitBlockKey;
+        set => SetField(ref fitBlockKey, value);
+    }
+
     [XmlIgnore]
     public ItemGroup[] ItemGroups
     {
@@ -138,6 +157,15 @@ public class Config : INotifyPropertyChanged
     public ItemGroup FindItemGroup(string id) => ItemGroups.FirstOrDefault(g => g.Id == id);
 
     #endregion
+
+    // Pressed without Ctrl, Shift or Alt, which keep the game's block painting on the middle button
+    public enum FitMouseButton
+    {
+        None,
+        MiddleButton,
+        ExtraButton1,
+        ExtraButton2,
+    }
 
     #region Property change notification boilerplate
 

@@ -33,7 +33,7 @@ public class ItemGroupToolbarItem : MyToolbarItem
     // Loading a world activates its saved selected slot, which must not step that group on
     public static void OnSessionLoading() => activeGroupId = null;
 
-    private ItemGroup Group => Config.Current.FindItemGroup(GroupId);
+    public ItemGroup Group => Config.Current.FindItemGroup(GroupId);
 
     private string Position => Positions.TryGetValue(GroupId, out var kind) ? kind : null;
 
@@ -99,6 +99,12 @@ public class ItemGroupToolbarItem : MyToolbarItem
         if (member == null || (current && member == held))
             return false;
 
+        return Equip(character, member, held);
+    }
+
+    // Equips the member of the group and makes this the group in use
+    public bool Equip(MyCharacter character, ItemGroup.Member member, ItemGroup.Member held)
+    {
         // Like the game's toolbar, put the cube builder away before switching from a block.
         // Switching in place skips the builder's reset: the placement box could lose the grid
         // in view, and a block of the same game block group would switch the grid size.
