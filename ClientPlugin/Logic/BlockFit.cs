@@ -161,6 +161,10 @@ public static class BlockFit
         public string Family;
 
         public bool HasPorts => Ports.Length != 0;
+
+        // Sampled faces by rotation, cell relative to the block's position and direction.
+        // A face depends only on the shape, so it is sampled once per game session.
+        public readonly Dictionary<(Int3, Int3, Int3, Int3), bool[]> Faces = new();
     }
 
     public sealed class Placed
@@ -199,6 +203,14 @@ public static class BlockFit
         // The mountpoints on the face of a grid cell of this block towards the direction,
         // sampled at the same grid points for both blocks touching on that face
         public bool[] Face(Int3 cell, Int3 direction)
+        {
+            var key = (Rotation.X, Rotation.Y, cell - Position, direction);
+            if (!Shape.Faces.TryGetValue(key, out var mask))
+                Shape.Faces[key] = mask = Sample(cell, direction);
+            return mask;
+        }
+
+        private bool[] Sample(Int3 cell, Int3 direction)
         {
             var mask = new bool[Samples * Samples];
             var local = Rotation.Inverse(direction);
@@ -295,11 +307,13 @@ public static class BlockFit
     public static double? Score(Placed block, Func<Int3, Placed> grid, Target target)
     {
         var cells = new HashSet<Int3>(block.Cells);
+        if (cells.Any(cell => grid(cell) != null))
+            return null;
         var boundary = cells
             .SelectMany(cell => Int3.Directions.Select(d => (cell, d)))
             .Where(f => !cells.Contains(f.cell + f.d))
             .ToList();
-        if (boundary.Count == 0 || cells.Any(cell => grid(cell) != null))
+        if (boundary.Count == 0)
             return null;
 
         // The kinds of the neighbors' ports pointing into the block's cells, by face. A face

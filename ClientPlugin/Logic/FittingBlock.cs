@@ -24,6 +24,14 @@ namespace ClientPlugin.Logic;
 public static class FittingBlock
 {
     private static readonly Dictionary<MyDefinitionId, Shape> Shapes = new();
+    private static readonly Dictionary<MyDefinitionId, Rotation[]> Rotations = new();
+
+    // Another world may load mods that change the definitions
+    public static void OnSessionLoading()
+    {
+        Shapes.Clear();
+        Rotations.Clear();
+    }
 
     private static MyHudNotification noFit;
 
@@ -252,7 +260,7 @@ public static class FittingBlock
     }
 
     // What the matcher saw, so a missed fit can be reproduced in tests/BlockFit.Tests
-    public static void Log(Aimed aimed, string what)
+    private static void Log(Aimed aimed, string what)
     {
         var grid = aimed.Grid;
         var target = aimed.Target;
@@ -437,16 +445,20 @@ public static class FittingBlock
             new Vector3(r.Y.X, r.Y.Y, r.Y.Z)
         );
 
-    private static Rotation[] RotationsOf(MyCubeBlockDefinition definition) =>
-        Rotation
-            .All.Where(r =>
-                MyCubeBuilder.CheckValidBlockRotation(
-                    MatrixOf(r),
-                    definition.Direction,
-                    definition.Rotation
+    private static Rotation[] RotationsOf(MyCubeBlockDefinition definition)
+    {
+        if (!Rotations.TryGetValue(definition.Id, out var rotations))
+            Rotations[definition.Id] = rotations = Rotation
+                .All.Where(r =>
+                    MyCubeBuilder.CheckValidBlockRotation(
+                        MatrixOf(r),
+                        definition.Direction,
+                        definition.Rotation
+                    )
                 )
-            )
-            .ToArray();
+                .ToArray();
+        return rotations;
+    }
 
     private static Shape ShapeOf(MyCubeBlockDefinition definition)
     {

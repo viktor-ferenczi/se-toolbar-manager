@@ -53,6 +53,7 @@ public class Plugin : IPlugin
     {
         MyGuiScreenToolbarConfigBasePatch.OnSessionLoading();
         ItemGroupToolbarItem.OnSessionLoading();
+        FittingBlock.OnSessionLoading();
 
         // Another world may load other mods, so the definitions behind the group items change
         foreach (var group in Config.Current.ItemGroups)

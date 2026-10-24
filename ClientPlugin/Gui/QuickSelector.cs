@@ -97,8 +97,6 @@ public class QuickSelector : MyGuiScreenBase
         members = item.Group.Members;
         aimed = FittingBlock.Aim(item.Group);
         picks = aimed?.Evaluate();
-        if (aimed != null)
-            FittingBlock.Log(aimed, "quick selector");
 
         EnabledBackgroundFade = false;
         CanHideOthers = false;

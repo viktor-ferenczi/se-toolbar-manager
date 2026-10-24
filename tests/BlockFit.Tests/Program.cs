@@ -4,7 +4,7 @@
 //     dotnet run --project tests/BlockFit.Tests [-- --scores]
 //
 // Prints PASS or FAIL per check and exits non-zero on a failure. --scores also prints
-// the score of every candidate.
+// the score of every candidate. --bench times the evaluation of a 100 block group.
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +26,36 @@ var backward = new Int3(0, 0, 1);
 var left = new Int3(-1, 0, 0);
 var right = new Int3(1, 0, 0);
 var identity = Rotation.All[0];
+
+if (args.Contains("--bench"))
+{
+    // Every block in the file, repeated to 100, against armor around the gap: the work
+    // of opening the quick selector for a large group
+    var names = Enumerable.Range(0, 100).Select(i => blocks.Keys.ElementAt(i % blocks.Count));
+    var group = Group(names.ToArray());
+    var cube = blocks["LargeBlockArmorBlock"];
+    var benchGrid = new Dictionary<Int3, Placed>();
+    foreach (var d in new[] { down, left, right, forward, backward })
+        benchGrid[d] = new Placed(cube, identity, d);
+    var benchTarget = new Target
+    {
+        AddPos = origin,
+        AddDir = up,
+        Aimed = down,
+        LargePortSpan = 1,
+    };
+    var clock = System.Diagnostics.Stopwatch.StartNew();
+    Evaluate(group, benchTarget, identity, Lookup(benchGrid));
+    var first = clock.Elapsed.TotalMilliseconds;
+    clock.Restart();
+    const int runs = 20;
+    for (var i = 0; i < runs; i++)
+        Evaluate(group, benchTarget, identity, Lookup(benchGrid));
+    Console.WriteLine(
+        $"Evaluate of {group.Length} blocks: first {first:0.0} ms, then {clock.Elapsed.TotalMilliseconds / runs:0.0} ms"
+    );
+    return 0;
+}
 
 // The direction Presses steps in, and the direction of the aimed neighbor from the gap,
 // or else the target as it is
