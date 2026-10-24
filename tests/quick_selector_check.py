@@ -20,7 +20,17 @@ import time
 
 import fit_check
 import rig
-from fit_check import CASES, GROUP_SLOTS, GROUPS, PLAIN_BLOCK, PLAIN_SLOT, Fit
+from fit_check import (
+    CASES,
+    GROUP_SLOTS,
+    GROUPS,
+    PLAIN_BLOCK,
+    PLAIN_SLOT,
+    Case,
+    Fit,
+    add,
+    cube,
+)
 from item_groups_check import Game, check, results, wait
 
 SCREEN = "QuickSelector"
@@ -36,6 +46,11 @@ GROUPS["Mixed"] = [
     "CubeBlock/LargeBlockArmorSlope",
 ]
 GROUP_SLOTS["Mixed"] = 7
+GROUPS["Thrusters"] = [
+    "Thrust/LargeBlockSmallHydrogenThrust",
+    "Thrust/LargeBlockLargeHydrogenThrust",
+]
+GROUP_SLOTS["Thrusters"] = 8
 
 CHECKED = [
     "cube gap",
@@ -208,6 +223,77 @@ def game_shot(sel: Selector, name: str) -> None:
     sel.game.shot("quick-" + name.replace(" ", "-"))
 
 
+def run_thrusters(sel: Selector) -> None:
+    """Under a hydrogen tank's bottom port with beams along every side of the space a large
+    thruster takes: its side ports may end against the beams, so Shift+wheel and the
+    selector offer it, and the game places it there"""
+    fit, game = sel.fit, sel.game
+    blocks = [
+        (
+            "OxygenTank",
+            "LargeHydrogenTank",
+            add(fit_check.TARGET, (-1, 1, -1)),
+            "Forward",
+            "Up",
+        )
+    ]
+    for y in (-2, -1, 0):
+        for i in (-1, 0, 1):
+            for cell in ((2, y, i), (-2, y, i), (i, y, 2), (i, y, -2)):
+                blocks.append(cube(cell, "LargeGridBeamBlock"))
+    fit.paste(blocks)
+    case = Case(
+        "thrusters", "Thrusters", "LargeBlockSmallHydrogenThrust", [], (0, 1, 0), []
+    )
+    if not check(
+        "thrusters: holds the small thruster",
+        fit_check.hold(fit, case),
+        str(fit.held()),
+    ):
+        return
+    # The thruster hangs 3 cells down, a character closer than that is in its way
+    fit.aim(case.aim, distance=11)
+    fit.button()
+    seen = set()
+    for _ in range(3):
+        fit.shift_scroll(120)
+        seen.add(fit.held())
+    check(
+        "thrusters: Shift+wheel offers the large thruster beside beams",
+        seen == {"LargeBlockSmallHydrogenThrust", "LargeBlockLargeHydrogenThrust"},
+        str(sorted(seen)),
+    )
+    if not check("thrusters: Shift+Ctrl opens the selector", sel.open()):
+        sel.release()
+        return
+    check(
+        "thrusters: both thrusters are marked",
+        sel.fitting() == {0, 1},
+        str(sel.fitting()),
+    )
+    sel.click(1)
+    check(
+        "thrusters: click selects the large thruster",
+        fit.held() == "LargeBlockLargeHydrogenThrust",
+        str(fit.held()),
+    )
+    game_shot(sel, "thrusters")
+    sel.release()
+    before = set(fit.cubes())
+    fit.button(mouse_left=True)
+    placed = wait(
+        lambda: next(
+            (c for cell, c in fit.cubes().items() if cell not in before), None
+        ),
+        5,
+    )
+    check(
+        "thrusters: the large thruster is placed under the tank",
+        bool(placed) and placed["subtypeId"] == "LargeBlockLargeHydrogenThrust",
+        placed["subtypeId"] if placed else "nothing placed",
+    )
+
+
 def run_mixed(sel: Selector) -> None:
     """A tool of a mixed group in hand: no fit marks, a click equips a block"""
     fit, game = sel.fit, sel.game
@@ -285,6 +371,7 @@ def main() -> int:
             except Exception as e:  # noqa: BLE001 -- go on with the next case
                 check(f"{case.name}: completed", False, f"{type(e).__name__}: {e}")
                 sel.release()
+        run_thrusters(sel)
         run_mixed(sel)
         run_no_group(sel)
         fit.clear()

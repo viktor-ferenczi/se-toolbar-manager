@@ -64,7 +64,13 @@ BLOCKS = [
     "ConveyorFrameMedium",
     "SmallShipConveyorHub",
     "SmallBlockConveyorCapMedium",
+    "LargeBlockLargeHydrogenThrust",
+    "LargeBlockSmallHydrogenThrust",
+    "LargeHydrogenTank",
 ]
+
+# Block types of conveyor lines, as FittingBlock.ConveyorTypes has them
+CONVEYOR_TYPES = {"Conveyor", "ConveyorConnector", "ConveyorSorter", "ShipConnector"}
 
 SIDES = ["Right", "Top", "Front", "Left", "Bottom", "Back"]
 CUBE_SIZE = {"Large": 2.5, "Small": 0.5}
@@ -296,6 +302,7 @@ def main() -> None:
             "rotation": block.findtext("Rotation") or "Both",
             "mounts": mounts,
             "ports": ports(game, block, size, center, cube_size),
+            "conveyor": block.findtext("Id/TypeId") in CONVEYOR_TYPES,
             "family": (
                 "armor"
                 if block.find("CubeDefinition") is not None

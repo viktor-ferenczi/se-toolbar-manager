@@ -26,6 +26,15 @@ public static class FittingBlock
     private static readonly Dictionary<MyDefinitionId, Shape> Shapes = new();
     private static readonly Dictionary<MyDefinitionId, Rotation[]> Rotations = new();
 
+    // The block types of conveyor lines, see Shape.Conveyor
+    private static readonly HashSet<string> ConveyorTypes = new()
+    {
+        "MyObjectBuilder_Conveyor",
+        "MyObjectBuilder_ConveyorConnector",
+        "MyObjectBuilder_ConveyorSorter",
+        "MyObjectBuilder_ShipConnector",
+    };
+
     // Another world may load mods that change the definitions
     public static void OnSessionLoading()
     {
@@ -489,6 +498,7 @@ public static class FittingBlock
                 : definition.BlockVariantsGroup != null
                     ? definition.BlockVariantsGroup.Id.ToString()
                 : definition.Id.ToString(),
+            Conveyor = ConveyorTypes.Contains(definition.Id.TypeId.ToString()),
         };
         Shapes[definition.Id] = shape;
         return shape;

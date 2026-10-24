@@ -160,6 +160,11 @@ public static class BlockFit
         // group like the beams, or else a block alone
         public string Family;
 
+        // Tubes, junctions, sorters and connectors carry the conveyor line, so none of
+        // their ports may end against a block. Other blocks, like a thruster or a tank, may
+        // leave a port against a beam or a wall, as the game allows.
+        public bool Conveyor;
+
         public bool HasPorts => Ports.Length != 0;
 
         // Sampled faces by rotation, cell relative to the block's position and direction.
@@ -393,9 +398,9 @@ public static class BlockFit
         return (sticking + 0.5 * uncovered) / (Samples * Samples);
     }
 
-    // Each face a neighbor port points into is met by a port of the same kind and no port
-    // runs into an occupied cell without a port to meet it. The number of connected faces,
-    // 0 if it doesn't fit.
+    // Each face a neighbor port points into is met by a port of the same kind, and no port
+    // of a conveyor block runs into an occupied cell without a port to meet it. The number
+    // of connected faces, 0 if it doesn't fit.
     private static int PortsFit(
         Placed block,
         Func<Int3, Placed> grid,
@@ -412,9 +417,10 @@ public static class BlockFit
             if (!own.TryGetValue(face.Key, out var kinds) || !kinds.Any(face.Value.Contains))
                 return 0;
 
-        foreach (var face in own.Keys)
-            if (!incoming.ContainsKey(face) && grid(face.Item1 + face.Item2) != null)
-                return 0;
+        if (block.Shape.Conveyor)
+            foreach (var face in own.Keys)
+                if (!incoming.ContainsKey(face) && grid(face.Item1 + face.Item2) != null)
+                    return 0;
 
         return incoming.Count;
     }

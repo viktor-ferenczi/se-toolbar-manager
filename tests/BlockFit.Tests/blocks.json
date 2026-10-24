@@ -122,6 +122,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope": {
@@ -247,6 +248,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeBlockArmorCorner": {
@@ -372,6 +374,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeBlockArmorCornerInv": {
@@ -548,6 +551,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeHalfArmorBlock": {
@@ -656,6 +660,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope2Base": {
@@ -798,6 +803,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope2Tip": {
@@ -957,6 +963,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "armor"
  },
  "LargeGridBeamBlock": {
@@ -1184,6 +1191,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockEnd": {
@@ -1411,6 +1419,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockJunction": {
@@ -1672,6 +1681,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockTJunction": {
@@ -1916,6 +1926,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope": {
@@ -2109,6 +2120,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockRound": {
@@ -2302,6 +2314,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockHalf": {
@@ -2529,6 +2542,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockHalfSlope": {
@@ -2688,6 +2702,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope2x1Base": {
@@ -2932,6 +2947,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope2x1Tip": {
@@ -3125,6 +3141,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeBlockConveyor": {
@@ -3329,6 +3346,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTube": {
@@ -3515,6 +3533,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeCurved": {
@@ -3701,6 +3720,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeT": {
@@ -3968,6 +3988,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorCap": {
@@ -4008,6 +4029,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorPipeSeamless": {
@@ -4194,6 +4216,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeEnd": {
@@ -4380,6 +4403,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeFlange": {
@@ -4566,6 +4590,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCorner": {
@@ -4752,6 +4777,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeJunction": {
@@ -4956,6 +4982,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeT": {
@@ -5070,6 +5097,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCap": {
@@ -5110,6 +5138,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockSmallContainer": {
@@ -5314,6 +5343,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ContainerGroup"
  },
  "LargeRefinery": {
@@ -5664,6 +5694,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/RefineryGroup"
  },
  "LargeAssembler": {
@@ -5946,6 +5977,7 @@
     "kind": "upgrade"
    }
   ],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/AssemblerGroup"
  },
  "LargeProductivityModule": {
@@ -6098,6 +6130,7 @@
     "kind": "upgrade"
    }
   ],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/UpgradeModuleGroup"
  },
  "LargeEnergyModule": {
@@ -6250,6 +6283,7 @@
     "kind": "upgrade"
    }
   ],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/UpgradeModuleGroup"
  },
  "SmallBlockConveyor": {
@@ -6454,6 +6488,7 @@
     "kind": "small"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeSmall": {
@@ -6640,6 +6675,7 @@
     "kind": "small"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeSmallCurved": {
@@ -6724,6 +6760,7 @@
     "kind": "small"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "SmallBlockConveyorCap": {
@@ -6764,6 +6801,7 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeMedium": {
@@ -6950,6 +6988,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorFrameMedium": {
@@ -7136,6 +7175,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "SmallShipConveyorHub": {
@@ -7596,6 +7636,7 @@
     "kind": "large"
    }
   ],
+  "conveyor": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "SmallBlockConveyorCapMedium": {
@@ -7636,6 +7677,612 @@
    }
   ],
   "ports": [],
+  "conveyor": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
+ },
+ "LargeBlockLargeHydrogenThrust": {
+  "size": [
+   3,
+   3,
+   3
+  ],
+  "center": [
+   1,
+   1,
+   2
+  ],
+  "mirror": [
+   1,
+   1,
+   2
+  ],
+  "direction": "Both",
+  "rotation": "Both",
+  "mounts": [
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     1.001,
+     2.9996
+    ],
+    "e": [
+     2.999,
+     1.999,
+     3.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     1.001,
+     0.001,
+     2.9996
+    ],
+    "e": [
+     1.999,
+     0.999,
+     3.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     1.001,
+     2.001,
+     2.9996
+    ],
+    "e": [
+     1.999,
+     2.999,
+     3.0004
+    ]
+   },
+   {
+    "n": [
+     1,
+     0,
+     0
+    ],
+    "s": [
+     2.9996,
+     1.001,
+     2.999
+    ],
+    "e": [
+     3.0004,
+     1.999,
+     2.001
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     1.001,
+     0.0004,
+     2.001
+    ],
+    "e": [
+     1.999,
+     -0.0004,
+     2.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     1.001,
+     2.001
+    ],
+    "e": [
+     -0.0004,
+     1.999,
+     2.999
+    ]
+   },
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     1.001,
+     2.9996,
+     2.999
+    ],
+    "e": [
+     1.999,
+     3.0004,
+     2.001
+    ]
+   }
+  ],
+  "ports": [
+   {
+    "c": [
+     0,
+     0,
+     0
+    ],
+    "d": [
+     0,
+     0,
+     1
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     0,
+     -1,
+     0
+    ],
+    "d": [
+     0,
+     -1,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     -1,
+     0,
+     0
+    ],
+    "d": [
+     -1,
+     0,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     1,
+     0,
+     0
+    ],
+    "d": [
+     1,
+     0,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     0,
+     1,
+     0
+    ],
+    "d": [
+     0,
+     1,
+     0
+    ],
+    "kind": "large"
+   }
+  ],
+  "conveyor": false,
+  "family": "MyObjectBuilder_BlockVariantGroup/ThrusterHydroGroup"
+ },
+ "LargeBlockSmallHydrogenThrust": {
+  "size": [
+   1,
+   1,
+   1
+  ],
+  "center": [
+   0,
+   0,
+   0
+  ],
+  "mirror": [
+   0,
+   0,
+   0
+  ],
+  "direction": "Both",
+  "rotation": "Both",
+  "mounts": [
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.001,
+     0.9996
+    ],
+    "e": [
+     0.999,
+     0.999,
+     1.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     0.201,
+     0.9996,
+     0.999
+    ],
+    "e": [
+     0.799,
+     1.0004,
+     0.8009999999999999
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     0.201,
+     0.0004,
+     0.801
+    ],
+    "e": [
+     0.799,
+     -0.0004,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.201,
+     0.801
+    ],
+    "e": [
+     -0.0004,
+     0.799,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     1,
+     0,
+     0
+    ],
+    "s": [
+     0.9996,
+     0.201,
+     0.999
+    ],
+    "e": [
+     1.0004,
+     0.799,
+     0.8009999999999999
+    ]
+   }
+  ],
+  "ports": [
+   {
+    "c": [
+     0,
+     0,
+     0
+    ],
+    "d": [
+     0,
+     0,
+     1
+    ],
+    "kind": "large"
+   }
+  ],
+  "conveyor": false,
+  "family": "MyObjectBuilder_BlockVariantGroup/ThrusterHydroGroup"
+ },
+ "LargeHydrogenTank": {
+  "size": [
+   3,
+   3,
+   3
+  ],
+  "center": [
+   1,
+   1,
+   1
+  ],
+  "mirror": [
+   1,
+   1,
+   1
+  ],
+  "direction": "Both",
+  "rotation": "Both",
+  "mounts": [
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     0.001,
+     2.9996,
+     1.999
+    ],
+    "e": [
+     2.999,
+     3.0004,
+     1.001
+    ]
+   },
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     1.001,
+     2.9996,
+     2.999
+    ],
+    "e": [
+     1.999,
+     3.0004,
+     2.001
+    ]
+   },
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     1.001,
+     2.9996,
+     0.9990000000000001
+    ],
+    "e": [
+     1.999,
+     3.0004,
+     0.0009999999999998899
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     0.001,
+     0.0004,
+     1.001
+    ],
+    "e": [
+     2.999,
+     -0.0004,
+     1.999
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     1.001,
+     0.0004,
+     0.001
+    ],
+    "e": [
+     1.999,
+     -0.0004,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     1.001,
+     0.0004,
+     2.001
+    ],
+    "e": [
+     1.999,
+     -0.0004,
+     2.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.001,
+     1.001
+    ],
+    "e": [
+     -0.0004,
+     2.999,
+     1.999
+    ]
+   },
+   {
+    "n": [
+     1,
+     0,
+     0
+    ],
+    "s": [
+     2.9996,
+     0.001,
+     1.999
+    ],
+    "e": [
+     3.0004,
+     2.999,
+     1.001
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     -1
+    ],
+    "s": [
+     1.999,
+     0.001,
+     0.0004
+    ],
+    "e": [
+     1.001,
+     2.999,
+     -0.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     1.001,
+     0.001,
+     2.9996
+    ],
+    "e": [
+     1.999,
+     2.999,
+     3.0004
+    ]
+   }
+  ],
+  "ports": [
+   {
+    "c": [
+     0,
+     1,
+     0
+    ],
+    "d": [
+     0,
+     1,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     0,
+     -1,
+     0
+    ],
+    "d": [
+     0,
+     -1,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     -1,
+     0,
+     0
+    ],
+    "d": [
+     -1,
+     0,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     1,
+     0,
+     0
+    ],
+    "d": [
+     1,
+     0,
+     0
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     0,
+     0,
+     -1
+    ],
+    "d": [
+     0,
+     0,
+     -1
+    ],
+    "kind": "large"
+   },
+   {
+    "c": [
+     0,
+     0,
+     1
+    ],
+    "d": [
+     0,
+     0,
+     1
+    ],
+    "kind": "large"
+   }
+  ],
+  "conveyor": false,
+  "family": "MyObjectBuilder_BlockVariantGroup/TankGroup"
  }
 }

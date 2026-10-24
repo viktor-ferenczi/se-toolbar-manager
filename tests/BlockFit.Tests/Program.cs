@@ -453,6 +453,35 @@ Presses(
     );
 }
 
+// Under a hydrogen tank's bottom port, with beams along every side of the space a large
+// thruster takes: the thrusters connect to the tank. The large one's side ports may end
+// against the beams, it isn't a conveyor block.
+at = null;
+aim = up;
+{
+    var items = new List<(string, Int3, Rotation)>
+    {
+        ("LargeHydrogenTank", new Int3(0, 2, 0), identity),
+    };
+    for (var y = -2; y <= 0; y++)
+    for (var i = -1; i <= 1; i++)
+    {
+        items.Add(("LargeGridBeamBlock", new Int3(2, y, i), identity));
+        items.Add(("LargeGridBeamBlock", new Int3(-2, y, i), identity));
+        items.Add(("LargeGridBeamBlock", new Int3(i, y, 2), identity));
+        items.Add(("LargeGridBeamBlock", new Int3(i, y, -2), identity));
+    }
+    Presses(
+        "thrusters under a tank, beams around",
+        Grid(items.ToArray()),
+        new[] { "LargeBlockSmallHydrogenThrust", "LargeBlockLargeHydrogenThrust" },
+        "LargeBlockSmallHydrogenThrust",
+        ("LargeBlockLargeHydrogenThrust", null),
+        ("LargeBlockSmallHydrogenThrust", null)
+    );
+}
+aim = down;
+
 // Small grid: a small conveyor junction takes the small cap and the small tube, not the
 // medium tube, whose ports are large, nor the medium cap
 at = null;
@@ -580,6 +609,7 @@ static Dictionary<string, Shape> Load(string path)
                 })
                 .ToArray(),
             Family = b.GetProperty("family").GetString(),
+            Conveyor = b.GetProperty("conveyor").GetBoolean(),
         };
         directions[block.Name] = b.GetProperty("direction").GetString();
         rotationsAllowed[block.Name] = b.GetProperty("rotation").GetString();

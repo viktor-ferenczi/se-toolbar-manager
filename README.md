@@ -164,10 +164,13 @@ match best are the ones that fit. The shapes come from the blocks' mount points.
 
 Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
 neighbor pointing into the block has to be met by a port of the same kind (large
-conveyor, small conveyor or upgrade), no port may run into a block that has no such port
-there, and at least one port has to connect. So a tube is not offered against the middle
-of another tube, and an upgrade module goes on a refinery or assembler with its ports on
-the machine's upgrade ports, with as many of them connected as possible. Ports of a kind
+conveyor, small conveyor or upgrade), and at least one port has to connect. A conveyor
+block (tube, junction, sorter or connector) also may not have a port running into a block
+that has no such port there, so a tube is not offered against the middle of another tube.
+Other blocks may: a thruster, tank or machine can leave a port against a beam or wall, as
+the game allows, so a large hydrogen thruster fits under a tank's port even when beams
+frame the space. An upgrade module goes on a refinery or assembler with its ports on the
+machine's upgrade ports, with as many of them connected as possible. Ports of a kind
 the block doesn't have are left alone: a tube may run past a machine's upgrade ports, and
 armor may cover them. A block without ports fits an open conveyor end only as a cap of the
 port's size, mounted on that end alone: the small cap on a small port, the medium cap on
