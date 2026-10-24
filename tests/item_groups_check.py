@@ -694,6 +694,8 @@ def run(game: Game) -> None:
     )
     game.scroll(120)
     held_check(game, "wheel: back to the drill", "HandDrill/HandDrill2")
+    # No wheel turn follows, and the G menu below needs the input override gone
+    game.clear_scroll()
 
     # Editing and resetting the default group
     screen = game.open_edit_mode()

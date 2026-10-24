@@ -139,7 +139,10 @@ def run(game: Game) -> None:
     game.scroll(120)
     held_check(game, "wheel: the next block", LIGHT)
     use("Mixed", LIGHT, "same block already in hand, stays")
-    use("Mixed", WELDER, "pressed again, the tool")
+    use("Mixed", SMALL_LIGHT, "pressed again with the block, the game's small variant")
+    use("Mixed", LIGHT, "pressed again, the large one")
+    game.scroll(120)
+    held_check(game, "wheel: the tool", WELDER)
     use("Hand Tools", WELDER, "same tool already in hand, stays")
     use("Cutters", DRILL, "still where it was")
 
