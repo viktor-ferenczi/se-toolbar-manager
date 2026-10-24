@@ -75,28 +75,40 @@ public static class ItemGroupScrollPatch
     {
         var input = MyInput.Static;
         delta = input.DeltaMouseScrollWheelValue();
-        var toolbar = MyToolbarComponent.CurrentToolbar;
         if (
             delta == 0
-            || toolbar?.ToolbarType != MyToolbarType.Character
-            || !toolbar.CanPlayerActivateItems
-            || !(MySession.Static?.ControlledEntity is MyCharacter character)
-            || MySession.Static.IsCameraUserControlledSpectator()
-            || MyGuiScreenGamePlay.DisableInput
-            || MyGuiScreenGamePlay.ActiveGameplayScreen != null
-            || MyScreenManager.GetScreenWithFocus() != MyGuiScreenGamePlay.Static
             || input.IsAnyCtrlKeyPressed()
             || input.IsAnyShiftKeyPressed()
             || input.IsAnyAltKeyPressed()
         )
             return null;
 
+        return GroupInUse(out _);
+    }
+
+    // The group used last, while its tool, weapon or block is in the hand in gameplay
+    public static ItemGroupToolbarItem GroupInUse(out MyCharacter character)
+    {
+        character = MySession.Static?.ControlledEntity as MyCharacter;
+        var toolbar = MyToolbarComponent.CurrentToolbar;
+        if (
+            toolbar?.ToolbarType != MyToolbarType.Character
+            || !toolbar.CanPlayerActivateItems
+            || character == null
+            || MySession.Static.IsCameraUserControlledSpectator()
+            || MyGuiScreenGamePlay.DisableInput
+            || MyGuiScreenGamePlay.ActiveGameplayScreen != null
+            || MyScreenManager.GetScreenWithFocus() != MyGuiScreenGamePlay.Static
+        )
+            return null;
+
         // The group in use, even when an ordinary slot holding the same tool is selected
+        var user = character;
         return Enumerable
             .Range(0, toolbar.SlotCount)
             .Select(toolbar.GetSlotItem)
             .OfType<ItemGroupToolbarItem>()
-            .FirstOrDefault(candidate => candidate.ScrollsWith(character));
+            .FirstOrDefault(candidate => candidate.ScrollsWith(user));
     }
 }
 

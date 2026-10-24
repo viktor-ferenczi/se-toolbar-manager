@@ -30,6 +30,12 @@ public class Config : INotifyPropertyChanged
     private string latestProfileSearchText = "";
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
+    private FitModifier fitScrollModifier = FitModifier.Shift;
+    private bool quickFit = true;
+    private FitMouseButton nextFitButton = FitMouseButton.ExtraButton2;
+    private Binding nextFitKey = new Binding(MyKeys.None);
+    private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
+    private Binding previousFitKey = new Binding(MyKeys.None);
 
     private ItemGroup[] itemGroups;
 
@@ -123,6 +129,57 @@ public class Config : INotifyPropertyChanged
     [Button(label: "Edit groups", description: "Opens the G menu in group edit mode, in a world")]
     public static void EditItemGroups() => GroupEditor.OpenFromSettings();
 
+    public const string FitBlockDescription =
+        "With a block of a group in hand and aiming at a grid, selects the next or previous\nblock of the group whose faces and conveyor ports fit the aimed position";
+
+    [Dropdown(
+        label: "Fitting blocks wheel",
+        description: "Modifier key which makes the mouse wheel step through\nonly the blocks of the group that fit the aimed position"
+    )]
+    public FitModifier FitScrollModifier
+    {
+        get => fitScrollModifier;
+        set => SetField(ref fitScrollModifier, value);
+    }
+
+    [Checkbox(
+        label: "Quick fitting block",
+        description: "Pressing the wheel's modifier key alone selects a fitting block right away:\nthe block in hand if it fits, turned to fit, or else the next one that fits"
+    )]
+    public bool QuickFit
+    {
+        get => quickFit;
+        set => SetField(ref quickFit, value);
+    }
+
+    [Dropdown(label: "Next fitting block", description: FitBlockDescription)]
+    public FitMouseButton NextFitButton
+    {
+        get => nextFitButton;
+        set => SetField(ref nextFitButton, value);
+    }
+
+    [Keybind(label: "Next fitting block key", description: FitBlockDescription)]
+    public Binding NextFitKey
+    {
+        get => nextFitKey;
+        set => SetField(ref nextFitKey, value);
+    }
+
+    [Dropdown(label: "Previous fitting block", description: FitBlockDescription)]
+    public FitMouseButton PreviousFitButton
+    {
+        get => previousFitButton;
+        set => SetField(ref previousFitButton, value);
+    }
+
+    [Keybind(label: "Previous fitting block key", description: FitBlockDescription)]
+    public Binding PreviousFitKey
+    {
+        get => previousFitKey;
+        set => SetField(ref previousFitKey, value);
+    }
+
     [XmlIgnore]
     public ItemGroup[] ItemGroups
     {
@@ -138,6 +195,24 @@ public class Config : INotifyPropertyChanged
     public ItemGroup FindItemGroup(string id) => ItemGroups.FirstOrDefault(g => g.Id == id);
 
     #endregion
+
+    // Held alone, without the other two
+    public enum FitModifier
+    {
+        None,
+        Shift,
+        Ctrl,
+        Alt,
+    }
+
+    // Pressed without Ctrl, Shift or Alt
+    public enum FitMouseButton
+    {
+        None,
+        MiddleButton,
+        ExtraButton1,
+        ExtraButton2,
+    }
 
     #region Property change notification boilerplate
 
