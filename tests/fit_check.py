@@ -4,12 +4,14 @@
 
 Starts the client with block groups written before the launch, pastes small static
 grids with a gap, aims the cube builder into the gap and presses the next fitting block
-button (extra mouse button 2) with a block of a group in hand. Each press must select the
-expected block, and a left click must place it in the expected rotation. Shift and the
-wheel, and the previous button, step through the fitting blocks too. The middle button
-must paint as in the vanilla game. These are the in-game counterparts of the offline
-cases in tests/BlockFit.Tests. TBM_FIT_CASES=name,... runs only those cases ("wheel" for
-the wheel checks). Prints PASS or FAIL per check and exits non-zero on a failure.
+button (extra mouse button 2) with a block of a group in hand: armor, beams, conveyors,
+upgrade modules, small grid conveyors. Each press must select the expected block, and a
+left click must place it in the expected rotation. Shift and the wheel, the previous
+button and the quick Shift press step through the fitting blocks too, also from a block
+without a small variant at a small grid. The middle button must paint as in the vanilla
+game. These are the in-game counterparts of the offline cases in tests/BlockFit.Tests.
+TBM_FIT_CASES=name,... runs only those cases, "wheel", "quick" and "size" the checks of
+those names. Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach uses a client this script started before with --keep, which leaves it running.
 """
 
@@ -442,13 +444,15 @@ def setup_toolbar(game: Game) -> None:
 
 
 def hold(fit: Fit, case: Case) -> bool:
-    """Steps the group's slot until the case's first block is in hand"""
+    """Equips the group and steps it with the wheel until the case's first block is in
+    hand. Pressing the slot again would switch the block's size."""
     game = fit.game
     game.holster()
+    game.press_slot(GROUP_SLOTS[case.group])
     for _ in range(len(GROUPS[case.group]) + 1):
-        game.press_slot(GROUP_SLOTS[case.group])
         if fit.held() == case.held:
             return True
+        game.scroll(120)
     return False
 
 
@@ -558,10 +562,12 @@ def run_dlc_skip(fit: Fit) -> None:
     """Without Steam no DLC is owned: the slot and the wheel skip the beams"""
     game = fit.game
     game.holster()
+    game.clear_scroll()
     held = []
-    for _ in range(3):
-        game.press_slot(GROUP_SLOTS["Beams"])
-        held.append(fit.held())
+    game.press_slot(GROUP_SLOTS["Beams"])
+    held.append(fit.held())
+    game.scroll(120)
+    held.append(fit.held())
     game.scroll(120)
     held.append(fit.held())
     game.scroll(-120)

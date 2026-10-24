@@ -7,7 +7,6 @@ using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.GUI;
 using Sandbox.Game.Gui;
 using Sandbox.Game.Multiplayer;
-using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.SessionComponents;
 using Sandbox.Game.World;
 using VRage.Audio;
@@ -125,7 +124,8 @@ public static class FittingBlock
 
     // Whether the press was for this, with a group's block in hand aiming at a grid cell
     // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
-    // nothing fits: the quick press of the wheel's modifier key
+    // nothing fits, unless the group has no block of the grid's size: the quick press of
+    // the wheel's modifier key
     public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
     {
         var builder = MyCubeBuilder.Static;
@@ -452,8 +452,8 @@ public static class FittingBlock
             var parts = name.Split('_');
             var kind =
                 parts.Length >= 2 && parts[0] == "detector" && parts[1].StartsWith("conveyor")
-                    ? (parts.Length > 2 && parts[2] == "small" ? "small" : "large")
-                : name.Contains("detector_upgrade") ? "upgrade"
+                    ? (parts.Length > 2 && parts[2] == "small" ? SmallPort : LargePort)
+                : name.Contains("detector_upgrade") ? UpgradePort
                 : null;
             if (kind == null)
                 continue;

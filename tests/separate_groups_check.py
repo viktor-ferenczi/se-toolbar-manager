@@ -27,6 +27,8 @@ GRINDER = "AngleGrinder/AngleGrinder4"
 DRILL = "HandDrill/HandDrill4"
 LIGHT = "CubeBlock/LargeBlockArmorSlope"
 HEAVY = "CubeBlock/LargeHeavyBlockArmorSlope"
+SMALL_LIGHT = "CubeBlock/SmallBlockArmorSlope"
+SMALL_HEAVY = "CubeBlock/SmallHeavyBlockArmorSlope"
 
 # Group name, then the G menu category and name of each of its items
 GROUPS = {
@@ -121,7 +123,10 @@ def run(game: Game) -> None:
 
     # A block group in between
     use("Armor", LIGHT, "first block")
-    use("Armor", HEAVY, "pressed again, next block")
+    use("Armor", SMALL_LIGHT, "pressed again, the game's small variant")
+    use("Armor", LIGHT, "pressed again, the large one")
+    game.scroll(120)
+    held_check(game, "wheel: the next block", HEAVY)
     use("Hand Tools", WELDER, "after the block group, still where it was")
     use("Armor", HEAVY, "after the tool group, still where it was")
 
@@ -129,9 +134,15 @@ def run(game: Game) -> None:
     use("Mixed", WELDER, "first item, on page 2")
     use("Mixed", LIGHT, "pressed again, the block")
     use("Armor", HEAVY, "page 1 again, still where it was")
-    use("Armor", LIGHT, "pressed again")
+    use("Armor", SMALL_HEAVY, "pressed again, the game's small variant")
+    use("Armor", HEAVY, "pressed again, the large one")
+    game.scroll(120)
+    held_check(game, "wheel: the next block", LIGHT)
     use("Mixed", LIGHT, "same block already in hand, stays")
-    use("Mixed", WELDER, "pressed again, the tool")
+    use("Mixed", SMALL_LIGHT, "pressed again with the block, the game's small variant")
+    use("Mixed", LIGHT, "pressed again, the large one")
+    game.scroll(120)
+    held_check(game, "wheel: the tool", WELDER)
     use("Hand Tools", WELDER, "same tool already in hand, stays")
     use("Cutters", DRILL, "still where it was")
 

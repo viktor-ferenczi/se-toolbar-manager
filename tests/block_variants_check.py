@@ -109,22 +109,26 @@ def run(game: Game) -> list[str]:
     game.holster()
     game.press_slot(SLOT)
     held("slot press: the first block", 0)
+    # Like the slot of a single block: the game switches to the small variant and back
     game.press_slot(SLOT)
-    held("pressed again: the light armor block", 1)
+    held_check(
+        game,
+        "pressed again: the game's small variant",
+        short(group[0]).replace("/Large", "/Small", 1),
+    )
+    game.press_slot(SLOT)
+    held("pressed again: the large one", 0)
     game.scroll(120)
-    held("wheel up: the group's next block, not the game's next variant", 2)
+    held("wheel up: the group's next block, not the game's next variant", 1)
     game.scroll(120)
-    held("wheel up again", 3)
+    held("wheel up again", 2)
     game.scroll(-120)
-    held("wheel down", 2)
+    held("wheel down", 1)
     game.scroll(-120)
-    game.scroll(-120)
-    held("wheel down twice: back to the heavy block before it", 0)
+    held("wheel down again: the first block", 0)
     game.scroll(-120)
     held("wheel down: wraps around to the last block", -1)
     game.clear_scroll()
-    game.press_slot(SLOT)
-    held("slot press after the wheel: wraps around to the first", 0)
 
     check(
         "no exceptions in the game log",

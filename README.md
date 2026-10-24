@@ -75,21 +75,24 @@ cleaned up after 90 days, but only when a profile is deleted the next time.
 
 A group puts several tools, weapons and blocks into one slot of your character toolbar.
 Using the slot equips the first available item in tile order. Pressing the slot again
-moves on to the next item: all tiers of a tool count as one, and every block is a step of
-its own. With the default group that is welder, grinder, then hand drill. Tools you don't
-carry, blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the items can be used,
-nothing happens.
+with a tool or weapon of the group in hand moves on to the next item, all tiers of a tool
+counting as one. With the default group that is welder, grinder, then hand drill. With a
+block of the group in hand, pressing the slot again does what it does on a block's own
+slot: it switches between the block's large and small variant. Tools you don't carry,
+blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the
+items can be used, nothing happens.
 
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
 may share items. Each slot steps only through its own group. Going back to a group's
-slot equips the item it was on last, and pressing it again moves on from there.
+slot equips the item it was on last.
 
 While holding a tool, weapon or block from the group used last, with that group on the
 current toolbar page, scroll up to move forward through the group or down to move backward.
-Both inputs pick the first available item of each kind in tile order, regardless of its
-level. With a block of the group in hand the wheel steps through the group instead of the
-game's block variants. Scrolling in menus
-or with Ctrl, Shift or Alt held keeps the game's normal behavior.
+The wheel and the slot pick the first available item of each kind in tile order,
+regardless of its level, and every block is a step of its own. With a block of the group
+in hand the wheel steps through the group instead of the game's block variants. Scrolling
+in menus or with Ctrl, Shift or Alt held keeps the game's normal behavior, except for the
+fitting blocks below.
 
 The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
 Click its tile to open the editor with that group selected. The **TG** button
@@ -146,15 +149,18 @@ The wheel without Shift steps through the whole group as before.
 
 Pressing Shift alone is the quick way: it keeps the block in hand if it fits, turned the
 way it fits, or else selects the next block that fits. Then the wheel can step on from
-there. When nothing fits, the quick press stays silent.
+there. When nothing fits, the quick press stays silent, unless the group has no block
+of the grid's size at all.
 
-A block fits when its face matches the face of the block you aim at, and the faces of the
-other blocks around it of the same kind: armor with armor, beams with beams, and so on for
-the blocks of a game block group. Other neighbors don't count, so a beam can continue past
-a wall instead of being closed off to hug it. A face that would stick out where the
-neighbor has none, like a full face against the slanted side of a slope, counts more than
-leaving part of the neighbor's face uncovered. The blocks of the group that match best are
-the ones that fit. The shapes come from the blocks' mount points.
+A block fits when its face matches the face of the block you aim at. The other blocks
+around it rank the candidates if they are of the same kind: armor with armor, beams with
+beams, and so on for the blocks of a game block group. Other neighbors don't count, so a
+beam can continue past a wall instead of being closed off to hug it. A face that would
+stick out where the neighbor has none, like a full face against the slanted side of a
+slope, counts more than leaving part of the neighbor's face uncovered. Armor closes
+surfaces, so for armor both count on every side; other blocks, like a half beam in a frame
+of full beams, only must not stick out past their neighbors. The blocks of the group that
+match best are the ones that fit. The shapes come from the blocks' mount points.
 
 Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
 neighbor pointing into the block has to be met by a port of the same kind (large
@@ -168,7 +174,9 @@ port's size, mounted on that end alone: the small cap on a small port, the mediu
 the large port of a small grid's medium conveyors.
 
 This works on small grids too, with small and medium conveyors, and for blocks larger
-than one cube, placed the way the game places them against the aimed face. Modded blocks
+than one cube, placed the way the game places them against the aimed face. With a block in
+hand that has no variant of the aimed grid's size, the fitting blocks come from the group's
+blocks of that size. Modded blocks
 work the same way when their models name their ports like the game's blocks do
 (`detector_conveyor`, `detector_conveyor_small`, `detector_upgrade`) and their
 definitions have mount points; armor counts as one kind if it is built from the game's

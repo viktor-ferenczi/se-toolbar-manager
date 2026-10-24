@@ -4,8 +4,9 @@ using System.Linq;
 
 namespace ClientPlugin.Logic;
 
-// Finds the blocks of a group that fit an empty cell of a grid: their faces match the faces
-// of the neighbors they touch, and their conveyor ports line up with the neighbors' ports.
+// Finds the blocks of a group that fit an empty cell of a grid: their face matches the face
+// of the aimed block, the neighbors of their family rank them, and their conveyor and
+// upgrade ports line up with the neighbors' ports.
 // It knows no game types, so it can be tested offline on real block definitions.
 //
 // Coordinates follow the game: a block's local cells run from 0 to Size - 1 along x right,
@@ -22,6 +23,11 @@ public static class BlockFit
 
     // The family of the blocks built from the game's armor shapes
     public const string Armor = "armor";
+
+    // Port kinds, ports connect to ports of the same kind
+    public const string LargePort = "large",
+        SmallPort = "small",
+        UpgradePort = "upgrade";
 
     // An aimed face that differs more than this doesn't fit at all
     private const double MaxMismatch = 1.0;
@@ -322,7 +328,7 @@ public static class BlockFit
             return connected > 0 ? -0.001 * connected : (double?)null;
         }
 
-        var conveyor = Only(incoming, new HashSet<string> { "large", "small" });
+        var conveyor = Only(incoming, new HashSet<string> { LargePort, SmallPort });
         if (conveyor.Count != 0)
             return CapFits(block, boundary, conveyor, target.LargePortSpan) ? 0 : (double?)null;
 
@@ -423,7 +429,7 @@ public static class BlockFit
         var mounted = boundary.Where(f => block.Face(f.cell, f.d).Any(s => s)).ToList();
         var directions = new HashSet<Int3>(incoming.Keys.Select(f => f.Item2));
         var width = incoming.Values.Sum(kinds =>
-            kinds.Contains("large") ? largePortSpan * largePortSpan : 1
+            kinds.Contains(LargePort) ? largePortSpan * largePortSpan : 1
         );
         return mounted.Count == width
             && incoming.Keys.All(mounted.Contains)
