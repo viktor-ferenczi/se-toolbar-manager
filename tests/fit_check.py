@@ -35,6 +35,7 @@ GROUPS = {
     ],
     "Beams": [
         "CubeBlock/LargeBlockArmorBlock",
+        "CubeBlock/LargeGridBeamBlockHalfSlope",
         "CubeBlock/LargeGridBeamBlockEnd",
         "CubeBlock/LargeGridBeamBlock",
     ],
@@ -154,6 +155,28 @@ CASES = [
             ["LargeGridBeamBlockEnd", "LargeGridBeamBlock", "LargeGridBeamBlockEnd"]
             if STEAM
             # Without the DLC the beams are skipped and the cube is the best left
+            else ["LargeBlockArmorBlock"]
+        ),
+        "Forward" if STEAM else None,
+        "Up" if STEAM else None,
+    ),
+    # The armor around the beam's end doesn't decide what fits the beam
+    Case(
+        "beam end among armor",
+        "Beams",
+        "LargeBlockArmorBlock",
+        [
+            cube(BACKWARD, "LargeGridBeamBlock"),
+            cube((0, 0, 2), "LargeGridBeamBlock"),
+            cube(LEFT),
+            cube(RIGHT),
+            cube(UP),
+            cube(DOWN),
+        ],
+        BACKWARD,
+        (
+            ["LargeGridBeamBlockEnd", "LargeGridBeamBlock", "LargeGridBeamBlockEnd"]
+            if STEAM
             else ["LargeBlockArmorBlock"]
         ),
         "Forward" if STEAM else None,

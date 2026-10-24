@@ -144,10 +144,13 @@ and the corner at the corner of a sloped roof. If nothing in the group fits, the
 sound of a refused placement plays, a short message says so and the block in hand stays.
 The wheel without Shift steps through the whole group as before.
 
-A block fits when its faces match the faces of the blocks around it. A face that would
-stick out where the neighbor has none, like a full face against the slanted side of a
-slope, counts more than leaving part of the neighbor's face uncovered. The blocks of the
-group that match best are the ones that fit. The shapes come from the blocks' mount points.
+A block fits when its face matches the face of the block you aim at, and the faces of the
+other blocks around it of the same kind: armor with armor, beams with beams, and so on for
+the blocks of a game block group. Other neighbors don't count, so a beam can continue past
+a wall instead of being closed off to hug it. A face that would stick out where the
+neighbor has none, like a full face against the slanted side of a slope, counts more than
+leaving part of the neighbor's face uncovered. The blocks of the group that match best are
+the ones that fit. The shapes come from the blocks' mount points.
 
 Conveyor blocks fit by their ports instead: every port of a neighbor pointing into the
 cell has to be met by a port of the same size, no port may run into a block that has no

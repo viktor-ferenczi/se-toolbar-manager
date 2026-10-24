@@ -27,8 +27,9 @@ var left = new Int3(-1, 0, 0);
 var right = new Int3(1, 0, 0);
 var identity = Rotation.All[0];
 
-// The direction Presses steps in
+// The direction Presses steps in, and the direction of the aimed neighbor from the gap
 var step = 1;
+var aim = down;
 
 // Rotation of a block facing forward with its top up, as MyBlockOrientation has it
 Rotation Facing(Int3 f, Int3 u)
@@ -80,7 +81,7 @@ void Scores(string title, Candidate[] group, Dictionary<Int3, Placed> grid, Rota
     {
         var best = candidate
             .Rotations.Select(r =>
-                (r, s: Score(new Placed(candidate.Shape, r, origin), Lookup(grid)))
+                (r, s: Score(new Placed(candidate.Shape, r, origin), Lookup(grid), origin + aim))
             )
             .Where(x => x.s.HasValue)
             .OrderBy(x => x.s)
@@ -109,7 +110,7 @@ void Presses(
     var rotation = identity;
     for (var press = 0; press < Math.Max(expected.Length, 1); press++)
     {
-        var pick = Next(candidates, current, step, rotation, origin, Lookup(grid));
+        var pick = Next(candidates, current, step, rotation, origin, origin + aim, Lookup(grid));
         var got = pick.HasValue ? group[pick.Value.Index] : null;
         var want = expected.Length == 0 ? null : expected[press].name;
         var ok = got == want;
@@ -201,6 +202,7 @@ Presses(
 var beams = new[] { "LargeBlockArmorBlock", "LargeGridBeamBlockEnd", "LargeGridBeamBlock" };
 
 // The open end of a beam running backward: the beam end and the beam both continue it
+aim = backward;
 Presses(
     "beam: open end",
     Grid(
@@ -213,6 +215,32 @@ Presses(
     ("LargeGridBeamBlock", identity),
     ("LargeGridBeamBlockEnd", identity)
 );
+
+// The same beam end boxed in by armor: the armor doesn't decide what fits the beam, so it
+// is still closed or continued, not turned into a half slope that hugs the walls
+Presses(
+    "beam: open end among armor",
+    Grid(
+        ("LargeGridBeamBlock", backward, identity),
+        ("LargeGridBeamBlock", new Int3(0, 0, 2), identity),
+        ("LargeBlockArmorBlock", left, identity),
+        ("LargeBlockArmorBlock", right, identity),
+        ("LargeBlockArmorBlock", up, identity),
+        ("LargeBlockArmorBlock", down, identity)
+    ),
+    new[]
+    {
+        "LargeBlockArmorBlock",
+        "LargeGridBeamBlockHalfSlope",
+        "LargeGridBeamBlockEnd",
+        "LargeGridBeamBlock",
+    },
+    "LargeBlockArmorBlock",
+    ("LargeGridBeamBlockEnd", identity),
+    ("LargeGridBeamBlock", identity),
+    ("LargeGridBeamBlockEnd", identity)
+);
+aim = down;
 
 var conveyors = new[]
 {
@@ -246,12 +274,14 @@ Presses(
 );
 
 // Beside the middle of a tube no conveyor block fits, and the cube has nothing to mount on
+aim = right;
 Presses(
     "conveyor: tube middle",
     Grid(("ConveyorTube", right, identity)),
     conveyors,
     "LargeBlockArmorBlock"
 );
+aim = down;
 
 // A gap between two tubes of a line: only the straight tube connects both
 Presses(
@@ -306,6 +336,7 @@ step = 1;
         1,
         turned,
         origin,
+        origin + down,
         Lookup(Grid(("LargeBlockArmorBlock", down, identity)))
     );
     Check(
@@ -353,6 +384,7 @@ static Dictionary<string, Shape> Load(string path)
                     Small = p.GetProperty("small").GetBoolean(),
                 })
                 .ToArray(),
+            Family = b.GetProperty("family").GetString(),
         };
         directions[block.Name] = b.GetProperty("direction").GetString();
         rotationsAllowed[block.Name] = b.GetProperty("rotation").GetString();

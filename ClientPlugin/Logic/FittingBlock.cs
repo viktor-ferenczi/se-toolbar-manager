@@ -106,6 +106,8 @@ public static class FittingBlock
 
         var space = builder.m_gizmo.SpaceDefault;
         var position = space.m_addPos;
+        // The face the placement box sits on points from the aimed block to the new one
+        var aimed = position - space.m_addDir;
         if (grid.CubeExists(position))
             return false;
 
@@ -141,6 +143,7 @@ public static class FittingBlock
             direction,
             RotationOf(space.m_localMatrixAdd),
             new Int3(position.X, position.Y, position.Z),
+            new Int3(aimed.X, aimed.Y, aimed.Z),
             cell => Neighbor(grid, cell, placed)
         );
         if (!pick.HasValue)
@@ -282,6 +285,11 @@ public static class FittingBlock
                 })
                 .ToArray(),
             Ports = PortsOf(definition),
+            Family =
+                definition.CubeDefinition != null ? "armor"
+                : definition.BlockVariantsGroup != null
+                    ? definition.BlockVariantsGroup.Id.ToString()
+                : definition.Id.ToString(),
         };
         Shapes[definition.Id] = shape;
         return shape;

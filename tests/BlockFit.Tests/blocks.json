@@ -116,7 +116,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeBlockArmorSlope": {
   "size": [
@@ -235,7 +236,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeBlockArmorCorner": {
   "size": [
@@ -354,7 +356,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeBlockArmorCornerInv": {
   "size": [
@@ -524,7 +527,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeHalfArmorBlock": {
   "size": [
@@ -626,7 +630,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeBlockArmorSlope2Base": {
   "size": [
@@ -762,7 +767,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeBlockArmorSlope2Tip": {
   "size": [
@@ -915,7 +921,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "armor"
  },
  "LargeGridBeamBlock": {
   "size": [
@@ -1136,7 +1143,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockEnd": {
   "size": [
@@ -1357,7 +1365,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockJunction": {
   "size": [
@@ -1612,7 +1621,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockTJunction": {
   "size": [
@@ -1850,7 +1860,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope": {
   "size": [
@@ -2037,7 +2048,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockRound": {
   "size": [
@@ -2224,7 +2236,384 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
+ },
+ "LargeGridBeamBlockHalf": {
+  "size": [
+   1,
+   1,
+   1
+  ],
+  "center": [
+   0,
+   0,
+   0
+  ],
+  "direction": "Both",
+  "rotation": "Both",
+  "mounts": [
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     0.001,
+     0.9996,
+     0.999
+    ],
+    "e": [
+     0.499,
+     1.0004,
+     0.0010000000000000009
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     0.001,
+     0.0004,
+     0.001
+    ],
+    "e": [
+     0.499,
+     -0.0004,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.001,
+     0.001
+    ],
+    "e": [
+     -0.0004,
+     0.299,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.701,
+     0.001
+    ],
+    "e": [
+     -0.0004,
+     0.999,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.301,
+     0.001
+    ],
+    "e": [
+     -0.0004,
+     0.699,
+     0.149
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.301,
+     0.851
+    ],
+    "e": [
+     -0.0004,
+     0.699,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     -1
+    ],
+    "s": [
+     0.499,
+     0.001,
+     0.0004
+    ],
+    "e": [
+     0.0010000000000000009,
+     0.099,
+     -0.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     -1
+    ],
+    "s": [
+     0.499,
+     0.901,
+     0.0004
+    ],
+    "e": [
+     0.0010000000000000009,
+     0.999,
+     -0.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     -1
+    ],
+    "s": [
+     0.09899999999999998,
+     0.101,
+     0.0004
+    ],
+    "e": [
+     0.0010000000000000009,
+     0.899,
+     -0.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.001,
+     0.9996
+    ],
+    "e": [
+     0.499,
+     0.099,
+     1.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.901,
+     0.9996
+    ],
+    "e": [
+     0.499,
+     0.999,
+     1.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.101,
+     0.9996
+    ],
+    "e": [
+     0.099,
+     0.899,
+     1.0004
+    ]
+   }
+  ],
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
+ },
+ "LargeGridBeamBlockHalfSlope": {
+  "size": [
+   1,
+   1,
+   1
+  ],
+  "center": [
+   0,
+   0,
+   0
+  ],
+  "direction": "Both",
+  "rotation": "Both",
+  "mounts": [
+   {
+    "n": [
+     0,
+     1,
+     0
+    ],
+    "s": [
+     0.001,
+     0.9996,
+     0.999
+    ],
+    "e": [
+     0.499,
+     1.0004,
+     0.501
+    ]
+   },
+   {
+    "n": [
+     0,
+     -1,
+     0
+    ],
+    "s": [
+     0.001,
+     0.0004,
+     0.501
+    ],
+    "e": [
+     0.499,
+     -0.0004,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.001,
+     0.501
+    ],
+    "e": [
+     -0.0004,
+     0.099,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.901,
+     0.501
+    ],
+    "e": [
+     -0.0004,
+     0.999,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     -1,
+     0,
+     0
+    ],
+    "s": [
+     0.0004,
+     0.101,
+     0.901
+    ],
+    "e": [
+     -0.0004,
+     0.899,
+     0.999
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.001,
+     0.9996
+    ],
+    "e": [
+     0.499,
+     0.099,
+     1.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.901,
+     0.9996
+    ],
+    "e": [
+     0.499,
+     0.999,
+     1.0004
+    ]
+   },
+   {
+    "n": [
+     0,
+     0,
+     1
+    ],
+    "s": [
+     0.001,
+     0.101,
+     0.9996
+    ],
+    "e": [
+     0.099,
+     0.899,
+     1.0004
+    ]
+   }
+  ],
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeBlockConveyor": {
   "size": [
@@ -2422,7 +2811,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTube": {
   "size": [
@@ -2602,7 +2992,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeCurved": {
   "size": [
@@ -2782,7 +3173,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeT": {
   "size": [
@@ -3043,7 +3435,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorCap": {
   "size": [
@@ -3077,7 +3470,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorPipeSeamless": {
   "size": [
@@ -3257,7 +3651,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeEnd": {
   "size": [
@@ -3437,7 +3832,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeFlange": {
   "size": [
@@ -3617,7 +4013,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCorner": {
   "size": [
@@ -3797,7 +4194,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeJunction": {
   "size": [
@@ -3995,7 +4393,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeT": {
   "size": [
@@ -4103,7 +4502,8 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCap": {
   "size": [
@@ -4137,7 +4537,8 @@
     ]
    }
   ],
-  "ports": []
+  "ports": [],
+  "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockSmallContainer": {
   "size": [
@@ -4335,6 +4736,7 @@
     ],
     "small": false
    }
-  ]
+  ],
+  "family": "MyObjectBuilder_BlockVariantGroup/ContainerGroup"
  }
 }

@@ -144,6 +144,10 @@ public static class BlockFit
         public Mount[] Mounts;
         public Port[] Ports;
 
+        // Blocks of a family stick to each other: armor, the blocks of a block variant
+        // group like the beams, or else a block alone
+        public string Family;
+
         public bool HasPorts => Ports.Length != 0;
     }
 
@@ -243,8 +247,9 @@ public static class BlockFit
         public double Score;
     }
 
-    // How badly the block fits the cell, 0 for a perfect fit, null if it doesn't fit at all
-    public static double? Score(Placed block, Func<Int3, Placed> grid)
+    // How badly the block fits the cell, 0 for a perfect fit, null if it doesn't fit at all.
+    // The aimed cell holds the block the cube builder aims at.
+    public static double? Score(Placed block, Func<Int3, Placed> grid, Int3 aimed)
     {
         var cells = new HashSet<Int3>(block.Cells);
         var boundary = cells
@@ -275,14 +280,17 @@ public static class BlockFit
 
         // A face sticking out where the neighbor has none, like a full face against the
         // slanted side of a slope, is worse than leaving part of the neighbor's face
-        // uncovered, like the floor beside a corner block
+        // uncovered, like the floor beside a corner block.
+        // The aimed face has to fit, so the block attaches there. Other neighbors count only
+        // if they are of the block's family, so a beam may run past a wall and continue.
         var sticking = 0;
         var uncovered = 0;
         var contact = 0;
         foreach (var (cell, d) in boundary)
         {
             var neighbor = grid(cell + d);
-            if (neighbor == null)
+            var isAimed = (cell + d).Equals(aimed);
+            if (neighbor == null || !isAimed && neighbor.Shape.Family != block.Shape.Family)
                 continue;
 
             var own = block.Face(cell, d);
@@ -293,7 +301,7 @@ public static class BlockFit
                     sticking++;
                 else if (other[k] && !own[k])
                     uncovered++;
-                else if (own[k])
+                else if (own[k] && isAimed)
                     contact++;
             }
         }
@@ -350,6 +358,7 @@ public static class BlockFit
     public static Pick?[] Evaluate(
         IList<Candidate> candidates,
         Int3 position,
+        Int3 aimed,
         Rotation current,
         Func<Int3, Placed> grid
     )
@@ -363,7 +372,7 @@ public static class BlockFit
                 .Concat(rotations.Where(r => !r.Equals(current)));
             foreach (var rotation in ordered)
             {
-                var score = Score(new Placed(candidates[i].Shape, rotation, position), grid);
+                var score = Score(new Placed(candidates[i].Shape, rotation, position), grid, aimed);
                 if (score.HasValue && (!picks[i].HasValue || score.Value < picks[i].Value.Score))
                     picks[i] = new Pick
                     {
@@ -395,6 +404,7 @@ public static class BlockFit
         int direction,
         Rotation rotation,
         Int3 position,
+        Int3 aimed,
         Func<Int3, Placed> grid
     )
     {
@@ -402,7 +412,7 @@ public static class BlockFit
         if (current < 0)
             current = direction > 0 ? -1 : count;
 
-        var picks = Evaluate(candidates, position, rotation, grid);
+        var picks = Evaluate(candidates, position, aimed, rotation, grid);
         for (var step = 1; step <= count; step++)
         {
             var pick = picks[((current + direction * step) % count + count) % count];

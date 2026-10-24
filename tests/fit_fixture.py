@@ -35,6 +35,8 @@ BLOCKS = [
     "LargeGridBeamBlockTJunction",
     "LargeGridBeamBlockSlope",
     "LargeGridBeamBlockRound",
+    "LargeGridBeamBlockHalf",
+    "LargeGridBeamBlockHalfSlope",
     "LargeBlockConveyor",
     "ConveyorTube",
     "ConveyorTubeCurved",
@@ -237,6 +239,17 @@ def main() -> None:
             if subtype in BLOCKS:
                 definitions[subtype] = block
 
+    # Families as FittingBlock.ShapeOf has them: armor, else the block variant group
+    groups = {}
+    variants = ET.parse(game / "Content/Data/BlockVariantGroups.sbc").getroot()
+    for group in variants.iter("BlockVariantGroup"):
+        group_id = group.find("Id")
+        for block in group.iter("Block"):
+            groups.setdefault(
+                block.get("Subtype"),
+                f"MyObjectBuilder_BlockVariantGroup/{group_id.get('Subtype')}",
+            )
+
     result = {}
     for name in BLOCKS:
         block = definitions[name]
@@ -264,6 +277,13 @@ def main() -> None:
             "rotation": block.findtext("Rotation") or "Both",
             "mounts": mounts,
             "ports": ports(game, block, size, center, cube_size),
+            "family": (
+                "armor"
+                if block.find("CubeDefinition") is not None
+                else groups.get(
+                    name, f"MyObjectBuilder_{block.findtext('Id/TypeId')}/{name}"
+                )
+            ),
         }
 
     OUT.parent.mkdir(exist_ok=True)
