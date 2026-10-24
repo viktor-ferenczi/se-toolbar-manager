@@ -122,28 +122,51 @@ public static class FittingBlock
         return true;
     }
 
-    // Whether the press was for this, with a group's block in hand aiming at a grid cell
-    // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
-    // nothing fits, unless the group has no block of the grid's size: the quick press of
-    // the wheel's modifier key
-    public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
+    // The group's blocks in the size of the aimed grid, as the cube builder would place them,
+    // and the empty cell they would go into
+    public sealed class Aimed
+    {
+        public MyCubeGrid Grid;
+        public Target Target;
+        public Rotation Current;
+        public readonly List<ItemGroup.Member> Members = new();
+        public readonly List<MyCubeBlockDefinition> Definitions = new();
+        public readonly List<Candidate> Candidates = new();
+        public readonly Dictionary<MySlimBlock, Placed> Neighbors = new();
+
+        public Placed Lookup(Int3 cell) => Neighbor(Grid, cell, Neighbors);
+
+        // The best rotation of each member at the cell, null for those that don't fit
+        public Pick?[] Evaluate() => BlockFit.Evaluate(Candidates, Target, Current, Lookup);
+    }
+
+    // Null without a group's block in hand aiming at an empty cell of a grid
+    public static Aimed Aim(ItemGroup group)
     {
         var builder = MyCubeBuilder.Static;
-        var group = item.Group;
         if (
             group == null
             || builder is not { IsActivated: true }
             || !Aim(builder, out var grid, out var position, out var addDir)
         )
-            return false;
+            return null;
 
         var space = builder.m_gizmo.SpaceDefault;
         // The new cell is on the aimed block's face, which points to it
         var aimed = position - addDir;
+        var result = new Aimed
+        {
+            Grid = grid,
+            Current = RotationOf(space.m_localMatrixAdd),
+            Target = new Target
+            {
+                AddPos = new Int3(position.X, position.Y, position.Z),
+                AddDir = new Int3(addDir.X, addDir.Y, addDir.Z),
+                Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
+                LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
+            },
+        };
 
-        // The group's blocks in the size of the grid, as the cube builder would place them
-        var members = new List<ItemGroup.Member>();
-        var definitions = new List<MyCubeBlockDefinition>();
         var dlc = MySession.Static.GetComponent<MySessionComponentDLC>();
         foreach (var candidate in group.Members)
         {
@@ -154,56 +177,72 @@ public static class FittingBlock
             // The game refuses to equip a block of a DLC the player doesn't own
             if (
                 definition == null
-                || definitions.Contains(definition)
+                || result.Definitions.Contains(definition)
                 || dlc?.GetFirstMissingDefinitionDLC(definition, Sync.MyId) != null
             )
                 continue;
-            members.Add(candidate);
-            definitions.Add(definition);
+            result.Members.Add(candidate);
+            result.Definitions.Add(definition);
+            result.Candidates.Add(
+                new Candidate { Shape = ShapeOf(definition), Rotations = RotationsOf(definition) }
+            );
         }
 
-        var held = group.Held;
-        var candidates = definitions
-            .Select(d => new Candidate { Shape = ShapeOf(d), Rotations = RotationsOf(d) })
-            .ToList();
-        var placed = new Dictionary<MySlimBlock, Placed>();
-        var target = new Target
-        {
-            AddPos = new Int3(position.X, position.Y, position.Z),
-            AddDir = new Int3(addDir.X, addDir.Y, addDir.Z),
-            Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
-            LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
-        };
+        return result;
+    }
+
+    // Whether the press was for this, with a group's block in hand aiming at a grid cell
+    // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
+    // nothing fits, unless the group has no block of the grid's size: the quick press of
+    // the wheel's modifier key
+    public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
+    {
+        var aimed = Aim(item.Group);
+        if (aimed == null)
+            return false;
+
         var pick = Next(
-            candidates,
-            members.IndexOf(held),
+            aimed.Candidates,
+            aimed.Members.IndexOf(item.Group.Held),
             direction,
-            RotationOf(space.m_localMatrixAdd),
-            target,
-            cell => Neighbor(grid, cell, placed)
+            aimed.Current,
+            aimed.Target,
+            aimed.Lookup
         );
         // The quick press tells only when the group has no block of the grid's size at all
-        if (!pick.HasValue && (direction != 0 || candidates.Count == 0))
+        if (!pick.HasValue && (direction != 0 || aimed.Candidates.Count == 0))
         {
             NotifyNoFit();
-            LogNoFit(grid, target, candidates, placed);
+            LogNoFit(aimed);
         }
-        if (!pick.HasValue)
-            return true;
+        if (pick.HasValue)
+            Take(item, character, aimed, pick.Value);
+        return true;
+    }
 
+    // Equips the picked block of the group, turned to fit
+    public static bool Take(
+        ItemGroupToolbarItem item,
+        MyCharacter character,
+        Aimed aimed,
+        Pick pick
+    )
+    {
         // The cube builder takes up the rotation it remembers for the block, as it does
         // when switching blocks. Both sizes, like MyCubeBuilderState.UpdateCubeBlockDefinition.
-        var picked = definitions[pick.Value.Index];
-        var matrix = MatrixOf(pick.Value.Rotation);
+        var builder = MyCubeBuilder.Static;
+        var picked = aimed.Definitions[pick.Index];
+        var matrix = MatrixOf(pick.Rotation);
         var rotation = Quaternion.CreateFromRotationMatrix(matrix);
         var pairs = MyDefinitionManager.Static.GetDefinitionGroup(picked.BlockPairName);
         foreach (var definition in new[] { pairs?.Small, pairs?.Large, picked })
             if (definition != null)
                 builder.m_cubeBuilderState.RotationsByDefinitionHash[definition.Id] = rotation;
 
-        var member = members[pick.Value.Index];
+        var member = aimed.Members[pick.Index];
+        var held = item.Group.Held;
         if (member != held && !item.Equip(character, member, held))
-            return true;
+            return false;
 
         pendingBlock = picked.Id;
         pendingRotation = matrix;
@@ -213,14 +252,11 @@ public static class FittingBlock
     }
 
     // What the matcher saw, so a missed fit can be reproduced in tests/BlockFit.Tests
-    private static void LogNoFit(
-        MyCubeGrid grid,
-        Target target,
-        List<Candidate> candidates,
-        Dictionary<MySlimBlock, Placed> placed
-    )
+    private static void LogNoFit(Aimed aimed)
     {
-        Placed Lookup(Int3 cell) => Neighbor(grid, cell, placed);
+        var grid = aimed.Grid;
+        var target = aimed.Target;
+        Placed Lookup(Int3 cell) => aimed.Lookup(cell);
         string Describe(Placed block) =>
             block == null
                 ? "empty"
@@ -233,7 +269,7 @@ public static class FittingBlock
         );
         foreach (var d in Int3.Directions)
             text.Append($"; {d}: {Describe(Lookup(target.AddPos + d))}");
-        foreach (var candidate in candidates)
+        foreach (var candidate in aimed.Candidates)
         {
             var best = candidate
                 .Rotations.Select(r =>

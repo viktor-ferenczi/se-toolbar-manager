@@ -36,6 +36,7 @@ public class Config : INotifyPropertyChanged
     private Binding nextFitKey = new Binding(MyKeys.None);
     private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
     private Binding previousFitKey = new Binding(MyKeys.None);
+    private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
 
     private ItemGroup[] itemGroups;
 
@@ -180,6 +181,16 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref previousFitKey, value);
     }
 
+    [Dropdown(
+        label: "Quick selector keys",
+        description: "Holding these keys with a group in use shows its items to pick one with the mouse,\nhighlighting the blocks that fit the aimed position"
+    )]
+    public QuickSelectorChord QuickSelectorKeys
+    {
+        get => quickSelectorKeys;
+        set => SetField(ref quickSelectorKeys, value);
+    }
+
     [XmlIgnore]
     public ItemGroup[] ItemGroups
     {
@@ -203,6 +214,15 @@ public class Config : INotifyPropertyChanged
         Shift,
         Ctrl,
         Alt,
+    }
+
+    // Both held, without the third modifier
+    public enum QuickSelectorChord
+    {
+        None,
+        ShiftCtrl,
+        ShiftAlt,
+        CtrlAlt,
     }
 
     // Pressed without Ctrl, Shift or Alt
