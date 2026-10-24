@@ -609,16 +609,18 @@ def main() -> int:
         setup_toolbar(game)
         fit = Fit(game)
         only = os.environ.get("TBM_FIT_CASES")
-        for case in CASES:
-            if only and case.name not in only.split(","):
-                continue
-            try:
-                run_case(fit, case)
-            except (
-                Exception
-            ) as e:  # noqa: BLE001 -- report and go on with the next case
-                check(f"{case.name}: completed", False, f"{type(e).__name__}: {e}")
-            game.shot(case.name.replace(" ", "-"))
+
+        def run_cases(cases):
+            for case in cases:
+                if only and case.name not in only.split(","):
+                    continue
+                try:
+                    run_case(fit, case)
+                except Exception as e:  # noqa: BLE001 -- go on with the next case
+                    check(f"{case.name}: completed", False, f"{type(e).__name__}: {e}")
+                game.shot(case.name.replace(" ", "-"))
+
+        run_cases([c for c in CASES if c.grid == "Large"])
         if not only or "wheel" in only.split(","):
             run_wheel(fit)
         if not only or "quick" in only.split(","):
@@ -626,6 +628,8 @@ def main() -> int:
         if not STEAM:
             run_dlc_skip(fit)
         run_vanilla(fit)
+        # Last: the cube builder stays in small block mode after a small grid
+        run_cases([c for c in CASES if c.grid == "Small"])
         fit.clear()
         check(
             "no new exceptions in the game log",
