@@ -28,7 +28,7 @@ public static class FittingBlockPatch
             holdingButton = false;
 
         var direction = FittingBlock.Direction(input, out var middleButton);
-        if (direction == 0)
+        if (direction == 0 && !FittingBlock.IsQuickPress(input))
             return true;
 
         var item = ItemGroupScrollPatch.GroupInUse(out var character);

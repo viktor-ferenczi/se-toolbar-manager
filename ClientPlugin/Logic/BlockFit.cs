@@ -132,7 +132,9 @@ public static class BlockFit
         // Cell relative to the block's Center, direction the port faces
         public Int3 Cell,
             Direction;
-        public bool Small;
+
+        // Ports of the same kind connect: large or small conveyor ports, upgrade ports
+        public string Kind;
     }
 
     // What a block definition looks like to the matcher
@@ -140,7 +142,8 @@ public static class BlockFit
     {
         public string Name;
         public Int3 Size,
-            Center;
+            Center,
+            MirroringCenter;
         public Mount[] Mounts;
         public Port[] Ports;
 
@@ -181,7 +184,7 @@ public static class BlockFit
             {
                 Cell = Position + Rotation.Apply(p.Cell),
                 Direction = Rotation.Apply(p.Direction),
-                Small = p.Small,
+                Kind = p.Kind,
             });
 
         // The mountpoints on the face of a grid cell of this block towards the direction,
@@ -232,6 +235,37 @@ public static class BlockFit
         }
     }
 
+    // Where the cube builder places a block: the new cell, the direction from the aimed
+    // block to it, and the cell of the aimed block
+    public struct Target
+    {
+        public Int3 AddPos,
+            AddDir,
+            Aimed;
+
+        // Cells along an edge of a large conveyor port's face: 3 on small grids, where the
+        // large conveyors are the 3x3 medium ones, 1 on large grids
+        public int LargePortSpan;
+    }
+
+    // The block's Center cell as the cube builder places it in the rotation: it moves the
+    // block along the direction to the new cell, so the block sits on the aimed face.
+    // MyCubeBuilderGizmo.UpdateGizmoCubeParts, for each axis.
+    public static Int3 Position(Shape shape, Rotation rotation, Target target)
+    {
+        var size = rotation.Apply(shape.Size);
+        var mirror = rotation.Apply(shape.MirroringCenter);
+        int Shift(int axis)
+        {
+            var dir = Math.Sign(target.AddDir[axis]);
+            return Math.Sign(size[axis]) == dir
+                ? mirror[axis]
+                : dir * (Math.Abs(size[axis]) - Math.Abs(mirror[axis]) - 1);
+        }
+        var shift = new Int3(Shift(0), Shift(1), Shift(2));
+        return target.AddPos + rotation.Apply(shape.Center - shape.MirroringCenter) + shift;
+    }
+
     public struct Candidate
     {
         public Shape Shape;
@@ -248,8 +282,8 @@ public static class BlockFit
     }
 
     // How badly the block fits the cell, 0 for a perfect fit, null if it doesn't fit at all.
-    // The aimed cell holds the block the cube builder aims at.
-    public static double? Score(Placed block, Func<Int3, Placed> grid, Int3 aimed)
+    // The aimed cell is a cell of the block the cube builder aims at.
+    public static double? Score(Placed block, Func<Int3, Placed> grid, Target target)
     {
         var cells = new HashSet<Int3>(block.Cells);
         var boundary = cells
@@ -259,37 +293,49 @@ public static class BlockFit
         if (boundary.Count == 0 || cells.Any(cell => grid(cell) != null))
             return null;
 
-        // Ports of the neighbors pointing into the block's cells
-        var incoming = new Dictionary<(Int3, Int3), bool>();
+        // The kinds of the neighbors' ports pointing into the block's cells, by face. A face
+        // may have several, like a conveyor port and an upgrade port.
+        var incoming = new Dictionary<(Int3, Int3), HashSet<string>>();
         foreach (var (cell, d) in boundary)
         {
-            var neighbor = grid(cell + d);
-            var port = neighbor
-                ?.Ports.Where(p => p.Cell.Equals(cell + d) && p.Direction.Equals(-d))
-                .Select(p => (bool?)p.Small)
-                .FirstOrDefault();
-            if (port.HasValue)
-                incoming[(cell, d)] = port.Value;
+            var kinds = new HashSet<string>(
+                grid(cell + d)
+                    ?.Ports.Where(p => p.Cell.Equals(cell + d) && p.Direction.Equals(-d))
+                    .Select(p => p.Kind)
+                    ?? Enumerable.Empty<string>()
+            );
+            if (kinds.Count != 0)
+                incoming[(cell, d)] = kinds;
         }
 
+        // More connected ports pick the better rotation, like both ports of an upgrade
+        // module on the machine instead of one, but don't make other blocks unfit
+        // Ports of a kind the block doesn't have don't concern it: a tube may pass by the
+        // upgrade ports of a machine, and armor may sit on them
         if (block.Shape.HasPorts)
-            return PortsFit(block, grid, cells, incoming) ? 0 : (double?)null;
+        {
+            var own = new HashSet<string>(block.Shape.Ports.Select(p => p.Kind));
+            var connected = PortsFit(block, grid, cells, Only(incoming, own));
+            return connected > 0 ? -0.001 * connected : (double?)null;
+        }
 
-        if (incoming.Count != 0)
-            return CapFits(block, boundary, incoming) ? 0 : (double?)null;
+        var conveyor = Only(incoming, new HashSet<string> { "large", "small" });
+        if (conveyor.Count != 0)
+            return CapFits(block, boundary, conveyor, target.LargePortSpan) ? 0 : (double?)null;
 
         // A face sticking out where the neighbor has none, like a full face against the
         // slanted side of a slope, is worse than leaving part of the neighbor's face
         // uncovered, like the floor beside a corner block.
         // The aimed face has to fit, so the block attaches there. Other neighbors count only
         // if they are of the block's family, so a beam may run past a wall and continue.
+        var aimedBlock = grid(target.Aimed);
         var sticking = 0;
         var uncovered = 0;
         var contact = 0;
         foreach (var (cell, d) in boundary)
         {
             var neighbor = grid(cell + d);
-            var isAimed = (cell + d).Equals(aimed);
+            var isAimed = neighbor != null && neighbor == aimedBlock;
             if (neighbor == null || !isAimed && neighbor.Shape.Family != block.Shape.Family)
                 continue;
 
@@ -313,52 +359,67 @@ public static class BlockFit
         return score <= MaxMismatch ? score : (double?)null;
     }
 
-    // Each neighbor port pointing in is met by a port of the same size, no port runs into
-    // an occupied cell without a port to meet it, and at least one port connects
-    private static bool PortsFit(
+    // Each face a neighbor port points into is met by a port of the same kind and no port
+    // runs into an occupied cell without a port to meet it. The number of connected faces,
+    // 0 if it doesn't fit.
+    private static int PortsFit(
         Placed block,
         Func<Int3, Placed> grid,
         HashSet<Int3> cells,
-        Dictionary<(Int3, Int3), bool> incoming
+        Dictionary<(Int3, Int3), HashSet<string>> incoming
     )
     {
-        var connected = 0;
-        foreach (var port in block.Ports)
-        {
-            var facing = port.Cell + port.Direction;
-            if (cells.Contains(facing))
-                continue;
+        var own = block
+            .Ports.Where(p => !cells.Contains(p.Cell + p.Direction))
+            .GroupBy(p => (p.Cell, p.Direction))
+            .ToDictionary(g => g.Key, g => g.Select(p => p.Kind).ToList());
 
-            if (incoming.TryGetValue((port.Cell, port.Direction), out var small))
-            {
-                if (small != port.Small)
-                    return false;
-                connected++;
-            }
-            else if (grid(facing) != null)
-                return false;
-        }
+        foreach (var face in incoming)
+            if (!own.TryGetValue(face.Key, out var kinds) || !kinds.Any(face.Value.Contains))
+                return 0;
 
-        return connected != 0 && connected == incoming.Count;
+        foreach (var face in own.Keys)
+            if (!incoming.ContainsKey(face) && grid(face.Item1 + face.Item2) != null)
+                return 0;
+
+        return incoming.Count;
     }
 
-    // A block without ports closes an open conveyor end if it is mounted only on the
-    // faces the ports point into, like a conveyor cap
+    private static Dictionary<(Int3, Int3), HashSet<string>> Only(
+        Dictionary<(Int3, Int3), HashSet<string>> incoming,
+        HashSet<string> kinds
+    ) =>
+        incoming
+            .Where(face => face.Value.Overlaps(kinds))
+            .ToDictionary(
+                face => face.Key,
+                face => new HashSet<string>(face.Value.Where(kinds.Contains))
+            );
+
+    // A block without ports closes open conveyor ends if it is mounted on the faces the
+    // ports point into and on no face looking any other way, and it is as wide as the
+    // ports, like a small conveyor cap on a small port or a medium one on a large port
     private static bool CapFits(
         Placed block,
         List<(Int3 cell, Int3 d)> boundary,
-        Dictionary<(Int3, Int3), bool> incoming
+        Dictionary<(Int3, Int3), HashSet<string>> incoming,
+        int largePortSpan
     )
     {
         var mounted = boundary.Where(f => block.Face(f.cell, f.d).Any(s => s)).ToList();
-        return mounted.Count == incoming.Count && mounted.All(incoming.ContainsKey);
+        var directions = new HashSet<Int3>(incoming.Keys.Select(f => f.Item2));
+        var width = incoming.Values.Sum(kinds =>
+            kinds.Contains("large") ? largePortSpan * largePortSpan : 1
+        );
+        return mounted.Count == width
+            && incoming.Keys.All(mounted.Contains)
+            && mounted.All(f => directions.Contains(f.d));
     }
 
     // The best rotation of each candidate at the cell, null for those that don't fit
     public static Pick?[] Evaluate(
         IList<Candidate> candidates,
-        Int3 position,
-        Int3 aimed,
+        Target target,
         Rotation current,
         Func<Int3, Placed> grid
     )
@@ -372,7 +433,12 @@ public static class BlockFit
                 .Concat(rotations.Where(r => !r.Equals(current)));
             foreach (var rotation in ordered)
             {
-                var score = Score(new Placed(candidates[i].Shape, rotation, position), grid, aimed);
+                var shape = candidates[i].Shape;
+                var score = Score(
+                    new Placed(shape, rotation, Position(shape, rotation, target)),
+                    grid,
+                    target
+                );
                 if (score.HasValue && (!picks[i].HasValue || score.Value < picks[i].Value.Score))
                     picks[i] = new Pick
                     {
@@ -397,22 +463,28 @@ public static class BlockFit
     }
 
     // The first fitting candidate after the current one in the direction, wrapping around
-    // to the current one itself. Null if none fits.
+    // to the current one itself. Direction 0 keeps the current one if it fits, or else
+    // moves forward. Null if none fits.
     public static Pick? Next(
         IList<Candidate> candidates,
         int current,
         int direction,
         Rotation rotation,
-        Int3 position,
-        Int3 aimed,
+        Target target,
         Func<Int3, Placed> grid
     )
     {
         var count = candidates.Count;
+        var picks = Evaluate(candidates, target, rotation, grid);
+        if (direction == 0)
+        {
+            if (current >= 0 && picks[current].HasValue)
+                return picks[current];
+            direction = 1;
+        }
         if (current < 0)
             current = direction > 0 ? -1 : count;
 
-        var picks = Evaluate(candidates, position, aimed, rotation, grid);
         for (var step = 1; step <= count; step++)
         {
             var pick = picks[((current + direction * step) % count + count) % count];

@@ -45,8 +45,25 @@ GROUPS = {
         "ConveyorConnector/ConveyorTube",
         "ConveyorConnector/ConveyorTubeCurved",
     ],
+    "Upgrades": [
+        "UpgradeModule/LargeEnergyModule",
+        "UpgradeModule/LargeProductivityModule",
+        "CubeBlock/LargeBlockArmorBlock",
+    ],
+    "SmallConveyors": [
+        "CubeBlock/SmallBlockConveyorCap",
+        "ConveyorConnector/ConveyorTubeSmall",
+        "ConveyorConnector/ConveyorTubeMedium",
+        "CubeBlock/SmallBlockConveyorCapMedium",
+    ],
 }
-GROUP_SLOTS = {"Armor": 1, "Beams": 2, "Conveyors": 3}
+GROUP_SLOTS = {
+    "Armor": 1,
+    "Beams": 2,
+    "Conveyors": 3,
+    "Upgrades": 4,
+    "SmallConveyors": 6,
+}
 PLAIN_SLOT = 5
 # A block in no group, so no group is in use with it in hand
 PLAIN_BLOCK = "LargeHeavyBlockArmorBlock"
@@ -88,6 +105,9 @@ class Case:
     up: str | None = None
     # Meters to move the aimed point by, to hit the solid part of a slanted face
     offset: tuple[float, float, float] = (0, 0, 0)
+    grid: str = "Large"
+    # Meters from the gap to stand at, closer on small grids
+    distance: float = 6
 
 
 def cube(cell, subtype="LargeBlockArmorBlock", forward="Forward", up="Up"):
@@ -96,6 +116,9 @@ def cube(cell, subtype="LargeBlockArmorBlock", forward="Forward", up="Up"):
 
 def tube(cell, subtype="ConveyorTube", kind="ConveyorConnector"):
     return (kind, subtype, add(TARGET, cell), "Forward", "Up")
+
+
+SMALL_HUB = (-3, -1, -1)
 
 
 DOWN, UP = (0, -1, 0), (0, 1, 0)
@@ -215,6 +238,41 @@ CASES = [
         RIGHT,
         [None],
     ),
+    # Both ports of the module on the assembler's upgrade ports
+    Case(
+        "upgrade module",
+        "Upgrades",
+        "LargeBlockArmorBlock",
+        [("Assembler", "LargeAssembler", add(TARGET, RIGHT), "Forward", "Up")],
+        RIGHT,
+        ["LargeEnergyModule", "LargeProductivityModule"],
+        "Forward",
+        "Up",
+    ),
+    Case(
+        "small grid small port",
+        "SmallConveyors",
+        "ConveyorTubeSmall",
+        [tube(DOWN, "SmallBlockConveyor", "Conveyor")],
+        DOWN,
+        ["SmallBlockConveyorCap", "ConveyorTubeSmall", "SmallBlockConveyorCap"],
+        None,
+        "Up",
+        grid="Small",
+        distance=2.5,
+    ),
+    # The large port in the middle of the hub's side, flush against which the 3x3x3
+    # medium tube goes
+    Case(
+        "small grid medium port",
+        "SmallConveyors",
+        "ConveyorTubeSmall",
+        [("Conveyor", "SmallShipConveyorHub", add(TARGET, SMALL_HUB), "Forward", "Up")],
+        LEFT,
+        ["ConveyorTubeMedium", "SmallBlockConveyorCapMedium", "ConveyorTubeMedium"],
+        grid="Small",
+        distance=4,
+    ),
 ]
 
 
@@ -241,7 +299,7 @@ def start(c: rig.Client):
     return api
 
 
-def blueprint(blocks) -> str:
+def blueprint(blocks, grid="Large") -> str:
     cubes = "".join(
         f'<MyObjectBuilder_CubeBlock xsi:type="MyObjectBuilder_{kind}">'
         f'<SubtypeName>{subtype}</SubtypeName><Min x="{x}" y="{y}" z="{z}" />'
@@ -259,7 +317,7 @@ def blueprint(blocks) -> str:
         "<PersistentFlags>CastShadows InScene</PersistentFlags>"
         '<PositionAndOrientation><Position x="0" y="0" z="0" />'
         '<Forward x="0" y="0" z="-1" /><Up x="0" y="1" z="0" /></PositionAndOrientation>'
-        f"<GridSizeEnum>Large</GridSizeEnum><CubeBlocks>{cubes}</CubeBlocks>"
+        f"<GridSizeEnum>{grid}</GridSizeEnum><CubeBlocks>{cubes}</CubeBlocks>"
         "<IsStatic>true</IsStatic><IsUnsupportedStation>true</IsUnsupportedStation>"
         "<DisplayName>FitTest</DisplayName></CubeGrid></CubeGrids>"
         "</ShipBlueprint></ShipBlueprints></Definitions>"
@@ -283,14 +341,17 @@ class Fit:
         cubes = self.api.list_cubes(self.grid, 0, 200)["cubes"]
         return {tuple(c["cellMin"]): c for c in cubes}
 
-    def paste(self, blocks) -> None:
+    def paste(self, blocks, grid="Large") -> None:
         self.clear()
         self.api.character_teleport(*self.home)
         time.sleep(1)
         state = self.api.get_character()
         ahead = tuple(p + 15 * f for p, f in zip(state["position"], state["forward"]))
         grids = self.api.paste_blueprint(
-            xml=blueprint(blocks), position=ahead, forward=(0, 0, -1), up=(0, 1, 0)
+            xml=blueprint(blocks, grid),
+            position=ahead,
+            forward=(0, 0, -1),
+            up=(0, 1, 0),
         )
         self.grid = grids[0]["entityId"]
         cells = wait(lambda: len(self.cubes()) == len(blocks) and self.cubes(), 10)
@@ -304,14 +365,14 @@ class Fit:
             self.grid = None
             time.sleep(1)
 
-    def aim(self, direction, offset=(0, 0, 0)) -> None:
-        """Faces the face between the gap and its neighbor in the direction from 6 m"""
+    def aim(self, direction, offset=(0, 0, 0), distance=6.0) -> None:
+        """Faces the face between the gap and its neighbor in the direction from a distance"""
         gap = self.world(TARGET)
         neighbor = self.world(add(TARGET, direction))
         face = tuple((a + b) / 2 + o for a, b, o in zip(gap, neighbor, offset))
         away = tuple(a - b for a, b in zip(gap, neighbor))
         length = sum(x * x for x in away) ** 0.5
-        stand = tuple(g + 6 * a / length for g, a in zip(gap, away))
+        stand = tuple(g + distance * a / length for g, a in zip(gap, away))
         self.api.character_teleport(*stand)
         time.sleep(1)
         self.api.character_look_at(*face, tolerance=0.5)
@@ -322,6 +383,16 @@ class Fit:
         self.api.set_input_state(scroll=self.game.wheel, **buttons)
         time.sleep(0.3)
         self.api.set_input_state(scroll=self.game.wheel)
+        time.sleep(1.0)
+
+    def quick(self) -> None:
+        """Shift pressed and released without the wheel"""
+        self.api.set_input_state(keys=["LeftShift"], scroll=self.game.wheel)
+        time.sleep(0.3)
+        self.api._post(
+            "/v1/input/state",
+            {"keyboard": {"keys": []}, "mouse": {"scroll": self.game.wheel}},
+        )
         time.sleep(1.0)
 
     def shift_scroll(self, delta: int) -> None:
@@ -371,10 +442,10 @@ def hold(fit: Fit, case: Case) -> bool:
 
 
 def run_case(fit: Fit, case: Case) -> None:
-    fit.paste(case.blocks)
+    fit.paste(case.blocks, case.grid)
     if not check(f"{case.name}: holds {case.held}", hold(fit, case), str(fit.held())):
         return
-    fit.aim(case.aim, case.offset)
+    fit.aim(case.aim, case.offset, case.distance)
     fit.no_fit_shown()
     colors = {cell: c["colorMaskHsv"] for cell, c in fit.cubes().items()}
     before = len(colors)
@@ -402,7 +473,12 @@ def run_case(fit: Fit, case: Case) -> None:
     if last is None:
         return
     fit.button(mouse_left=True)
-    placed = wait(lambda: len(fit.cubes()) > before and fit.cubes().get(TARGET), 5)
+
+    def new_block():
+        added = [c for cell, c in fit.cubes().items() if cell not in colors]
+        return added[0] if added else None
+
+    placed = wait(new_block, 5)
     detail = (
         f"{placed['subtypeId']} {placed['forward']} {placed['up']}"
         if placed
@@ -417,6 +493,25 @@ def run_case(fit: Fit, case: Case) -> None:
         and (case.forward is None or placed["forward"] == case.forward)
         and (case.up is None or placed["up"] == case.up),
         detail,
+    )
+
+
+def run_quick(fit: Fit) -> None:
+    """Shift alone selects a fitting block when the one in hand doesn't fit, and keeps
+    one that fits"""
+    fit.paste([tube(DOWN), tube((0, -2, 0))])
+    case = Case("quick", "Conveyors", "LargeBlockArmorBlock", [], DOWN, [])
+    if not check("quick: holds LargeBlockArmorBlock", hold(fit, case), str(fit.held())):
+        return
+    fit.aim(DOWN)
+    fit.quick()
+    first = fit.held()
+    fit.quick()
+    second = fit.held()
+    check(
+        "quick: Shift selects the cap, and again keeps it",
+        [first, second] == ["LargeBlockConveyorCap"] * 2,
+        f"{first}, {second}",
     )
 
 
@@ -526,6 +621,8 @@ def main() -> int:
             game.shot(case.name.replace(" ", "-"))
         if not only or "wheel" in only.split(","):
             run_wheel(fit)
+        if not only or "quick" in only.split(","):
+            run_quick(fit)
         if not STEAM:
             run_dlc_skip(fit)
         run_vanilla(fit)

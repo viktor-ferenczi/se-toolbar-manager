@@ -27,9 +27,25 @@ var left = new Int3(-1, 0, 0);
 var right = new Int3(1, 0, 0);
 var identity = Rotation.All[0];
 
-// The direction Presses steps in, and the direction of the aimed neighbor from the gap
+// The direction Presses steps in, and the direction of the aimed neighbor from the gap,
+// or else the target as it is
 var step = 1;
 var aim = down;
+Target? at = null;
+var smallGrid = false;
+
+Target CurrentTarget() =>
+    at
+    ?? new Target
+    {
+        AddPos = origin,
+        AddDir = -aim,
+        Aimed = origin + aim,
+        LargePortSpan = smallGrid ? 3 : 1,
+    };
+
+Placed Place(Shape shape, Rotation rotation, Target target) =>
+    new Placed(shape, rotation, Position(shape, rotation, target));
 
 // Rotation of a block facing forward with its top up, as MyBlockOrientation has it
 Rotation Facing(Int3 f, Int3 u)
@@ -81,7 +97,14 @@ void Scores(string title, Candidate[] group, Dictionary<Int3, Placed> grid, Rota
     {
         var best = candidate
             .Rotations.Select(r =>
-                (r, s: Score(new Placed(candidate.Shape, r, origin), Lookup(grid), origin + aim))
+                (
+                    r,
+                    s: Score(
+                        Place(candidate.Shape, r, CurrentTarget()),
+                        Lookup(grid),
+                        CurrentTarget()
+                    )
+                )
             )
             .Where(x => x.s.HasValue)
             .OrderBy(x => x.s)
@@ -110,7 +133,7 @@ void Presses(
     var rotation = identity;
     for (var press = 0; press < Math.Max(expected.Length, 1); press++)
     {
-        var pick = Next(candidates, current, step, rotation, origin, origin + aim, Lookup(grid));
+        var pick = Next(candidates, current, step, rotation, CurrentTarget(), Lookup(grid));
         var got = pick.HasValue ? group[pick.Value.Index] : null;
         var want = expected.Length == 0 ? null : expected[press].name;
         var ok = got == want;
@@ -131,9 +154,11 @@ void Presses(
 // Rotations that give a block the same faces and ports are the same placement
 bool SameShape(string name, Rotation a, Rotation b)
 {
-    var pa = new Placed(blocks[name], a, origin);
-    var pb = new Placed(blocks[name], b, origin);
-    return Int3.Directions.All(d => pa.Face(origin, d).SequenceEqual(pb.Face(origin, d)))
+    var pa = Place(blocks[name], a, CurrentTarget());
+    var pb = Place(blocks[name], b, CurrentTarget());
+    var cells = new HashSet<Int3>(pa.Cells);
+    return cells.SetEquals(pb.Cells)
+        && cells.All(c => Int3.Directions.All(d => pa.Face(c, d).SequenceEqual(pb.Face(c, d))))
         && new HashSet<(Int3, Int3)>(pa.Ports.Select(p => (p.Cell, p.Direction))).SetEquals(
             pb.Ports.Select(p => (p.Cell, p.Direction))
         );
@@ -327,6 +352,114 @@ Presses(
 );
 step = 1;
 
+// Upgrade modules beside an assembler's upgrade ports: the modules' ports face the
+// assembler's ports. Armor may cover them too, the tube doesn't fit.
+at = new Target
+{
+    AddPos = origin,
+    AddDir = left,
+    Aimed = right,
+    LargePortSpan = 1,
+};
+var modules = new[]
+{
+    "LargeBlockArmorBlock",
+    "ConveyorTube",
+    "LargeEnergyModule",
+    "LargeProductivityModule",
+};
+Presses(
+    "upgrade: modules at an assembler",
+    Grid(("LargeAssembler", right, identity)),
+    modules,
+    "LargeBlockArmorBlock",
+    ("LargeEnergyModule", null),
+    ("LargeProductivityModule", null),
+    ("LargeBlockArmorBlock", null),
+    ("LargeEnergyModule", null)
+);
+{
+    var candidates = Group(modules);
+    var assembler = Lookup(Grid(("LargeAssembler", right, identity)));
+    // Starting from a rotation that puts the module one cell aside, with one port on
+    var aside = Rotation.All.First(r => r.X.Equals(right) && r.Y.Equals(down));
+    var pick = Next(candidates, 0, 1, aside, CurrentTarget(), assembler);
+    var ports = pick.HasValue
+        ? Place(candidates[pick.Value.Index].Shape, pick.Value.Rotation, CurrentTarget())
+            .Ports.Select(p => (p.Cell, p.Direction))
+            .ToList()
+        : new List<(Int3, Int3)>();
+    var expected = new[] { (origin, right), (backward, right) };
+    Check(
+        "upgrade: both module ports face the assembler's upgrade ports",
+        ports.Count == 2 && expected.All(ports.Contains),
+        string.Join(", ", ports)
+    );
+}
+
+// Small grid: a small conveyor junction takes the small cap and the small tube, not the
+// medium tube, whose ports are large, nor the medium cap
+at = null;
+aim = down;
+smallGrid = true;
+var smallConveyors = new[]
+{
+    "SmallBlockConveyorCap",
+    "ConveyorTubeSmall",
+    "ConveyorTubeMedium",
+    "SmallBlockConveyorCapMedium",
+};
+Presses(
+    "small grid: small conveyor port",
+    Grid(("SmallBlockConveyor", down, identity)),
+    smallConveyors,
+    "ConveyorTubeSmall",
+    ("SmallBlockConveyorCap", null),
+    ("ConveyorTubeSmall", null),
+    ("SmallBlockConveyorCap", null)
+);
+
+// Small grid: the large port of a 3x3x3 conveyor hub takes the medium tube and the medium
+// cap, placed flush against the hub as the cube builder places them, not the small tube
+var hub = new Int3(-2, 0, 0);
+at = new Target
+{
+    AddPos = origin,
+    AddDir = right,
+    Aimed = left,
+    LargePortSpan = 3,
+};
+Presses(
+    "small grid: medium conveyor port",
+    Grid(("SmallShipConveyorHub", hub, identity)),
+    smallConveyors,
+    "ConveyorTubeSmall",
+    ("ConveyorTubeMedium", null),
+    ("SmallBlockConveyorCapMedium", null),
+    ("ConveyorTubeMedium", null)
+);
+at = null;
+smallGrid = false;
+
+// Armor may sit on a machine's open upgrade ports, and a tube may pass them
+Presses(
+    "upgrade: a tube passing an assembler",
+    Grid(("LargeAssembler", right, identity), ("ConveyorTube", down, identity)),
+    new[] { "LargeBlockArmorBlock", "ConveyorTube" },
+    "LargeBlockArmorBlock",
+    ("ConveyorTube", identity),
+    ("ConveyorTube", identity)
+);
+aim = right;
+Presses(
+    "upgrade: armor beside an assembler",
+    Grid(("LargeAssembler", right, identity)),
+    new[] { "LargeBlockArmorBlock", "ConveyorTube" },
+    "ConveyorTube",
+    ("LargeBlockArmorBlock", null)
+);
+aim = down;
+
 // The current rotation stays when it fits as well as any other
 {
     var turned = Facing(left, up);
@@ -335,8 +468,13 @@ step = 1;
         0,
         1,
         turned,
-        origin,
-        origin + down,
+        new Target
+        {
+            AddPos = origin,
+            AddDir = up,
+            Aimed = origin + down,
+            LargePortSpan = 1,
+        },
         Lookup(Grid(("LargeBlockArmorBlock", down, identity)))
     );
     Check(
@@ -363,6 +501,7 @@ static Dictionary<string, Shape> Load(string path)
             Name = block.Name,
             Size = ReadInt3(b.GetProperty("size")),
             Center = ReadInt3(b.GetProperty("center")),
+            MirroringCenter = ReadInt3(b.GetProperty("mirror")),
             Mounts = b.GetProperty("mounts")
                 .EnumerateArray()
                 .Select(m => new Mount
@@ -381,7 +520,7 @@ static Dictionary<string, Shape> Load(string path)
                 {
                     Cell = ReadInt3(p.GetProperty("c")),
                     Direction = ReadInt3(p.GetProperty("d")),
-                    Small = p.GetProperty("small").GetBoolean(),
+                    Kind = p.GetProperty("kind").GetString(),
                 })
                 .ToArray(),
             Family = b.GetProperty("family").GetString(),

@@ -144,6 +144,10 @@ and the corner at the corner of a sloped roof. If nothing in the group fits, the
 sound of a refused placement plays, a short message says so and the block in hand stays.
 The wheel without Shift steps through the whole group as before.
 
+Pressing Shift alone is the quick way: it keeps the block in hand if it fits, turned the
+way it fits, or else selects the next block that fits. Then the wheel can step on from
+there. When nothing fits, the quick press stays silent.
+
 A block fits when its face matches the face of the block you aim at, and the faces of the
 other blocks around it of the same kind: armor with armor, beams with beams, and so on for
 the blocks of a game block group. Other neighbors don't count, so a beam can continue past
@@ -152,14 +156,26 @@ neighbor has none, like a full face against the slanted side of a slope, counts 
 leaving part of the neighbor's face uncovered. The blocks of the group that match best are
 the ones that fit. The shapes come from the blocks' mount points.
 
-Conveyor blocks fit by their ports instead: every port of a neighbor pointing into the
-cell has to be met by a port of the same size, no port may run into a block that has no
-port there, and at least one port has to connect. So a tube is not offered against the
-middle of another tube. A block without ports fits an open conveyor end only as a cap,
-mounted on that end alone.
+Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
+neighbor pointing into the block has to be met by a port of the same kind (large
+conveyor, small conveyor or upgrade), no port may run into a block that has no such port
+there, and at least one port has to connect. So a tube is not offered against the middle
+of another tube, and an upgrade module goes on a refinery or assembler with its ports on
+the machine's upgrade ports, with as many of them connected as possible. Ports of a kind
+the block doesn't have are left alone: a tube may run past a machine's upgrade ports, and
+armor may cover them. A block without ports fits an open conveyor end only as a cap of the
+port's size, mounted on that end alone: the small cap on a small port, the medium cap on
+the large port of a small grid's medium conveyors.
+
+This works on small grids too, with small and medium conveyors, and for blocks larger
+than one cube, placed the way the game places them against the aimed face. Modded blocks
+work the same way when their models name their ports like the game's blocks do
+(`detector_conveyor`, `detector_conveyor_small`, `detector_upgrade`) and their
+definitions have mount points; armor counts as one kind if it is built from the game's
+armor shapes, other blocks by their block variant group.
 
 The plugin's configuration can change the wheel's modifier key to Ctrl or Alt or turn it
-off, assign the next and previous actions to other mouse buttons, and add keyboard keys
+off, turn the quick press off, assign the next and previous actions to other mouse buttons, and add keyboard keys
 for them. When the middle button is assigned, a plain middle button press that selects a
 block doesn't paint; otherwise it paints as in the game.
 

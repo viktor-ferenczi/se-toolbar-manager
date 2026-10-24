@@ -31,6 +31,7 @@ public class Config : INotifyPropertyChanged
 
     private Binding blockSearchKey = new Binding(MyKeys.OemPipe);
     private FitModifier fitScrollModifier = FitModifier.Shift;
+    private bool quickFit = true;
     private FitMouseButton nextFitButton = FitMouseButton.ExtraButton2;
     private Binding nextFitKey = new Binding(MyKeys.None);
     private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
@@ -139,6 +140,16 @@ public class Config : INotifyPropertyChanged
     {
         get => fitScrollModifier;
         set => SetField(ref fitScrollModifier, value);
+    }
+
+    [Checkbox(
+        label: "Quick fitting block",
+        description: "Pressing the wheel's modifier key alone selects a fitting block right away:\nthe block in hand if it fits, turned to fit, or else the next one that fits"
+    )]
+    public bool QuickFit
+    {
+        get => quickFit;
+        set => SetField(ref quickFit, value);
     }
 
     [Dropdown(label: "Next fitting block", description: FitBlockDescription)]

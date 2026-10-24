@@ -3,7 +3,7 @@
     python tests/fit_fixture.py [--game <SpaceEngineers folder>]
 
 Mountpoints come from the CubeBlocks .sbc files and conveyor ports from the
-detector_conveyor dummies of the block models, converted the way the game does it
+detector_conveyor and detector_upgrade dummies of the block models, converted the way the game does it
 (MyCubeBlockDefinition.SetMountPoints, MyConveyorLine.GetBlockLinePositions), so the
 tests see the same shapes as the plugin in the game. The output is
 tests/BlockFit.Tests/blocks.json.
@@ -50,6 +50,18 @@ BLOCKS = [
     "LargeBlockConveyorPipeT",
     "LargeBlockConveyorPipeCap",
     "LargeBlockSmallContainer",
+    "LargeRefinery",
+    "LargeAssembler",
+    "LargeProductivityModule",
+    "LargeEnergyModule",
+    "SmallBlockConveyor",
+    "ConveyorTubeSmall",
+    "ConveyorTubeSmallCurved",
+    "SmallBlockConveyorCap",
+    "ConveyorTubeMedium",
+    "ConveyorFrameMedium",
+    "SmallShipConveyorHub",
+    "SmallBlockConveyorCapMedium",
 ]
 
 SIDES = ["Right", "Top", "Front", "Left", "Bottom", "Back"]
@@ -198,10 +210,14 @@ def ports(game: Path, block: ET.Element, size, center, cube_size):
     for name, m in dummies(find_model(game, model)).items():
         parts = name.lower().split("_")
         if (
-            len(parts) < 2
-            or parts[0] != "detector"
-            or not parts[1].startswith("conveyor")
+            len(parts) >= 2
+            and parts[0] == "detector"
+            and parts[1].startswith("conveyor")
         ):
+            kind = "small" if len(parts) > 2 and parts[2] == "small" else "large"
+        elif "detector_upgrade" in name.lower():
+            kind = "upgrade"
+        else:
             continue
         p = [m[12 + k] + offset[k] + size[k] * 0.5 * cube_size for k in range(3)]
         cell = [
@@ -215,7 +231,7 @@ def ports(game: Path, block: ET.Element, size, center, cube_size):
             {
                 "c": [cell[k] - center[k] for k in range(3)],
                 "d": direction,
-                "small": len(parts) > 2 and parts[2] == "small",
+                "kind": kind,
             }
         )
     return result
@@ -273,6 +289,7 @@ def main() -> None:
         result[name] = {
             "size": size,
             "center": center,
+            "mirror": vector(block.find("MirroringCenter"), center),
             "direction": block.findtext("Direction") or "Both",
             "rotation": block.findtext("Rotation") or "Both",
             "mounts": mounts,

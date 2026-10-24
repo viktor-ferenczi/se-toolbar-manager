@@ -68,6 +68,39 @@ public static class FittingBlock
         return 0;
     }
 
+    // A new press of the wheel's modifier key alone, for quick mode
+    public static bool IsQuickPress(IMyInput input)
+    {
+        var config = Config.Current;
+        if (!config.QuickFit || input.DeltaMouseScrollWheelValue() != 0)
+            return false;
+
+        var ctrl = input.IsAnyCtrlKeyPressed();
+        var shift = input.IsAnyShiftKeyPressed();
+        var alt = input.IsAnyAltKeyPressed();
+        return config.FitScrollModifier switch
+        {
+            Config.FitModifier.Shift => !ctrl
+                && !alt
+                && (
+                    input.IsNewKeyPressed(MyKeys.LeftShift)
+                    || input.IsNewKeyPressed(MyKeys.RightShift)
+                ),
+            Config.FitModifier.Ctrl => !shift
+                && !alt
+                && (
+                    input.IsNewKeyPressed(MyKeys.LeftControl)
+                    || input.IsNewKeyPressed(MyKeys.RightControl)
+                ),
+            Config.FitModifier.Alt => !ctrl
+                && !shift
+                && (
+                    input.IsNewKeyPressed(MyKeys.LeftAlt) || input.IsNewKeyPressed(MyKeys.RightAlt)
+                ),
+            _ => false,
+        };
+    }
+
     private static bool Pressed(IMyInput input, Config.FitMouseButton choice, ref bool middleButton)
     {
         var button = choice switch
@@ -91,6 +124,8 @@ public static class FittingBlock
     }
 
     // Whether the press was for this, with a group's block in hand aiming at a grid cell
+    // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
+    // nothing fits: the quick press of the wheel's modifier key
     public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
     {
         var builder = MyCubeBuilder.Static;
@@ -106,7 +141,7 @@ public static class FittingBlock
 
         var space = builder.m_gizmo.SpaceDefault;
         var position = space.m_addPos;
-        // The face the placement box sits on points from the aimed block to the new one
+        // The placement box sits on the aimed block's face, which points to the new cell
         var aimed = position - space.m_addDir;
         if (grid.CubeExists(position))
             return false;
@@ -142,10 +177,17 @@ public static class FittingBlock
             members.IndexOf(held),
             direction,
             RotationOf(space.m_localMatrixAdd),
-            new Int3(position.X, position.Y, position.Z),
-            new Int3(aimed.X, aimed.Y, aimed.Z),
+            new Target
+            {
+                AddPos = new Int3(position.X, position.Y, position.Z),
+                AddDir = new Int3(space.m_addDir.X, space.m_addDir.Y, space.m_addDir.Z),
+                Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
+                LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
+            },
             cell => Neighbor(grid, cell, placed)
         );
+        if (!pick.HasValue && direction == 0)
+            return true;
         if (!pick.HasValue)
         {
             // The sound of a placement the game refuses
@@ -276,6 +318,11 @@ public static class FittingBlock
             Name = definition.Id.SubtypeName,
             Size = new Int3(definition.Size.X, definition.Size.Y, definition.Size.Z),
             Center = new Int3(definition.Center.X, definition.Center.Y, definition.Center.Z),
+            MirroringCenter = new Int3(
+                definition.MirroringCenter.X,
+                definition.MirroringCenter.Y,
+                definition.MirroringCenter.Z
+            ),
             Mounts = (definition.MountPoints ?? new MyCubeBlockDefinition.MountPoint[0])
                 .Select(m => new Mount
                 {
@@ -295,7 +342,8 @@ public static class FittingBlock
         return shape;
     }
 
-    // The conveyor ports of the block's model, as MyConveyorLine.GetBlockLinePositions finds them
+    // The conveyor and upgrade ports of the block's model, as MyConveyorLine.GetBlockLinePositions
+    // and MyMultilineConveyorEndpoint.GetLinePositions(.., "detector_upgrade") find them
     private static Port[] PortsOf(MyCubeBlockDefinition definition)
     {
         if (string.IsNullOrEmpty(definition.Model))
@@ -310,8 +358,14 @@ public static class FittingBlock
         var ports = new List<Port>();
         foreach (var dummy in dummies)
         {
-            var parts = dummy.Key.ToLower().Split('_');
-            if (parts.Length < 2 || parts[0] != "detector" || !parts[1].StartsWith("conveyor"))
+            var name = dummy.Key.ToLower();
+            var parts = name.Split('_');
+            var kind =
+                parts.Length >= 2 && parts[0] == "detector" && parts[1].StartsWith("conveyor")
+                    ? (parts.Length > 2 && parts[2] == "small" ? "small" : "large")
+                : name.Contains("detector_upgrade") ? "upgrade"
+                : null;
+            if (kind == null)
                 continue;
 
             var p = dummy.Value.Matrix.Translation + definition.ModelOffset + half;
@@ -334,7 +388,7 @@ public static class FittingBlock
                 {
                     Cell = new Int3(local.X, local.Y, local.Z),
                     Direction = new Int3(direction.X, direction.Y, direction.Z),
-                    Small = parts.Length > 2 && parts[2] == "small",
+                    Kind = kind,
                 }
             );
         }
