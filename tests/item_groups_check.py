@@ -694,7 +694,6 @@ def run(game: Game) -> None:
     )
     game.scroll(120)
     held_check(game, "wheel: back to the drill", "HandDrill/HandDrill2")
-    game.clear_scroll()
 
     # Editing and resetting the default group
     screen = game.open_edit_mode()

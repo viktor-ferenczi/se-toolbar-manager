@@ -127,7 +127,6 @@ def run(game: Game) -> None:
     use("Armor", LIGHT, "pressed again, the large one")
     game.scroll(120)
     held_check(game, "wheel: the next block", HEAVY)
-    game.clear_scroll()
     use("Hand Tools", WELDER, "after the block group, still where it was")
     use("Armor", HEAVY, "after the tool group, still where it was")
 
@@ -139,7 +138,6 @@ def run(game: Game) -> None:
     use("Armor", HEAVY, "pressed again, the large one")
     game.scroll(120)
     held_check(game, "wheel: the next block", LIGHT)
-    game.clear_scroll()
     use("Mixed", LIGHT, "same block already in hand, stays")
     use("Mixed", WELDER, "pressed again, the tool")
     use("Hand Tools", WELDER, "same tool already in hand, stays")

@@ -114,7 +114,7 @@ def run(game: Game) -> list[str]:
     held_check(
         game,
         "pressed again: the game's small variant",
-        "CubeBlock/SmallBlockArmorBlock",
+        short(group[0]).replace("/Large", "/Small", 1),
     )
     game.press_slot(SLOT)
     held("pressed again: the large one", 0)
