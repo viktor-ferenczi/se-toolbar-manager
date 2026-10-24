@@ -213,7 +213,7 @@ public static class FittingBlock
         if (!pick.HasValue && (direction != 0 || aimed.Candidates.Count == 0))
         {
             NotifyNoFit();
-            LogNoFit(aimed);
+            Log(aimed, "no fitting block");
         }
         if (pick.HasValue)
             Take(item, character, aimed, pick.Value);
@@ -252,7 +252,7 @@ public static class FittingBlock
     }
 
     // What the matcher saw, so a missed fit can be reproduced in tests/BlockFit.Tests
-    private static void LogNoFit(Aimed aimed)
+    public static void Log(Aimed aimed, string what)
     {
         var grid = aimed.Grid;
         var target = aimed.Target;
@@ -264,7 +264,7 @@ public static class FittingBlock
 
         var text = new System.Text.StringBuilder();
         text.Append(
-            $"ToolbarManager: no fitting block on a {grid.GridSizeEnum} grid at {target.AddPos}, "
+            $"ToolbarManager: {what} on a {grid.GridSizeEnum} grid at {target.AddPos}, "
                 + $"from {target.AddDir}, aimed: {Describe(Lookup(target.Aimed))}"
         );
         foreach (var d in Int3.Directions)
@@ -282,8 +282,22 @@ public static class FittingBlock
                 .Where(score => score.HasValue)
                 .DefaultIfEmpty()
                 .Min();
+            // A block overlapping others is placed elsewhere than the gap
+            var overlaps = candidate
+                .Rotations.Select(r =>
+                    new Placed(candidate.Shape, r, Position(candidate.Shape, r, target))
+                        .Cells.Select(Lookup)
+                        .FirstOrDefault(other => other != null)
+                )
+                .Where(other => other != null)
+                .ToList();
+            var why =
+                overlaps.Count == 0
+                    ? ""
+                    : $", overlaps {overlaps[0].Shape.Name} at {overlaps[0].Position} "
+                        + $"in {overlaps.Count}/{candidate.Rotations.Length} rotations";
             text.Append(
-                $"; {candidate.Shape.Name}: {(best.HasValue ? best.Value.ToString("0.000") : "no fit")}"
+                $"; {candidate.Shape.Name}: {(best.HasValue ? best.Value.ToString("0.000") : "no fit")}{why}"
             );
         }
         MyLog.Default.WriteLine(text.ToString());
