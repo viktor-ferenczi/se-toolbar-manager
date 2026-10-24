@@ -19,7 +19,7 @@ namespace ClientPlugin.Gui;
 // blocks wheel does. The blocks that fit the aimed cell are highlighted.
 public class QuickSelector : MyGuiScreenBase
 {
-    private static readonly Vector4 FitColor = new Vector4(0.35f, 1f, 0.35f, 1f);
+    private static readonly Vector4 FitColor = new Vector4(0.6f, 1f, 0.6f, 1f);
     private static readonly Vector2 Margin = new Vector2(0.03f, 0.04f);
 
     private static QuickSelector open;
