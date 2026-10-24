@@ -133,7 +133,6 @@ public static class FittingBlock
         if (
             group == null
             || builder is not { IsActivated: true }
-            || builder.DynamicMode
             || !Aim(builder, out var grid, out var position, out var addDir)
         )
             return false;
@@ -238,7 +237,11 @@ public static class FittingBlock
         grid = builder.m_currentGrid;
         position = space.m_addPos;
         addDir = space.m_addDir;
-        if (grid != null)
+        if (
+            grid != null
+            && !builder.DynamicMode
+            && grid.GridSizeEnum == builder.CurrentBlockDefinition?.CubeSize
+        )
             return !grid.CubeExists(position);
 
         var start = MyBlockBuilderBase.IntersectionStart;
