@@ -18,6 +18,8 @@ public static class MyGuiScreenGamePlayPatch
     [HarmonyPatch(nameof(MyGuiScreenGamePlay.HandleUnhandledInput))]
     public static bool HandleUnhandledInputPrefix()
     {
+        QuickSelector.HandleGameplayInput();
+
         var myInput = MyInput.Static;
         if (!myInput.IsNewKeyPressed(Config.Current.BlockSearchKey.Key))
             return true;

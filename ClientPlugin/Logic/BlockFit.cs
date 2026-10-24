@@ -160,7 +160,16 @@ public static class BlockFit
         // group like the beams, or else a block alone
         public string Family;
 
+        // Tubes, junctions, sorters and connectors carry the conveyor line, so none of
+        // their ports may end against a block. Other blocks, like a thruster or a tank, may
+        // leave a port against a beam or a wall, as the game allows.
+        public bool Conveyor;
+
         public bool HasPorts => Ports.Length != 0;
+
+        // Sampled faces by rotation, cell relative to the block's position and direction.
+        // A face depends only on the shape, so it is sampled once per game session.
+        public readonly Dictionary<(Int3, Int3, Int3, Int3), bool[]> Faces = new();
     }
 
     public sealed class Placed
@@ -199,6 +208,14 @@ public static class BlockFit
         // The mountpoints on the face of a grid cell of this block towards the direction,
         // sampled at the same grid points for both blocks touching on that face
         public bool[] Face(Int3 cell, Int3 direction)
+        {
+            var key = (Rotation.X, Rotation.Y, cell - Position, direction);
+            if (!Shape.Faces.TryGetValue(key, out var mask))
+                Shape.Faces[key] = mask = Sample(cell, direction);
+            return mask;
+        }
+
+        private bool[] Sample(Int3 cell, Int3 direction)
         {
             var mask = new bool[Samples * Samples];
             var local = Rotation.Inverse(direction);
@@ -295,11 +312,13 @@ public static class BlockFit
     public static double? Score(Placed block, Func<Int3, Placed> grid, Target target)
     {
         var cells = new HashSet<Int3>(block.Cells);
+        if (cells.Any(cell => grid(cell) != null))
+            return null;
         var boundary = cells
             .SelectMany(cell => Int3.Directions.Select(d => (cell, d)))
             .Where(f => !cells.Contains(f.cell + f.d))
             .ToList();
-        if (boundary.Count == 0 || cells.Any(cell => grid(cell) != null))
+        if (boundary.Count == 0)
             return null;
 
         // The kinds of the neighbors' ports pointing into the block's cells, by face. A face
@@ -379,9 +398,9 @@ public static class BlockFit
         return (sticking + 0.5 * uncovered) / (Samples * Samples);
     }
 
-    // Each face a neighbor port points into is met by a port of the same kind and no port
-    // runs into an occupied cell without a port to meet it. The number of connected faces,
-    // 0 if it doesn't fit.
+    // Each face a neighbor port points into is met by a port of the same kind, and no port
+    // of a conveyor block runs into an occupied cell without a port to meet it. The number
+    // of connected faces, 0 if it doesn't fit.
     private static int PortsFit(
         Placed block,
         Func<Int3, Placed> grid,
@@ -398,9 +417,10 @@ public static class BlockFit
             if (!own.TryGetValue(face.Key, out var kinds) || !kinds.Any(face.Value.Contains))
                 return 0;
 
-        foreach (var face in own.Keys)
-            if (!incoming.ContainsKey(face) && grid(face.Item1 + face.Item2) != null)
-                return 0;
+        if (block.Shape.Conveyor)
+            foreach (var face in own.Keys)
+                if (!incoming.ContainsKey(face) && grid(face.Item1 + face.Item2) != null)
+                    return 0;
 
         return incoming.Count;
     }

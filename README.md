@@ -164,10 +164,13 @@ match best are the ones that fit. The shapes come from the blocks' mount points.
 
 Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
 neighbor pointing into the block has to be met by a port of the same kind (large
-conveyor, small conveyor or upgrade), no port may run into a block that has no such port
-there, and at least one port has to connect. So a tube is not offered against the middle
-of another tube, and an upgrade module goes on a refinery or assembler with its ports on
-the machine's upgrade ports, with as many of them connected as possible. Ports of a kind
+conveyor, small conveyor or upgrade), and at least one port has to connect. A conveyor
+block (tube, junction, sorter or connector) also may not have a port running into a block
+that has no such port there, so a tube is not offered against the middle of another tube.
+Other blocks may: a thruster, tank or machine can leave a port against a beam or wall, as
+the game allows, so a large hydrogen thruster fits under a tank's port even when beams
+frame the space. An upgrade module goes on a refinery or assembler with its ports on the
+machine's upgrade ports, with as many of them connected as possible. Ports of a kind
 the block doesn't have are left alone: a tube may run past a machine's upgrade ports, and
 armor may cover them. A block without ports fits an open conveyor end only as a cap of the
 port's size, mounted on that end alone: the small cap on a small port, the medium cap on
@@ -186,6 +189,27 @@ The plugin's configuration can change the wheel's modifier key to Ctrl or Alt or
 off, turn the quick press off, assign the next and previous actions to other mouse buttons, and add keyboard keys
 for them. When the middle button is assigned, a plain middle button press that selects a
 block doesn't paint; otherwise it paints as in the game.
+
+#### Quick selector
+
+With a tool, weapon or block of a group in hand, hold Shift+Ctrl to see all items of
+the group on a small panel in the middle of the screen. The mouse is free while the keys
+are held, so the camera doesn't turn. Click an item to equip it, the same way the group's
+slot or the wheel would. The panel stays open, so you can click another one, and marks
+the item in hand as selected. Releasing either key closes it and gives back normal
+control.
+
+When the placement box is on a grid, the blocks that fit the aimed position are
+highlighted in green, by the same rules as the fitting blocks wheel above, and their
+tooltip says so. Clicking one of them selects it turned the way it fits. The other blocks
+can still be clicked. Tools and weapons are never marked, and with a tool in hand
+nothing is, because there is no placement box then. Items you can't use now are greyed
+out.
+
+The panel is about 16:9: a group of 12 items gets 5 columns and 3 rows, with the empty
+cells on the right of the last row. The plugin's configuration can change the keys to
+Shift+Alt or Ctrl+Alt, or turn the panel off. If Shift is the fitting blocks wheel's
+modifier with the quick press on, pressing Shift before Ctrl also does the quick press.
 
 ### Quick block selection
 
