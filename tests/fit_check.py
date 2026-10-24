@@ -443,6 +443,17 @@ def setup_toolbar(game: Game) -> None:
     game.close_screen(TOOLBAR_CONFIG)
 
 
+def reset_wheel(game: Game) -> None:
+    """Puts the hand item away and turns the wheel counter back to 0. Remote's look-at,
+    which aiming uses, injects the wheel at 0, and the game would read that as a turn with
+    a block in hand. Clearing the input state isn't enough: the game keeps counting from
+    the last injected value."""
+    game.holster()
+    game.wheel = 0
+    game.api.set_input_state(scroll=0)
+    time.sleep(1)
+
+
 def hold(fit: Fit, case: Case) -> bool:
     """Equips the group and steps it with the wheel until the case's first block is in
     hand. Pressing the slot again would switch the block's size."""
@@ -451,9 +462,17 @@ def hold(fit: Fit, case: Case) -> bool:
     game.press_slot(GROUP_SLOTS[case.group])
     for _ in range(len(GROUPS[case.group]) + 1):
         if fit.held() == case.held:
-            return True
+            break
         game.scroll(120)
-    return False
+    else:
+        return False
+    if game.wheel == 0:
+        return True
+
+    # The slot equips the block the group was left on
+    reset_wheel(game)
+    game.press_slot(GROUP_SLOTS[case.group])
+    return fit.held() == case.held
 
 
 def run_case(fit: Fit, case: Case) -> None:
@@ -561,8 +580,7 @@ def run_size_switch(fit: Fit) -> None:
 def run_dlc_skip(fit: Fit) -> None:
     """Without Steam no DLC is owned: the slot and the wheel skip the beams"""
     game = fit.game
-    game.holster()
-    game.clear_scroll()
+    reset_wheel(game)
     held = []
     game.press_slot(GROUP_SLOTS["Beams"])
     held.append(fit.held())
@@ -624,10 +642,7 @@ def run_vanilla(fit: Fit) -> None:
     """A block from an ordinary slot: the middle button paints, the block stays"""
     game = fit.game
     fit.paste([cube(DOWN)])
-    # Resetting the wheel counter is a wheel turn, which must not reach the plain block
-    game.holster()
-    game.clear_scroll()
-    time.sleep(1)
+    reset_wheel(game)
     game.press_slot(PLAIN_SLOT)
     fit.aim(DOWN)
     before = fit.cubes()[add(TARGET, DOWN)]["colorMaskHsv"]
