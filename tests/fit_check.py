@@ -451,9 +451,21 @@ def hold(fit: Fit, case: Case) -> bool:
     game.press_slot(GROUP_SLOTS[case.group])
     for _ in range(len(GROUPS[case.group]) + 1):
         if fit.held() == case.held:
-            return True
+            break
         game.scroll(120)
-    return False
+    else:
+        return False
+    if game.wheel == 0:
+        return True
+
+    # Remote's look-at, which aiming uses, drops the input override, and the game would
+    # read the wheel going back to 0 as a turn. Reset it with an empty hand, then the slot
+    # equips the block the group was left on.
+    game.holster()
+    game.clear_scroll()
+    time.sleep(1)
+    game.press_slot(GROUP_SLOTS[case.group])
+    return fit.held() == case.held
 
 
 def run_case(fit: Fit, case: Case) -> None:
