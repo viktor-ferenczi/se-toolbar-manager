@@ -167,23 +167,27 @@ public static class FittingBlock
             .Select(d => new Candidate { Shape = ShapeOf(d), Rotations = RotationsOf(d) })
             .ToList();
         var placed = new Dictionary<MySlimBlock, Placed>();
+        var target = new Target
+        {
+            AddPos = new Int3(position.X, position.Y, position.Z),
+            AddDir = new Int3(addDir.X, addDir.Y, addDir.Z),
+            Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
+            LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
+        };
         var pick = Next(
             candidates,
             members.IndexOf(held),
             direction,
             RotationOf(space.m_localMatrixAdd),
-            new Target
-            {
-                AddPos = new Int3(position.X, position.Y, position.Z),
-                AddDir = new Int3(addDir.X, addDir.Y, addDir.Z),
-                Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
-                LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
-            },
+            target,
             cell => Neighbor(grid, cell, placed)
         );
         // The quick press tells only when the group has no block of the grid's size at all
         if (!pick.HasValue && (direction != 0 || candidates.Count == 0))
+        {
             NotifyNoFit();
+            LogNoFit(grid, target, candidates, placed);
+        }
         if (!pick.HasValue)
             return true;
 
@@ -206,6 +210,47 @@ public static class FittingBlock
         pendingFrames = RotationFrames;
         ApplyRotation();
         return true;
+    }
+
+    // What the matcher saw, so a missed fit can be reproduced in tests/BlockFit.Tests
+    private static void LogNoFit(
+        MyCubeGrid grid,
+        Target target,
+        List<Candidate> candidates,
+        Dictionary<MySlimBlock, Placed> placed
+    )
+    {
+        Placed Lookup(Int3 cell) => Neighbor(grid, cell, placed);
+        string Describe(Placed block) =>
+            block == null
+                ? "empty"
+                : $"{block.Shape.Name} at {block.Position} x->{block.Rotation.X} y->{block.Rotation.Y}";
+
+        var text = new System.Text.StringBuilder();
+        text.Append(
+            $"ToolbarManager: no fitting block on a {grid.GridSizeEnum} grid at {target.AddPos}, "
+                + $"from {target.AddDir}, aimed: {Describe(Lookup(target.Aimed))}"
+        );
+        foreach (var d in Int3.Directions)
+            text.Append($"; {d}: {Describe(Lookup(target.AddPos + d))}");
+        foreach (var candidate in candidates)
+        {
+            var best = candidate
+                .Rotations.Select(r =>
+                    Score(
+                        new Placed(candidate.Shape, r, Position(candidate.Shape, r, target)),
+                        Lookup,
+                        target
+                    )
+                )
+                .Where(score => score.HasValue)
+                .DefaultIfEmpty()
+                .Min();
+            text.Append(
+                $"; {candidate.Shape.Name}: {(best.HasValue ? best.Value.ToString("0.000") : "no fit")}"
+            );
+        }
+        MyLog.Default.WriteLine(text.ToString());
     }
 
     private static void NotifyNoFit()
@@ -378,7 +423,7 @@ public static class FittingBlock
                 .ToArray(),
             Ports = PortsOf(definition),
             Family =
-                definition.CubeDefinition != null ? "armor"
+                definition.CubeDefinition != null ? Armor
                 : definition.BlockVariantsGroup != null
                     ? definition.BlockVariantsGroup.Id.ToString()
                 : definition.Id.ToString(),

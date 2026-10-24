@@ -265,6 +265,32 @@ Presses(
     ("LargeGridBeamBlock", identity),
     ("LargeGridBeamBlockEnd", identity)
 );
+
+// A gap at the channel side of a half slope, framed by beams: the frame only ranks the
+// blocks and doesn't rule out the half sized ones that fit the half slope's channel. The
+// full beam, which sticks out past the half slope, isn't offered.
+aim = right;
+Presses(
+    "beam: half slope framed by beams",
+    Grid(
+        ("LargeGridBeamBlockHalfSlope", right, identity),
+        ("LargeGridBeamBlock", up, identity),
+        ("LargeGridBeamBlock", down, identity),
+        ("LargeGridBeamBlock", forward, identity),
+        ("LargeGridBeamBlock", backward, identity)
+    ),
+    new[]
+    {
+        "LargeGridBeamBlock",
+        "LargeGridBeamBlockHalf",
+        "LargeGridBeamBlockHalfSlope",
+        "LargeGridBeamBlockSlope2x1Base",
+        "LargeGridBeamBlockSlope2x1Tip",
+    },
+    "LargeGridBeamBlock",
+    ("LargeGridBeamBlockHalfSlope", null),
+    ("LargeGridBeamBlockHalfSlope", null)
+);
 aim = down;
 
 var conveyors = new[]

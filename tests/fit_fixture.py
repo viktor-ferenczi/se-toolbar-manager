@@ -37,6 +37,8 @@ BLOCKS = [
     "LargeGridBeamBlockRound",
     "LargeGridBeamBlockHalf",
     "LargeGridBeamBlockHalfSlope",
+    "LargeGridBeamBlockSlope2x1Base",
+    "LargeGridBeamBlockSlope2x1Tip",
     "LargeBlockConveyor",
     "ConveyorTube",
     "ConveyorTubeCurved",

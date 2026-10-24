@@ -20,7 +20,10 @@ public static class BlockFit
     // Shapes this much worse than the best one still fit, in face units
     private const double Tolerance = 0.05;
 
-    // Faces that differ more than this in total don't fit at all
+    // The family of the blocks built from the game's armor shapes
+    public const string Armor = "armor";
+
+    // An aimed face that differs more than this doesn't fit at all
     private const double MaxMismatch = 1.0;
 
     public struct Int3 : IEquatable<Int3>
@@ -328,10 +331,13 @@ public static class BlockFit
         // uncovered, like the floor beside a corner block.
         // The aimed face has to fit, so the block attaches there. Other neighbors count only
         // if they are of the block's family, so a beam may run past a wall and continue.
+        // The aimed face decides whether the block fits at all, the others only rank it, so
+        // the beams around a gap don't rule out every block that fits the aimed beam
         var aimedBlock = grid(target.Aimed);
         var sticking = 0;
         var uncovered = 0;
         var contact = 0;
+        var aimedMismatch = 0.0;
         foreach (var (cell, d) in boundary)
         {
             var neighbor = grid(cell + d);
@@ -341,22 +347,30 @@ public static class BlockFit
 
             var own = block.Face(cell, d);
             var other = neighbor.Face(cell + d, -d);
+            var faceSticking = 0;
+            var faceUncovered = 0;
             for (var k = 0; k < own.Length; k++)
             {
                 if (own[k] && !other[k])
-                    sticking++;
+                    faceSticking++;
                 else if (other[k] && !own[k])
-                    uncovered++;
+                    faceUncovered++;
                 else if (own[k] && isAimed)
                     contact++;
             }
+            // Armor closes surfaces, so leaving its neighbors' faces open counts. Other blocks,
+            // like a half beam in a frame of full beams, need only not stick out past them.
+            sticking += faceSticking;
+            if (isAimed || block.Shape.Family == Armor)
+                uncovered += faceUncovered;
+            if (isAimed)
+                aimedMismatch += faceSticking + 0.5 * faceUncovered;
         }
 
-        if (contact == 0)
+        if (contact == 0 || aimedMismatch / (Samples * Samples) > MaxMismatch)
             return null;
 
-        var score = (sticking + 0.5 * uncovered) / (Samples * Samples);
-        return score <= MaxMismatch ? score : (double?)null;
+        return (sticking + 0.5 * uncovered) / (Samples * Samples);
     }
 
     // Each face a neighbor port points into is met by a port of the same kind and no port
