@@ -75,21 +75,24 @@ cleaned up after 90 days, but only when a profile is deleted the next time.
 
 A group puts several tools, weapons and blocks into one slot of your character toolbar.
 Using the slot equips the first available item in tile order. Pressing the slot again
-moves on to the next item: all tiers of a tool count as one, and every block is a step of
-its own. With the default group that is welder, grinder, then hand drill. Tools you don't
-carry, blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the items can be used,
-nothing happens.
+with a tool or weapon of the group in hand moves on to the next item, all tiers of a tool
+counting as one. With the default group that is welder, grinder, then hand drill. With a
+block of the group in hand, pressing the slot again does what it does on a block's own
+slot: it switches between the block's large and small variant. Tools you don't carry,
+blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the
+items can be used, nothing happens.
 
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
 may share items. Each slot steps only through its own group. Going back to a group's
-slot equips the item it was on last, and pressing it again moves on from there.
+slot equips the item it was on last.
 
 While holding a tool, weapon or block from the group used last, with that group on the
 current toolbar page, scroll up to move forward through the group or down to move backward.
-Both inputs pick the first available item of each kind in tile order, regardless of its
-level. With a block of the group in hand the wheel steps through the group instead of the
-game's block variants. Scrolling in menus
-or with Ctrl, Shift or Alt held keeps the game's normal behavior.
+The wheel and the slot pick the first available item of each kind in tile order,
+regardless of its level, and every block is a step of its own. With a block of the group
+in hand the wheel steps through the group instead of the game's block variants. Scrolling
+in menus or with Ctrl, Shift or Alt held keeps the game's normal behavior, except for the
+fitting blocks below.
 
 The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
 Click its tile to open the editor with that group selected. The **TG** button

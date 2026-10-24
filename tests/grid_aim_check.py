@@ -100,8 +100,8 @@ def run(game: Game) -> None:
         )
 
     # The first press takes the group back to where it was, the steps continue from there
-    steps("slot press", lambda: game.press_slot(SLOT), range(1, 3), -5.0)
-    steps("wheel", lambda: game.scroll(120), range(3, 5), 5.0)
+    steps("wheel", lambda: game.scroll(120), range(1, 3), -5.0)
+    steps("wheel again", lambda: game.scroll(120), range(3, 5), 5.0)
     game.clear_scroll()
 
     check(

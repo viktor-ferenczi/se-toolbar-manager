@@ -84,7 +84,22 @@ public class ItemGroupToolbarItem : MyToolbarItem
     public override bool AllowedInToolbarType(MyToolbarType type) =>
         type == MyToolbarType.Character;
 
-    public override bool Activate() => Activate(1);
+    // Pressing the slot of the group in use again with its block in hand does what it does
+    // for a block's own slot: the game switches between the large and small variant. The
+    // wheel steps through the group's blocks.
+    public override bool Activate()
+    {
+        var group = Group;
+        if (group == null || !(MySession.Static.ControlledEntity is MyCharacter character))
+            return false;
+
+        group.Update(character, MySession.Static.LocalPlayerId);
+        var held = group.Held;
+        if (IsCurrent(held) && held.Item is MyToolbarItemCubeBlock)
+            return held.Item.Activate();
+
+        return Activate(1);
+    }
 
     public bool Activate(int direction)
     {

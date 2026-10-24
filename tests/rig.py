@@ -287,7 +287,13 @@ def launch(c: Client, render: bool = True) -> None:
     steam = os.environ.get("TBM_STEAM") == "1"
     command = [str(c.launcher), *args]
     if steam:
-        command = [str(PARALLEL / "steam-slot.sh"), "se1", str(c.appdata), "--", *command]
+        command = [
+            str(PARALLEL / "steam-slot.sh"),
+            "se1",
+            str(c.appdata),
+            "--",
+            *command,
+        ]
     else:
         command += ["--no-steam", "--client-id", str(c.client_id)]
     env = {}

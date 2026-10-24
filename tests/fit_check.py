@@ -442,13 +442,15 @@ def setup_toolbar(game: Game) -> None:
 
 
 def hold(fit: Fit, case: Case) -> bool:
-    """Steps the group's slot until the case's first block is in hand"""
+    """Equips the group and steps it with the wheel until the case's first block is in
+    hand. Pressing the slot again would switch the block's size."""
     game = fit.game
     game.holster()
+    game.press_slot(GROUP_SLOTS[case.group])
     for _ in range(len(GROUPS[case.group]) + 1):
-        game.press_slot(GROUP_SLOTS[case.group])
         if fit.held() == case.held:
             return True
+        game.scroll(120)
     return False
 
 
@@ -558,10 +560,12 @@ def run_dlc_skip(fit: Fit) -> None:
     """Without Steam no DLC is owned: the slot and the wheel skip the beams"""
     game = fit.game
     game.holster()
+    game.clear_scroll()
     held = []
-    for _ in range(3):
-        game.press_slot(GROUP_SLOTS["Beams"])
-        held.append(fit.held())
+    game.press_slot(GROUP_SLOTS["Beams"])
+    held.append(fit.held())
+    game.scroll(120)
+    held.append(fit.held())
     game.scroll(120)
     held.append(fit.held())
     game.scroll(-120)

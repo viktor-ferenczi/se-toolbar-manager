@@ -687,7 +687,14 @@ def run(game: Game) -> None:
     game.press_slot(4)
     held_check(game, "pressed again: the block", "CubeBlock/LargeBlockArmorSlope")
     game.press_slot(4)
-    held_check(game, "pressed again: back to the drill", "HandDrill/HandDrill2")
+    held_check(
+        game,
+        "pressed again with the block: its small variant",
+        "CubeBlock/SmallBlockArmorSlope",
+    )
+    game.scroll(120)
+    held_check(game, "wheel: back to the drill", "HandDrill/HandDrill2")
+    game.clear_scroll()
 
     # Editing and resetting the default group
     screen = game.open_edit_mode()
