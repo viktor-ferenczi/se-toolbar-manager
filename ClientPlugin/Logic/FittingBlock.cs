@@ -130,21 +130,17 @@ public static class FittingBlock
     {
         var builder = MyCubeBuilder.Static;
         var group = item.Group;
-        var grid = builder?.m_currentGrid;
         if (
             group == null
             || builder is not { IsActivated: true }
-            || grid == null
             || builder.DynamicMode
+            || !Aim(builder, out var grid, out var position, out var addDir)
         )
             return false;
 
         var space = builder.m_gizmo.SpaceDefault;
-        var position = space.m_addPos;
-        // The placement box sits on the aimed block's face, which points to the new cell
-        var aimed = position - space.m_addDir;
-        if (grid.CubeExists(position))
-            return false;
+        // The new cell is on the aimed block's face, which points to it
+        var aimed = position - addDir;
 
         // The group's blocks in the size of the grid, as the cube builder would place them
         var members = new List<ItemGroup.Member>();
@@ -180,27 +176,17 @@ public static class FittingBlock
             new Target
             {
                 AddPos = new Int3(position.X, position.Y, position.Z),
-                AddDir = new Int3(space.m_addDir.X, space.m_addDir.Y, space.m_addDir.Z),
+                AddDir = new Int3(addDir.X, addDir.Y, addDir.Z),
                 Aimed = new Int3(aimed.X, aimed.Y, aimed.Z),
                 LargePortSpan = grid.GridSizeEnum == MyCubeSize.Small ? 3 : 1,
             },
             cell => Neighbor(grid, cell, placed)
         );
-        if (!pick.HasValue && direction == 0)
-            return true;
+        // The quick press tells only when the group has no block of the grid's size at all
+        if (!pick.HasValue && (direction != 0 || candidates.Count == 0))
+            NotifyNoFit();
         if (!pick.HasValue)
-        {
-            // The sound of a placement the game refuses
-            MyGuiAudio.PlaySound(MyGuiSounds.HudUnable);
-            noFit ??= new MyHudNotification(
-                MyStringId.GetOrCompute("No block of the group fits here"),
-                1500,
-                level: MyNotificationLevel.Important
-            );
-            MyHud.Notifications.Remove(noFit);
-            MyHud.Notifications.Add(noFit);
             return true;
-        }
 
         // The cube builder takes up the rotation it remembers for the block, as it does
         // when switching blocks. Both sizes, like MyCubeBuilderState.UpdateCubeBlockDefinition.
@@ -223,10 +209,66 @@ public static class FittingBlock
         return true;
     }
 
+    private static void NotifyNoFit()
+    {
+        // The sound of a placement the game refuses. Played directly: MyGuiAudio mutes it
+        // without a helmet in vacuum with realistic sounds, and within a frame of the last.
+        if (MyAudio.Static?.PlaySound(MyGuiAudio.GetCue(MyGuiSounds.HudUnable)) == null)
+            MyLog.Default.WriteLine("ToolbarManager: the game didn't play the refusal sound");
+        noFit ??= new MyHudNotification(
+            MyStringId.GetOrCompute("No block of the group fits here"),
+            1500,
+            level: MyNotificationLevel.Important
+        );
+        MyHud.Notifications.Remove(noFit);
+        MyHud.Notifications.Add(noFit);
+    }
+
+    // The grid and the empty cell the cube builder places the block in hand into. A block
+    // without a variant of the grid's size gets no placement box on it, then the cell is
+    // the last empty one along the view before the aimed block.
+    private static bool Aim(
+        MyCubeBuilder builder,
+        out MyCubeGrid grid,
+        out Vector3I position,
+        out Vector3I addDir
+    )
+    {
+        var space = builder.m_gizmo.SpaceDefault;
+        grid = builder.m_currentGrid;
+        position = space.m_addPos;
+        addDir = space.m_addDir;
+        if (grid != null)
+            return !grid.CubeExists(position);
+
+        var start = MyBlockBuilderBase.IntersectionStart;
+        var ray = new LineD(
+            start,
+            start
+                + MyBlockBuilderBase.IntersectionDirection * MyBlockBuilderBase.IntersectionDistance
+        );
+        if (!MyCubeGrid.TryRayCastGrid(ref ray, out grid, out _))
+            return false;
+
+        var cells = new List<Vector3I>();
+        grid.RayCastCells(ray.From, ray.To, cells);
+        for (var i = 1; i < cells.Count; i++)
+        {
+            if (!grid.CubeExists(cells[i]))
+                continue;
+            position = cells[i - 1];
+            addDir = position - cells[i];
+            return !grid.CubeExists(position) && addDir.RectangularLength() == 1;
+        }
+
+        return false;
+    }
+
     // Equipping the block activates the cube builder anew, and taking up the grid again
-    // aligns the block to its default mount point. So the rotation is applied on a few
+    // aligns the block to its default mount point. So the rotation is applied on some
     // frames, as a rotation by the player, which the alignment leaves be.
-    private const int RotationFrames = 10;
+    // Enough for the cube builder to switch to the grid's block size, too
+    private const int RotationFrames = 30;
 
     public static void ApplyRotation()
     {

@@ -56,6 +56,15 @@ GROUPS = {
         "ConveyorConnector/ConveyorTubeMedium",
         "CubeBlock/SmallBlockConveyorCapMedium",
     ],
+    # The refinery has no small grid variant
+    "SizeSwitch": [
+        "Refinery/LargeRefinery",
+        "ConveyorConnector/ConveyorTubeSmall",
+    ],
+    "LargeOnly": [
+        "Refinery/LargeRefinery",
+        "UpgradeModule/LargeEnergyModule",
+    ],
 }
 GROUP_SLOTS = {
     "Armor": 1,
@@ -63,6 +72,8 @@ GROUP_SLOTS = {
     "Conveyors": 3,
     "Upgrades": 4,
     "SmallConveyors": 6,
+    "SizeSwitch": 7,
+    "LargeOnly": 8,
 }
 PLAIN_SLOT = 5
 # A block in no group, so no group is in use with it in hand
@@ -515,6 +526,34 @@ def run_quick(fit: Fit) -> None:
     )
 
 
+def run_size_switch(fit: Fit) -> None:
+    """A block without a small variant in hand, aiming at a small grid: Shift selects the
+    group's small block, and tells when the group has none"""
+    fit.paste([tube(DOWN, "SmallBlockConveyor", "Conveyor")], "Small")
+    case = Case("size", "SizeSwitch", "LargeRefinery", [], DOWN, [])
+    if not check("size: holds LargeRefinery", hold(fit, case), str(fit.held())):
+        return
+    fit.aim(DOWN, distance=2.5)
+    fit.quick()
+    check(
+        "size: Shift selects the small tube for the small grid",
+        fit.held() == "ConveyorTubeSmall",
+        str(fit.held()),
+    )
+
+    case = Case("size", "LargeOnly", "LargeRefinery", [], DOWN, [])
+    if not check("size: holds LargeRefinery again", hold(fit, case), str(fit.held())):
+        return
+    fit.aim(DOWN, distance=2.5)
+    fit.no_fit_shown()
+    fit.quick()
+    check(
+        "size: Shift without a small block in the group tells so",
+        fit.held() == "LargeRefinery" and fit.no_fit_shown(),
+        str(fit.held()),
+    )
+
+
 def run_dlc_skip(fit: Fit) -> None:
     """Without Steam no DLC is owned: the slot and the wheel skip the beams"""
     game = fit.game
@@ -630,6 +669,8 @@ def main() -> int:
         run_vanilla(fit)
         # Last: the cube builder stays in small block mode after a small grid
         run_cases([c for c in CASES if c.grid == "Small"])
+        if not only or "size" in only.split(","):
+            run_size_switch(fit)
         fit.clear()
         check(
             "no new exceptions in the game log",
