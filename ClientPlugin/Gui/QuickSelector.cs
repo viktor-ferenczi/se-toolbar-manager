@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClientPlugin.Logic;
 using ClientPlugin.Patches;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Gui;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
@@ -45,9 +48,41 @@ public class QuickSelector : MyGuiScreenBase
 
         var item = ItemGroupScrollPatch.GroupInUse(out var character);
         if (item?.Group == null || item.Group.Members.Count == 0)
+        {
+            LogNoGroupInUse(character);
             return;
+        }
 
         MyGuiSandbox.AddScreen(new QuickSelector(item, character));
+    }
+
+    // Why the keys did nothing, which a player can't tell from the game (SE-692)
+    private static void LogNoGroupInUse(MyCharacter character)
+    {
+        var toolbar = MyToolbarComponent.CurrentToolbar;
+        var groups =
+            toolbar == null
+                ? ""
+                : string.Join(
+                    "; ",
+                    Enumerable
+                        .Range(0, toolbar.SlotCount)
+                        .Select(toolbar.GetSlotItem)
+                        .OfType<ItemGroupToolbarItem>()
+                        .Select(g => g.DescribeUse())
+                );
+        MyLog.Default.WriteLine(
+            "ToolbarManager: the quick selector keys found no group in use: "
+                + $"toolbar {toolbar?.ToolbarType}, can activate {toolbar?.CanPlayerActivateItems}, "
+                + $"controlled {MySession.Static?.ControlledEntity?.GetType().Name}, "
+                + $"spectator {MySession.Static?.IsCameraUserControlledSpectator()}, "
+                + $"input disabled {MyGuiScreenGamePlay.DisableInput}, "
+                + $"gameplay screen {MyGuiScreenGamePlay.ActiveGameplayScreen?.GetFriendlyName()}, "
+                + $"focus {MyScreenManager.GetScreenWithFocus()?.GetFriendlyName()}, "
+                + $"hand {character?.CurrentWeapon?.DefinitionId.ToString()}, "
+                + $"block {MyCubeBuilder.Static?.CurrentBlockDefinition?.Id.ToString()}, "
+                + $"groups: {groups}"
+        );
     }
 
     private static (MyKeys a, MyKeys b, MyKeys c)? Keys(Config.QuickSelectorChord keys) =>

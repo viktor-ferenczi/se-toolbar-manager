@@ -150,6 +150,11 @@ public class ItemGroupToolbarItem : MyToolbarItem
             && (held.Item is MyToolbarItemWeapon || held.Item is MyToolbarItemCubeBlock);
     }
 
+    // For the log: what the group holds, what it equipped last and whether it was used last
+    public string DescribeUse() =>
+        $"{Group?.Name ?? GroupId}: holds {Group?.Held?.Kind ?? "nothing"}, "
+        + $"equipped {Position ?? "nothing"} last, used last {activeGroupId == GroupId}";
+
     public override ChangeInfo Update(MyEntity owner, long playerID = 0, bool anyoneCanUse = false)
     {
         var group = Group;
