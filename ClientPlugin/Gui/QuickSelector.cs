@@ -39,12 +39,27 @@ public class QuickSelector : MyGuiScreenBase
 
     private readonly MyGuiControlGrid grid;
 
+    // Diagnostics for SE-692: the frame counter of Plugin.Update, the frame the gameplay
+    // input last saw a press of the keys, and the frame Plugin.Update saw one
+    private static int frame;
+    private static int seenFrame = -10;
+    private static int pressFrame = -10;
+
     // Opens the selector when the keys become held with a group in use in gameplay
     public static void HandleGameplayInput()
     {
         var input = MyInput.Static;
-        if (open != null || !IsHeld(input) || !IsNewPress(input))
+        if (!IsHeld(input) || !IsNewPress(input))
             return;
+
+        seenFrame = frame;
+        if (open != null)
+        {
+            MyLog.Default.WriteLine(
+                $"ToolbarManager: the quick selector keys found a selector still open, state {open.State}"
+            );
+            return;
+        }
 
         var item = ItemGroupScrollPatch.GroupInUse(out var character);
         if (item?.Group == null || item.Group.Members.Count == 0)
@@ -54,6 +69,32 @@ public class QuickSelector : MyGuiScreenBase
         }
 
         MyGuiSandbox.AddScreen(new QuickSelector(item, character));
+    }
+
+    // Called every frame: logs a press of the keys the gameplay screen didn't pass to
+    // HandleGameplayInput, in this frame or the one before
+    public static void WatchInput()
+    {
+        frame++;
+        if (pressFrame == frame - 1 && seenFrame != pressFrame && seenFrame != pressFrame - 1)
+            MyLog.Default.WriteLine(
+                "ToolbarManager: the quick selector keys were pressed, but the gameplay screen "
+                    + "didn't handle the input: "
+                    + $"focus {MyScreenManager.GetScreenWithFocus()?.GetFriendlyName()}, "
+                    + $"gameplay screen {MyGuiScreenGamePlay.ActiveGameplayScreen?.GetFriendlyName()}, "
+                    + $"input disabled {MyGuiScreenGamePlay.DisableInput}, "
+                    + $"block {MyCubeBuilder.Static?.CurrentBlockDefinition?.Id.ToString()}"
+            );
+
+        var input = MyInput.Static;
+        if (
+            MySession.Static?.Ready == true
+            && MyGuiScreenGamePlay.Static != null
+            && input != null
+            && IsHeld(input)
+            && IsNewPress(input)
+        )
+            pressFrame = frame;
     }
 
     // Why the keys did nothing, which a player can't tell from the game (SE-692)

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using ClientPlugin.Gui;
 using ClientPlugin.Logic;
 using ClientPlugin.Patches;
 using ClientPlugin.Settings;
@@ -47,7 +48,7 @@ public class Plugin : IPlugin
         Instance = null;
     }
 
-    public void Update() { }
+    public void Update() => QuickSelector.WatchInput();
 
     private void OnSessionLoading()
     {

@@ -7,7 +7,8 @@ Starts from a config written by 1.8.0, without the QuickSelectorKeys element. Wi
 block of a group in hand aimed into a gap, pressing Shift and then Ctrl a tenth of a
 second later, as a player does, must open the selector, and so must Ctrl before Shift.
 Shift first also does the quick fitting block press, which switches the block in hand.
-With a block of no group in hand nothing opens, and the game log says why.
+With a block of no group in hand nothing opens, and the game log says why. No press
+may be logged as missed by the gameplay screen.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 """
 
@@ -46,6 +47,7 @@ CONFIG_1_8_0 = """<?xml version="1.0" encoding="utf-8"?>
 # The armor gap of fit_check.py
 CASE = next(c for c in CASES if c.name == "cube gap")
 NO_GROUP = "the quick selector keys found no group in use"
+MISSED = "didn't handle the input"
 
 
 def write_configs(c: rig.Client, write=rig.write_configs) -> None:
@@ -120,6 +122,12 @@ def main() -> int:
         fit = Fit(game)
         run(game, fit, Selector(fit))
         fit.clear()
+        missed = [l for l in log_lines(game) if MISSED in l]
+        check(
+            "no press logged as missed by the gameplay screen",
+            not missed,
+            missed[0].split(MISSED)[-1][:300] if missed else "",
+        )
         check(
             "no new exceptions in the game log",
             game.exception_count() == errors_before,
