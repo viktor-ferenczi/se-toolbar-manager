@@ -248,9 +248,11 @@ public static class MyGuiScreenToolbarConfigBasePatch
         __instance.m_dragAndDrop.ItemDropped += (sender, eventArgs) =>
             OnStagingGridOnDrop(stagingGrid, eventArgs);
 
+        // Unsubscribe first, otherwise every opening of the screen would add the handlers again
+        stagingGrid.ItemClicked -= OnStagingGridItemClicked;
         stagingGrid.ItemClicked += OnStagingGridItemClicked;
-        stagingGrid.ItemDragged += (sender, eventArgs) =>
-            OnStagingGridOnDrag(__instance, sender, eventArgs);
+        stagingGrid.ItemDragged -= OnStagingGridOnDrag;
+        stagingGrid.ItemDragged += OnStagingGridOnDrag;
     }
 
     [HarmonyPrefix]
@@ -555,11 +557,15 @@ public static class MyGuiScreenToolbarConfigBasePatch
     }
 
     private static void OnStagingGridOnDrag(
-        MyGuiScreenToolbarConfigBase myGuiScreenToolbarConfigBase,
         MyGuiControlGrid stagingGrid,
         MyGuiControlGrid.EventArgs eventArgs
     )
     {
+        // The screen that shows the grid now. Static can be null while that screen is open,
+        // the previous screen clears it when it finishes closing.
+        if (!(stagingGrid.GetTopMostOwnerScreen() is MyGuiScreenToolbarConfigBase screen))
+            return;
+
         var item = stagingGrid.GetItemAt(eventArgs.ItemIndex);
         if (item == null || !item.Enabled)
             return;
@@ -567,7 +573,7 @@ public static class MyGuiScreenToolbarConfigBasePatch
         var info = new MyDragAndDropInfo();
         info.Grid = stagingGrid;
         info.ItemIndex = eventArgs.ItemIndex;
-        myGuiScreenToolbarConfigBase.m_dragAndDrop.StartDragging(
+        screen.m_dragAndDrop.StartDragging(
             MyDropHandleType.MouseRelease,
             eventArgs.Button,
             item,
