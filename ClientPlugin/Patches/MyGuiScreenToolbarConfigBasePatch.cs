@@ -123,6 +123,14 @@ public static class MyGuiScreenToolbarConfigBasePatch
             stagingGrid.RowsCount = 10;
         }
 
+        // Show the hovered or selected item in the block info panel, like the block grid does.
+        // Leaving the grid shows nothing, so it can't override the block grid's hovered item.
+        // The staging grid outlives the screen, so subscribe the static handler only once.
+        stagingGrid.MouseOverIndexChanged -= ShowItemInfo;
+        stagingGrid.MouseOverIndexChanged += ShowItemInfo;
+        stagingGrid.ItemSelected -= ShowItemInfo;
+        stagingGrid.ItemSelected += ShowItemInfo;
+
         var stagingPanel = new MyGuiControlScrollablePanel(stagingGrid);
         stagingPanel.BackgroundTexture = MyGuiControlGrid
             .GetVisualStyle(MyGuiControlGridStyleEnum.ToolsBlocks)
@@ -524,6 +532,15 @@ public static class MyGuiScreenToolbarConfigBasePatch
         }
 
         return false;
+    }
+
+    private static void ShowItemInfo(MyGuiControlGrid grid, MyGuiControlGrid.EventArgs eventArgs)
+    {
+        if (
+            MyGuiScreenToolbarConfigBase.Static is MyGuiScreenCubeBuilder screen
+            && !screen.m_dragAndDrop.IsActive()
+        )
+            screen.ShowItem(grid.TryGetItemAt(eventArgs.ItemIndex));
     }
 
     private static void OnStagingGridItemClicked(
