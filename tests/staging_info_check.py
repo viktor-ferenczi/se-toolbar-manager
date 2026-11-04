@@ -54,6 +54,9 @@ def follows(game: Game, screen: int, grid: str, a: int, b: int, name: str) -> No
     )
     for slot in (a, b):
         game.grid_click(screen, grid, slot, "select")
+        if slot == a:
+            # For the reviewer, in the client's screenshots folder
+            game.shot(f"{grid}-selected")
         check(
             f"{name}: selecting slot {slot} shows its block",
             shows(game, screen, icon(game, screen, grid, slot)),
