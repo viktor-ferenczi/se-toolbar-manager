@@ -18,6 +18,8 @@ stays null, and the game's own G menu throws on it in survival (the research gra
 TBM_STEAM=1 launches with Steam instead, for DLC blocks, waiting for the machine's
 single SE1 Steam slot.
 
+TBM_BIN64 sets the game's Bin64 folder, for hosts without a Steam library file.
+
 TBM_REMOTE points to the Remote working copy (default ~/ws/se/se1/plugins/remote),
 SE_WORKSPACE to the workspace (default: three levels above this repository).
 """
@@ -282,6 +284,9 @@ def launch(c: Client, render: bool = True) -> None:
         "-stablelogs", "-sources", "-appdata", str(c.appdata), "--quality", "minimal",
         "--resolution", "1280x720", "--no-audio", "--headless",
     ]  # fmt: skip
+    # TBM_BIN64 for hosts without a Steam library file to find the game in
+    if os.environ.get("TBM_BIN64"):
+        args += ["-bin64", os.environ["TBM_BIN64"]]
     # TBM_STEAM=1 runs with the machine's Steam account, which owns the DLCs, through the
     # single Steam slot of the game (testing/game-test-instance-modes/README.md, mode C)
     steam = os.environ.get("TBM_STEAM") == "1"
