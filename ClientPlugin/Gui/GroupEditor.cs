@@ -39,6 +39,7 @@ public class GroupEditor
         if (IsEditing(screen) && (groupId == null || groupId == selectedGroupId))
             return;
 
+        DropEmptyGroups();
         selectedGroupId = groupId ?? selectedGroupId;
         editingScreen = screen;
         Config.Save();
@@ -47,10 +48,19 @@ public class GroupEditor
 
     public static void Toggle(MyGuiScreenToolbarConfigBase screen)
     {
+        DropEmptyGroups();
         editingScreen = IsEditing(screen) ? null : screen;
         Current = null;
         Config.Save();
         screen.RecreateControls(false);
+    }
+
+    // A group left without items is gone once the editor opens or closes, freeing its name.
+    // It was never saved, see ItemGroupStorage.Save.
+    private static void DropEmptyGroups()
+    {
+        if (Groups.Any(g => g.Items.Length == 0))
+            Groups = Groups.Where(g => g.Items.Length > 0).ToArray();
     }
 
     // The plugin settings have no G menu behind them, so this opens one, in a world only

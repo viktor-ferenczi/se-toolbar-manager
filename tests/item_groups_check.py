@@ -336,8 +336,9 @@ class Game:
         }
 
     def exception_count(self) -> int:
-        """Exceptions in the game log, except the debug listener port another client holds
-        and LinuxCompat's list of shims, which has a WindowsException"""
+        """Exceptions in the game log, except the debug listener port another client holds,
+        the game falling back to the XML save of the test world, and LinuxCompat's list
+        of shims, which has a WindowsException"""
         text = self.client.log.read_text(errors="replace")
         return len(
             [
@@ -347,6 +348,7 @@ class Game:
                 and not line.lstrip().startswith("at ")
                 and "SocketException" not in line
                 and "MyLoadingNeedXMLException" not in line
+                and "UnloadOnException started" not in line
                 and "[LinuxCompat]" not in line
             ]
         )

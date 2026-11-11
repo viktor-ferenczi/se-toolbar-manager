@@ -32,17 +32,26 @@ public static class ItemGroupStorage
 
         var groups = new List<ItemGroup>();
         SavedPaths.Clear();
-        foreach (var path in Directory.EnumerateFiles(Folder, "*.xml"))
+        foreach (var path in Directory.EnumerateFiles(Folder, "*.xml").ToList())
         {
+            ItemGroup group;
             try
             {
                 using (var reader = File.OpenText(path))
                 {
-                    var group = (ItemGroup)Serializer.Deserialize(reader);
+                    group = (ItemGroup)Serializer.Deserialize(reader);
                     group.Name = Path.GetFileNameWithoutExtension(path);
-                    groups.Add(group);
-                    SavedPaths.Add(path);
                 }
+
+                // Versions up to 1.8.3 saved empty groups, which only blocked their names
+                if (group.Items.Length == 0)
+                {
+                    File.Delete(path);
+                    continue;
+                }
+
+                groups.Add(group);
+                SavedPaths.Add(path);
             }
             catch (Exception e)
                 when (e is IOException
@@ -57,6 +66,7 @@ public static class ItemGroupStorage
         return groups.OrderBy(group => group.Order).ToArray();
     }
 
+    // Empty groups are kept in memory only, so an emptied group's file is deleted below
     public static void Save(ItemGroup[] groups)
     {
         Directory.CreateDirectory(Folder);
@@ -65,6 +75,9 @@ public static class ItemGroupStorage
         {
             var group = groups[i];
             group.Order = i;
+            if (group.Items.Length == 0)
+                continue;
+
             var path = Path.Combine(Folder, group.Name.SanitizeFileName() + ".xml");
             var oldPath = SavedPaths.FirstOrDefault(saved => PathComparer.Equals(saved, path));
             if (oldPath != null && oldPath != path)
