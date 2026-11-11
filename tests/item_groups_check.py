@@ -542,12 +542,16 @@ def run(game: Game) -> None:
 
     # A custom group of tools and a block, preferring the lower tier drill
     game.retry_name(screen, "NewGroupButton", " hand tools ", "Builder")
+    # An empty group is not saved (SE-1356), so the selector key tells it is selected
+    selected_key = game.control(screen, "GroupSelector")["properties"].get(
+        "selectedKey"
+    )
     check(
-        "new group created and selected",
-        game.group_names(screen) == ["Hand Tools", "Builder"]
-        and game.selected_group(screen) == "Builder"
+        "new group created and selected, not saved while empty",
+        game.group_names(screen) == ["Hand Tools"]
+        and selected_key == 1
         and game.group_items(screen) == [],
-        f"{game.group_names(screen)}, {game.selected_group(screen)}",
+        f"{game.group_names(screen)}, {selected_key}",
     )
     game.select_category(screen, "Character Tools")
     game.drag_to_group(screen, "Elite Hand Drill", 0)
@@ -617,6 +621,8 @@ def run(game: Game) -> None:
     )
     game.delete_group(screen)
     game.name_dialog(screen, "NewGroupButton", "Path/Group")
+    game.select_category(screen, "Armor Blocks")
+    game.double_click_block(screen, "Light Armor Slope")
     check(
         "group names use toolbar filename sanitizing",
         game.selected_group(screen) == "Path-Group"
