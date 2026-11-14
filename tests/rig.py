@@ -20,8 +20,6 @@ single SE1 Steam slot.
 
 TBM_BIN64 sets the game's Bin64 folder, for hosts without a Steam library file.
 
-TBM_UNDO=<se-undo working copy> also loads the Undo plugin from there.
-
 TBM_CONFIG=<XML elements> sets options in the plugin's configuration file.
 
 TBM_REMOTE points to the Remote working copy (default ~/ws/se/se1/plugins/remote),
@@ -54,7 +52,6 @@ sys.path.insert(0, str(REMOTE_REPO / "skills" / "se-remote"))
 from se_remote import RemoteAPI  # noqa: E402
 
 PLUGIN_ID = "viktor-ferenczi/se-toolbar-manager"
-UNDO_ID = "AC284074-A676-4930-B47A-F30450988608"
 PULSAR_TEMPLATE = Path(os.environ.get("TBM_PULSAR_TEMPLATE", HOME / ".config/Pulsar"))
 WORLDS = REMOTE_REPO / "Worlds"
 TEMPLATE = "RemoteAPITestSpace"
@@ -190,10 +187,6 @@ def ensure_pulsar(c: Client) -> None:
     plugins = ["remote", "direct-transport"]
     if os.environ.get("TBM_WITHOUT_PLUGIN") != "1":
         plugins.append(PLUGIN_ID)
-    if os.environ.get("TBM_UNDO"):
-        undo = Path(os.environ["TBM_UNDO"]).expanduser()
-        _register_source(sources, "se-undo", undo, "Undo.xml")
-        plugins.append(UNDO_ID)
     (profiles / "Current.xml").write_text(_profile(plugins), encoding="utf-8")
 
 

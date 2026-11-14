@@ -39,8 +39,6 @@ public class Config : INotifyPropertyChanged
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
     private bool gameBlockGroups = true;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
-    private Binding pickBlockSecondKey = new Binding(MyKeys.Insert, ctrl: true);
-    private Binding cutBlockKey = new Binding(MyKeys.Delete, ctrl: true);
     private bool pickBlockColor;
 
     private ItemGroup[] itemGroups;
@@ -206,37 +204,20 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref gameBlockGroups, value);
     }
 
-    public const string PickBlockDescription =
-        "Takes the block you face into the hand as the block to place,\nwith its type, skin and orientation";
-
     [Separator("Faced block")]
-    [Keybind(label: "Pick block", description: PickBlockDescription)]
+    [Keybind(
+        label: "Pick block",
+        description: "Takes the block you face into the hand as the block to place,\nwith its type, skin and orientation"
+    )]
     public Binding PickBlockKey
     {
         get => pickBlockKey;
         set => SetField(ref pickBlockKey, value);
     }
 
-    [Keybind(label: "Pick block, second key", description: PickBlockDescription)]
-    public Binding PickBlockSecondKey
-    {
-        get => pickBlockSecondKey;
-        set => SetField(ref pickBlockSecondKey, value);
-    }
-
-    [Keybind(
-        label: "Cut block",
-        description: "Removes the block you face and takes it into the hand, in creative mode.\nAsks first if the grid would split. Symmetry mode removes the mirrored blocks too.\nOn Ctrl+Delete it replaces the game's delete of the whole faced grid."
-    )]
-    public Binding CutBlockKey
-    {
-        get => cutBlockKey;
-        set => SetField(ref cutBlockKey, value);
-    }
-
     [Checkbox(
         label: "Pick the color too",
-        description: "Picking or cutting a block also selects its color for new blocks"
+        description: "Picking a block also selects its color for new blocks"
     )]
     public bool PickBlockColor
     {

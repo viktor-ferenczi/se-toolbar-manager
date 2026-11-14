@@ -1,20 +1,15 @@
-"""In-game check of picking and cutting the faced block, on the isolated client of rig.py.
+"""In-game check of picking the faced block, on the isolated client of rig.py.
 
-    TBM_SLOT=15 TBM_UNDO=~/ws/se/se1/plugins/se-undo \\
-        uv run --with httpx python tests/faced_block_check.py [--color] [--attach] [--keep]
+    TBM_SLOT=15 uv run --with httpx python tests/faced_block_check.py [--color] [--attach] [--keep]
 
 Pastes a wall of blocks ahead of the character and a small grid beside it, then presses
-the default keys like a player: Ctrl+G and Ctrl+Insert to pick, Ctrl+Delete to cut.
+the default key like a player: Ctrl+G.
 
-Pick: the block in hand must be the faced one by type and subtype, in its size, the skin
-for new blocks must be the block's, and a click must place it turned like the picked one.
-The build color stays, or with --color (the "Pick the color too" option) becomes the
-block's. Ctrl+G must not open the G menu.
-Cut: refused without creative rights; removes a block that holds nothing else and takes
-it into the hand; Ctrl+Z of the Undo plugin brings it back. In symmetry mode it removes
-the mirrored block too, Undo restores both, and the block in hand places mirrored.
-A cut that would split the grid asks first: No keeps the blocks, Yes removes them and
-the grid splits. Screenshots of the dialogs go to the client's appdata.
+The block in hand must be the faced one by type and subtype, in its size, from an empty
+hand and with another block in hand. The skin for new blocks must be the block's, and a
+click must place the block turned like the picked one. The build color stays, or with
+--color (the "Pick the color too" option) becomes the block's. Ctrl+G must not open the
+G menu. It works without creative rights, and with no block in view it says so.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach and --keep work as in item_groups_check.py.
 """
@@ -35,13 +30,12 @@ SKIN = "Clean_Armor"
 BASE_COLOR = (0.0, -0.8, 0.55)
 HALF_COLOR = (0.575, 0.15, 0.2)
 DISTANCE = 9.0
-MESSAGE_BOX = "MyGuiScreenMessageBox"
 
 # The wall, seen from the front: a row of armor with four blocks standing on it.
-#   slope  cargo    .    half   armor        y = 1
+#   slope  cargo    .    half     .          y = 1
 #   armor  armor  armor  armor  armor        y = 0
 #   x=-2    -1      0      1      2
-SLOPE, CARGO_CELL, HALF, MIRROR = (-2, 1, 0), (-1, 1, 0), (1, 1, 0), (2, 1, 0)
+SLOPE, CARGO_CELL, HALF = (-2, 1, 0), (-1, 1, 0), (1, 1, 0)
 ROW = [(x, 0, 0) for x in range(-2, 3)]
 
 
@@ -85,7 +79,6 @@ WALL = blueprint(
         block(CUBE, "LargeBlockArmorSlope", SLOPE, skin=SKIN, forward="Right", up="Up"),
         block(CARGO, "LargeBlockSmallContainer", CARGO_CELL),
         block(CUBE, "LargeHalfArmorBlock", HALF, color=HALF_COLOR),
-        block(CUBE, "LargeBlockArmorBlock", MIRROR),
     ],
 )
 SMALL = blueprint(
@@ -184,23 +177,6 @@ class Faced:
     def latest(self) -> int:
         return self.api.get_hud_notifications(0)["latest"]
 
-    # The split question
-
-    def question(self) -> tuple[int | None, str]:
-        index = wait(lambda: self.game.screen_index(MESSAGE_BOX), 3)
-        if index is None:
-            return None, ""
-        texts = [
-            str((c.get("properties") or {}).get("text") or "")
-            for c in self.game.controls(index)
-        ]
-        return index, " ".join(texts)
-
-    def answer(self, index: int, text: str) -> None:
-        self.api.control_click(text=text, screen=index)
-        wait(lambda: self.game.screen_index(MESSAGE_BOX) is None, 5)
-        time.sleep(1.0)
-
 
 def held_is(faced: Faced, name: str, kind: str, subtype: str) -> bool:
     want = f"{kind}/{subtype}"
@@ -235,12 +211,10 @@ def pick_checks(faced: Faced, wall: int, small: int, pick_color: bool) -> None:
                 f"{start_color} -> {faced.color()}",
             )
 
-    # A block in hand, Ctrl+Insert, another type and no skin
+    # A block in hand, another type and no skin
     if check("the cargo container is in the crosshair", faced.face(wall, CARGO_CELL)):
-        faced.press("Insert")
-        held_is(
-            faced, "Ctrl+Insert picks the container", CARGO, "LargeBlockSmallContainer"
-        )
+        faced.press("G")
+        held_is(faced, "Ctrl+G picks the container", CARGO, "LargeBlockSmallContainer")
         check("pick clears the skin", faced.skin() == "", f"skin: {faced.skin()!r}")
 
     if pick_color and check(
@@ -261,6 +235,16 @@ def pick_checks(faced: Faced, wall: int, small: int, pick_color: bool) -> None:
         faced.press("G")
         held_is(faced, "pick takes the small block", CUBE, "SmallBlockArmorBlock")
 
+    # Without creative rights: the block to place, as its toolbar slot would give it
+    api.set_admin_flag("creativeTools", False)
+    time.sleep(0.5)
+    game.holster()
+    if check("the half block is in the crosshair", faced.face(wall, HALF)):
+        faced.press("G")
+        held_is(faced, "pick works without creative tools", CUBE, "LargeHalfArmorBlock")
+    api.set_admin_flag("creativeTools", True)
+    time.sleep(0.5)
+
     # Nothing in view
     before = game.held()
     away = [p - 50 * f for p, f in zip(faced.position, faced.forward)]
@@ -273,8 +257,8 @@ def pick_checks(faced: Faced, wall: int, small: int, pick_color: bool) -> None:
 
     # The picked block places turned like the original
     if check("the slope is in the crosshair again", faced.face(wall, SLOPE)):
-        faced.press("Insert")
-        held_is(faced, "Ctrl+Insert picks the slope", CUBE, "LargeBlockArmorSlope")
+        faced.press("G")
+        held_is(faced, "Ctrl+G picks the slope", CUBE, "LargeBlockArmorSlope")
         time.sleep(1.0)
         before = faced.cubes(wall)
         faced.click()
@@ -293,170 +277,12 @@ def pick_checks(faced: Faced, wall: int, small: int, pick_color: bool) -> None:
                 (new[0]["forward"], new[0]["up"]) == (slope["forward"], slope["up"]),
                 f"{new[0]['forward']}/{new[0]['up']} vs {slope['forward']}/{slope['up']}",
             )
-            # Out of the way of the cut checks
+            # Leave the wall as it was
             api.set_input_state(mouse_right=True)
             time.sleep(0.3)
             api.clear_input_state()
             time.sleep(1.0)
             check("the placed block is removed again", faced.count(wall) == len(before))
-
-
-def cut_checks(faced: Faced, wall: int, undo: bool) -> None:
-    game, api = faced.game, faced.api
-    total = faced.count(wall)
-
-    # Survival rules
-    api.set_admin_flag("creativeTools", False)
-    time.sleep(0.5)
-    game.holster()
-    if check("the half block is in the crosshair", faced.face(wall, HALF)):
-        latest = faced.latest()
-        faced.press("Delete")
-        check(
-            "survival: the cut is refused",
-            faced.notified("needs creative mode", latest),
-        )
-        check("survival: the block stays", faced.count(wall) == total)
-        check("survival: nothing in hand", game.held() is None, f"{game.held()}")
-        faced.press("G")
-        held_is(faced, "survival: pick works", CUBE, "LargeHalfArmorBlock")
-    api.set_admin_flag("creativeTools", True)
-    time.sleep(0.5)
-
-    # A block that holds nothing else
-    game.holster()
-    if check("the half block is in the crosshair", faced.face(wall, HALF)):
-        latest = faced.latest()
-        faced.press("Delete")
-        gone = wait(lambda: HALF not in faced.cubes(wall), 5)
-        told = [
-            n.get("text") for n in api.get_hud_notifications(latest)["notifications"]
-        ]
-        check("Ctrl+Delete removes the block", bool(gone), f"notifications: {told}")
-        check(
-            "no question for a block that holds nothing",
-            game.screen_index(MESSAGE_BOX) is None,
-        )
-        check("only that block is removed", faced.count(wall) == total - 1)
-        held_is(faced, "the cut block is in hand", CUBE, "LargeHalfArmorBlock")
-        if undo:
-            faced.press("Z")
-            back = wait(lambda: faced.cubes(wall).get(HALF), 5)
-            check(
-                "Undo brings the cut block back",
-                bool(back) and back["subtypeId"] == "LargeHalfArmorBlock",
-                f"{back and back['subtypeId']}",
-            )
-            check(
-                "Undo restores its color",
-                bool(back)
-                and tuple(round(c, 3) for c in back["colorMaskHsv"])
-                == tuple(round(c, 3) for c in HALF_COLOR),
-            )
-
-    # Symmetry: the mirrored block goes too
-    api.set_game_option("cubeBuilderUseSymmetry", True)
-    api.set_grid_symmetry(wall, x=(0, 0, 0), x_odd=False)
-    total = faced.count(wall)
-    game.holster()
-    if check("the slope is in the crosshair", faced.face(wall, SLOPE)):
-        faced.press("Delete")
-        gone = wait(lambda: not {SLOPE, MIRROR} & set(faced.cubes(wall)), 5)
-        check("symmetry: the cut removes the mirrored block too", bool(gone))
-        check("symmetry: two blocks removed", faced.count(wall) == total - 2)
-        check("symmetry: no question", game.screen_index(MESSAGE_BOX) is None)
-        held_is(
-            faced, "symmetry: the faced block is in hand", CUBE, "LargeBlockArmorSlope"
-        )
-        if undo:
-            faced.press("Z")
-            back = wait(lambda: {SLOPE, MIRROR} <= set(faced.cubes(wall)), 5)
-            cubes = faced.cubes(wall)
-            check("symmetry: Undo brings both blocks back", bool(back))
-            check(
-                "symmetry: Undo restores the skin",
-                (cubes.get(SLOPE) or {}).get("skin") == SKIN,
-                f"{(cubes.get(SLOPE) or {}).get('skin')!r}",
-            )
-            total = faced.count(wall)
-
-    # The block in hand places mirrored, as any block does
-    if check("an armor block of the row is in the crosshair", faced.face(wall, ROW[0])):
-        held_is(
-            faced, "symmetry: the slope is still in hand", CUBE, "LargeBlockArmorSlope"
-        )
-        before = faced.cubes(wall)
-        faced.click()
-        new = [cell for cell in faced.cubes(wall) if cell not in before]
-        mirrored = (
-            len(new) == 2 and new[0][0] == -new[1][0] and new[0][1:] == new[1][1:]
-        )
-        check("symmetry: the picked block places mirrored", mirrored, f"new: {new}")
-        api.set_input_state(mouse_right=True)
-        time.sleep(0.3)
-        api.clear_input_state()
-        time.sleep(1.0)
-        check(
-            "symmetry: the placed blocks are removed again",
-            faced.count(wall) == len(before),
-        )
-
-    # Symmetry and a split: both blocks of the row hold the ends
-    total = faced.count(wall)
-    game.holster()
-    if check("the row's second block is in the crosshair", faced.face(wall, ROW[1])):
-        faced.press("Delete")
-        index, text = faced.question()
-        if check("symmetry: a splitting cut asks first", index is not None):
-            check(
-                "symmetry: the question counts the blocks",
-                "these 2 blocks" in text,
-                text,
-            )
-            game.shot("cut-split-dialog-symmetry")
-            faced.answer(index, "No")
-            check("symmetry: No keeps the blocks", faced.count(wall) == total)
-            check(
-                "symmetry: No leaves the hand empty",
-                game.held() is None,
-                f"{game.held()}",
-            )
-    api.set_grid_symmetry(wall, x=None)
-    api.set_game_option("cubeBuilderUseSymmetry", False)
-
-    # The split question, without symmetry
-    grids = len(api.list_grids())
-    if check("the row's middle block is in the crosshair", faced.face(wall, ROW[2])):
-        faced.press("Delete")
-        index, text = faced.question()
-        if check("a splitting cut asks first", index is not None):
-            check(
-                "the question tells the parts",
-                "this block splits the grid into 2 parts" in text,
-                text,
-            )
-            game.shot("cut-split-dialog")
-            faced.answer(index, "No")
-            check("No keeps the block", faced.count(wall) == total)
-            check("No leaves the hand empty", game.held() is None, f"{game.held()}")
-            check("No keeps one grid", len(api.list_grids()) == grids)
-
-        faced.press("Delete")
-        index, _ = faced.question()
-        if check("the cut asks again", index is not None):
-            faced.answer(index, "Yes")
-            split = wait(lambda: len(api.list_grids()) == grids + 1, 10)
-            check(
-                "Yes removes the block and the grid splits",
-                bool(split),
-                f"{len(api.list_grids())} grids",
-            )
-            held_is(
-                faced,
-                "the cut block is in hand after Yes",
-                CUBE,
-                "LargeBlockArmorBlock",
-            )
 
 
 def run(game: Game, pick_color: bool) -> None:
@@ -478,12 +304,10 @@ def run(game: Game, pick_color: bool) -> None:
     wall = faced.paste(WALL, 0.0)
     small = faced.paste(SMALL, 9.0)
     cubes = faced.cubes(wall)
-    check("the wall is pasted", len(cubes) == 9, f"{len(cubes)} blocks")
+    check("the wall is pasted", len(cubes) == 8, f"{len(cubes)} blocks")
     check("the slope has its skin", (cubes.get(SLOPE) or {}).get("skin") == SKIN)
 
     pick_checks(faced, wall, small, pick_color)
-    if not pick_color:
-        cut_checks(faced, wall, bool(os.environ.get("TBM_UNDO")))
 
     check(
         "no exceptions in the game log",
