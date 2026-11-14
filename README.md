@@ -166,11 +166,20 @@ surfaces, so for armor both count on every side; other blocks, like a half beam 
 of full beams, only must not stick out past their neighbors. The blocks of the group that
 match best are the ones that fit. The shapes come from the blocks' mount points.
 
+A gap in a row is the exception: aim at a block that has the same block, turned the same
+way, on the other side of the gap, and that block fits the gap too, whatever else is
+around. So a rounded armor block goes back between its two neighbors even with a half
+armor block beside the row, where the beams of the group would otherwise match better.
+
 Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
 neighbor pointing into the block has to be met by a port of the same kind (large
 conveyor, small conveyor or upgrade), and at least one port has to connect. A conveyor
 block (tube, junction, sorter or connector) also may not have a port running into a block
 that has no such port there, so a tube is not offered against the middle of another tube.
+The plain, reinforced and industrial tubes all connect to each other, but a line takes
+the tubes of its own look when the group has them: a reinforced tube continues with the
+reinforced tubes, not with the plain or industrial ones. Junctions, sorters, connectors
+and the plain caps go with any look.
 Other blocks may: a thruster, tank or machine can leave a port against a beam or wall, as
 the game allows, so a large hydrogen thruster fits under a tank's port even when beams
 frame the space. An upgrade module goes on a refinery or assembler with its ports on the

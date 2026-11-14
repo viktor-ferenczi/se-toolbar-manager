@@ -5,7 +5,7 @@
 Starts the client with block groups written before the launch, pastes small static
 grids with a gap, aims the cube builder into the gap and presses the next fitting block
 button (extra mouse button 2) with a block of a group in hand: armor, beams, conveyors,
-upgrade modules, small grid conveyors. Each press must select the expected block, and a
+upgrade modules, tube looks, a row of rounded armor, small grid conveyors. Each press must select the expected block, and a
 left click must place it in the expected rotation. Shift and the wheel, the previous
 button and the quick Shift press step through the fitting blocks too, also from a block
 without a small variant at a small grid. The middle button must paint as in the vanilla
@@ -47,9 +47,17 @@ GROUPS = {
         "ConveyorConnector/ConveyorTube",
         "ConveyorConnector/ConveyorTubeCurved",
     ],
+    # The toolbar has no slot left for another group, so the blocks of the row and tube
+    # look cases are here too, before the cube the cases start from
     "Upgrades": [
         "UpgradeModule/LargeEnergyModule",
         "UpgradeModule/LargeProductivityModule",
+        "CubeBlock/LargeBlockArmorRoundSlope",
+        "CubeBlock/LargeArmorHalfPanelLight",
+        "ConveyorConnector/ConveyorTube",
+        "ConveyorConnector/ConveyorTubeCurved",
+        "ConveyorConnector/ConveyorTubeDuct",
+        "ConveyorConnector/ConveyorTubeDuctCurved",
         "CubeBlock/LargeBlockArmorBlock",
     ],
     "SmallConveyors": [
@@ -121,6 +129,8 @@ class Case:
     grid: str = "Large"
     # Meters from the gap to stand at, closer on small grids
     distance: float = 6
+    # Direction from the gap to stand in, when a block is in the way opposite the aim
+    stand: tuple[float, float, float] | None = None
 
 
 def cube(cell, subtype="LargeBlockArmorBlock", forward="Forward", up="Up"):
@@ -129,6 +139,17 @@ def cube(cell, subtype="LargeBlockArmorBlock", forward="Forward", up="Up"):
 
 def tube(cell, subtype="ConveyorTube", kind="ConveyorConnector"):
     return (kind, subtype, add(TARGET, cell), "Forward", "Up")
+
+
+def duct(cell):
+    """A reinforced tube, whose ports are at its sides, turned to run up and down"""
+    return (
+        "ConveyorConnector",
+        "ConveyorTubeDuct",
+        add(TARGET, cell),
+        "Backward",
+        "Right",
+    )
 
 
 SMALL_HUB = (-3, -1, -1)
@@ -262,6 +283,48 @@ CASES = [
         "Forward",
         "Up",
     ),
+    # A line of tubes takes the tubes of its own look: reinforced on reinforced
+    Case(
+        "reinforced line",
+        "Upgrades",
+        "LargeBlockArmorBlock",
+        [duct(DOWN), duct((0, -2, 0))],
+        DOWN,
+        ["ConveyorTubeDuct", "ConveyorTubeDuctCurved", "ConveyorTubeDuct"],
+    ),
+    Case(
+        "plain line",
+        "Upgrades",
+        "LargeBlockArmorBlock",
+        [tube(DOWN), tube((0, -2, 0))],
+        DOWN,
+        ["ConveyorTube", "ConveyorTubeCurved", "ConveyorTube"],
+        None,
+        "Up",
+    ),
+    # A gap in a row of rounded armor with a half armor block beside it, aimed at a block
+    # of the row from outside the rounding: the rounded armor fits its row, though the
+    # panel, which isn't measured against the half block, scores better
+    Case(
+        "rounded row",
+        "Upgrades",
+        "LargeBlockArmorBlock",
+        [
+            cube(FORWARD, "LargeBlockArmorRoundSlope", "Up", "Left"),
+            cube(BACKWARD, "LargeBlockArmorRoundSlope", "Up", "Left"),
+            cube(RIGHT, "LargeHalfArmorBlock", "Up", "Backward"),
+        ],
+        BACKWARD,
+        [
+            "LargeBlockArmorRoundSlope",
+            "LargeArmorHalfPanelLight",
+            "LargeBlockArmorRoundSlope",
+        ],
+        "Up",
+        "Left",
+        (0.6, 0.6, 0),
+        stand=(-1, -0.6, -0.35),
+    ),
     Case(
         "small grid small port",
         "SmallConveyors",
@@ -378,15 +441,15 @@ class Fit:
             self.grid = None
             time.sleep(1)
 
-    def aim(self, direction, offset=(0, 0, 0), distance=6.0) -> None:
+    def aim(self, direction, offset=(0, 0, 0), distance=6.0, stand=None) -> None:
         """Faces the face between the gap and its neighbor in the direction from a distance"""
         gap = self.world(TARGET)
         neighbor = self.world(add(TARGET, direction))
         face = tuple((a + b) / 2 + o for a, b, o in zip(gap, neighbor, offset))
-        away = tuple(a - b for a, b in zip(gap, neighbor))
+        away = stand or tuple(a - b for a, b in zip(gap, neighbor))
         length = sum(x * x for x in away) ** 0.5
-        stand = tuple(g + distance * a / length for g, a in zip(gap, away))
-        self.api.character_teleport(*stand)
+        position = tuple(g + distance * a / length for g, a in zip(gap, away))
+        self.api.character_teleport(*position)
         time.sleep(1)
         self.api.character_look_at(*face, tolerance=0.5)
         time.sleep(1)
@@ -479,7 +542,7 @@ def run_case(fit: Fit, case: Case) -> None:
     fit.paste(case.blocks, case.grid)
     if not check(f"{case.name}: holds {case.held}", hold(fit, case), str(fit.held())):
         return
-    fit.aim(case.aim, case.offset, case.distance)
+    fit.aim(case.aim, case.offset, case.distance, case.stand)
     fit.no_fit_shown()
     colors = {cell: c["colorMaskHsv"] for cell, c in fit.cubes().items()}
     before = len(colors)
@@ -497,6 +560,9 @@ def run_case(fit: Fit, case: Case) -> None:
                 fit.held() == expected,
                 f"holds {fit.held()}",
             )
+        if press == 1:
+            # The first pick in its place, for the reviewer
+            fit.game.shot(case.name.replace(" ", "-") + "-first")
 
     painted = [
         cell for cell, c in fit.cubes().items() if c["colorMaskHsv"] != colors[cell]

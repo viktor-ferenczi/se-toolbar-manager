@@ -67,7 +67,26 @@ BLOCKS = [
     "LargeBlockLargeHydrogenThrust",
     "LargeBlockSmallHydrogenThrust",
     "LargeHydrogenTank",
+    "ConveyorTubeDuct",
+    "ConveyorTubeDuctCurved",
+    "ConveyorTubeDuctT",
+    "LargeBlockConveyorPipeIntersection",
+    "ConveyorTubeDuctSmall",
+    "LargeBlockArmorRoundSlope",
+    "LargeArmorHalfPanelLight",
 ]
+
+
+def style(subtype: str) -> str | None:
+    """The look of a conveyor tube, as FittingBlock.StyleOf has it"""
+    if "ConveyorPipe" in subtype:
+        return "industrial"
+    if "ConveyorTubeDuct" in subtype:
+        return "reinforced"
+    if subtype.startswith(("ConveyorTube", "ConveyorFrame")):
+        return "plain"
+    return None
+
 
 # Block types of conveyor lines, as FittingBlock.ConveyorTypes has them
 CONVEYOR_TYPES = {"Conveyor", "ConveyorConnector", "ConveyorSorter", "ShipConnector"}
@@ -303,6 +322,7 @@ def main() -> None:
             "mounts": mounts,
             "ports": ports(game, block, size, center, cube_size),
             "conveyor": block.findtext("Id/TypeId") in CONVEYOR_TYPES,
+            "style": style(name),
             "family": (
                 "armor"
                 if block.find("CubeDefinition") is not None

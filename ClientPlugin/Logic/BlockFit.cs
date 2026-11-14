@@ -6,7 +6,8 @@ namespace ClientPlugin.Logic;
 
 // Finds the blocks of a group that fit an empty cell of a grid: their face matches the face
 // of the aimed block, the neighbors of their family rank them, and their conveyor and
-// upgrade ports line up with the neighbors' ports.
+// upgrade ports line up with the neighbors' ports. Conveyor blocks of the look of the
+// connected ones go first, and a gap in a row of a block takes that block.
 // It knows no game types, so it can be tested offline on real block definitions.
 //
 // Coordinates follow the game: a block's local cells run from 0 to Size - 1 along x right,
@@ -31,6 +32,10 @@ public static class BlockFit
 
     // An aimed face that differs more than this doesn't fit at all
     private const double MaxMismatch = 1.0;
+
+    // Added to the score for each connected conveyor block of another look. More than the
+    // tolerance, so a tube of the line's look rules out the tubes of the other looks.
+    private const double StyleMismatch = 0.1;
 
     public struct Int3 : IEquatable<Int3>
     {
@@ -164,6 +169,10 @@ public static class BlockFit
         // their ports may end against a block. Other blocks, like a thruster or a tank, may
         // leave a port against a beam or a wall, as the game allows.
         public bool Conveyor;
+
+        // The look of a conveyor tube, like the plain, the reinforced and the industrial
+        // ones, which all connect to each other. Null for the blocks that go with any.
+        public string Style;
 
         public bool HasPorts => Ports.Length != 0;
 
@@ -343,13 +352,18 @@ public static class BlockFit
         if (block.Shape.HasPorts)
         {
             var own = new HashSet<string>(block.Shape.Ports.Select(p => p.Kind));
-            var connected = PortsFit(block, grid, cells, Only(incoming, own));
-            return connected > 0 ? -0.001 * connected : (double?)null;
+            var faces = Only(incoming, own);
+            var connected = PortsFit(block, grid, cells, faces);
+            return connected > 0
+                ? StyleMismatch * OtherStyles(block, grid, faces) - 0.001 * connected
+                : (double?)null;
         }
 
         var conveyor = Only(incoming, new HashSet<string> { LargePort, SmallPort });
         if (conveyor.Count != 0)
-            return CapFits(block, boundary, conveyor, target.LargePortSpan) ? 0 : (double?)null;
+            return CapFits(block, boundary, conveyor, target.LargePortSpan)
+                ? StyleMismatch * OtherStyles(block, grid, conveyor)
+                : (double?)null;
 
         // A face sticking out where the neighbor has none, like a full face against the
         // slanted side of a slope, is worse than leaving part of the neighbor's face
@@ -425,6 +439,49 @@ public static class BlockFit
         return incoming.Count;
     }
 
+    // The number of blocks connected on the faces which have another look than the block
+    private static int OtherStyles(
+        Placed block,
+        Func<Int3, Placed> grid,
+        Dictionary<(Int3, Int3), HashSet<string>> faces
+    ) =>
+        block.Shape.Style == null
+            ? 0
+            : faces
+                .Keys.Select(face => grid(face.Item1 + face.Item2))
+                .Distinct()
+                .Count(other =>
+                    other.Shape.Style != null && other.Shape.Style != block.Shape.Style
+                );
+
+    // The rotation in which the block fills a gap in a row of the same block: the aimed
+    // block and the one on the opposite side are the same block, turned the same way.
+    // Null if the cell isn't such a gap. Conveyor blocks go by their ports instead.
+    private static Rotation RowGap(Candidate candidate, Target target, Func<Int3, Placed> grid)
+    {
+        var shape = candidate.Shape;
+        var aimed = grid(target.Aimed);
+        if (shape.HasPorts || aimed?.Shape != shape)
+            return null;
+
+        var rotation = candidate.Rotations.FirstOrDefault(r => r.Equals(aimed.Rotation));
+        if (rotation == null)
+            return null;
+
+        var block = new Placed(shape, rotation, Position(shape, rotation, target));
+        if (block.Cells.Any(cell => grid(cell) != null))
+            return null;
+
+        var opposite = block.Position + block.Position - aimed.Position;
+        var other = grid(opposite);
+        return
+            other?.Shape == shape
+            && other.Rotation.Equals(rotation)
+            && other.Position.Equals(opposite)
+            ? rotation
+            : null;
+    }
+
     private static Dictionary<(Int3, Int3), HashSet<string>> Only(
         Dictionary<(Int3, Int3), HashSet<string>> incoming,
         HashSet<string> kinds
@@ -491,12 +548,26 @@ public static class BlockFit
 
         // Only the best shapes fit
         var fitting = picks.Where(p => p.HasValue).Select(p => p.Value.Score).ToList();
-        if (fitting.Count != 0)
+        var best = fitting.Count != 0 ? fitting.Min() : 0;
+        for (var i = 0; i < picks.Length; i++)
+            if (picks[i].HasValue && picks[i].Value.Score > best + Tolerance)
+                picks[i] = null;
+
+        // The block of a row fits its gap as well as the best, even when the scores say
+        // otherwise, like a rounded armor block that sticks out past a half block beside
+        // the row, which the beams in the group aren't measured against
+        for (var i = 0; i < picks.Length; i++)
         {
-            var best = fitting.Min();
-            for (var i = 0; i < picks.Length; i++)
-                if (picks[i].HasValue && picks[i].Value.Score > best + Tolerance)
-                    picks[i] = null;
+            if (picks[i].HasValue)
+                continue;
+            var rotation = RowGap(candidates[i], target, grid);
+            if (rotation != null)
+                picks[i] = new Pick
+                {
+                    Index = i,
+                    Rotation = rotation,
+                    Score = best,
+                };
         }
 
         return picks;
