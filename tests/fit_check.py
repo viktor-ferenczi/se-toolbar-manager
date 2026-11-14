@@ -5,7 +5,7 @@
 Starts the client with block groups written before the launch, pastes small static
 grids with a gap, aims the cube builder into the gap and presses the next fitting block
 button (extra mouse button 2) with a block of a group in hand: armor, beams, conveyors,
-upgrade modules, small grid conveyors. Each press must select the expected block, and a
+upgrade modules, tube looks, a row of rounded armor, small grid conveyors. Each press must select the expected block, and a
 left click must place it in the expected rotation. Shift and the wheel, the previous
 button and the quick Shift press step through the fitting blocks too, also from a block
 without a small variant at a small grid. The middle button must paint as in the vanilla
@@ -48,17 +48,17 @@ GROUPS = {
         "ConveyorConnector/ConveyorTubeCurved",
     ],
     # The toolbar has no slot left for another group, so the blocks of the row and tube
-    # look cases follow here. They don't fit at the assembler.
+    # look cases are here too, before the cube the cases start from
     "Upgrades": [
         "UpgradeModule/LargeEnergyModule",
         "UpgradeModule/LargeProductivityModule",
-        "CubeBlock/LargeBlockArmorBlock",
         "CubeBlock/LargeBlockArmorRoundSlope",
         "CubeBlock/LargeArmorHalfPanelLight",
         "ConveyorConnector/ConveyorTube",
         "ConveyorConnector/ConveyorTubeCurved",
         "ConveyorConnector/ConveyorTubeDuct",
         "ConveyorConnector/ConveyorTubeDuctCurved",
+        "CubeBlock/LargeBlockArmorBlock",
     ],
     "SmallConveyors": [
         "CubeBlock/SmallBlockConveyorCap",
@@ -560,6 +560,9 @@ def run_case(fit: Fit, case: Case) -> None:
                 fit.held() == expected,
                 f"holds {fit.held()}",
             )
+        if press == 1:
+            # The first pick in its place, for the reviewer
+            fit.game.shot(case.name.replace(" ", "-") + "-first")
 
     painted = [
         cell for cell, c in fit.cubes().items() if c["colorMaskHsv"] != colors[cell]
