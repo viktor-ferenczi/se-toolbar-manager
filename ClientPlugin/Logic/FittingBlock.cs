@@ -49,6 +49,14 @@ public static class FittingBlock
     private static Matrix pendingRotation;
     private static int pendingFrames;
 
+    // Turns the block in hand, once it is the given one, the way ApplyRotation does
+    public static void TurnTo(MyDefinitionId block, Matrix rotation)
+    {
+        pendingBlock = block;
+        pendingRotation = rotation;
+        pendingFrames = RotationFrames;
+    }
+
     // 1 for the next fitting block, -1 for the previous one, 0 if not asked for
     public static int Direction(IMyInput input, out bool middleButton)
     {
