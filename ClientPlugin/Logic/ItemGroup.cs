@@ -159,7 +159,29 @@ public class ItemGroup
             member.Item.Update(owner, playerID);
     }
 
-    public Member Held => Members.FirstOrDefault(m => m.Held);
+    // The block in the hand itself if the group lists it, so each of two blocks sharing a game
+    // block pair is told apart: both sizes of a block, or modded blocks with the same pair name
+    public Member Held
+    {
+        get
+        {
+            var block = MyCubeBuilder.Static is { IsActivated: true } builder
+                ? builder.CurrentBlockDefinition
+                : null;
+            return (block == null ? null : Members.FirstOrDefault(m => m.Definition == block))
+                ?? Members.FirstOrDefault(m => m.Held);
+        }
+    }
+
+    // Whether the items are blocks of the same game block pair
+    public static bool SamePair(Member a, Member b) =>
+        a?.Definition is MyCubeBlockDefinition first
+        && b?.Definition is MyCubeBlockDefinition second
+        && first.BlockPairName == second.BlockPairName;
+
+    // Whether another block of the group shares the game block pair of this one
+    public bool SharesPair(Member member) =>
+        Members.Any(other => other != member && SamePair(other, member));
 
     public bool AnyAvailable => Members.Any(m => m.Available);
 

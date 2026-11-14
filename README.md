@@ -82,6 +82,10 @@ slot: it switches between the block's large and small variant. Tools you don't c
 blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the
 items can be used, nothing happens.
 
+A group can hold both sizes of a block, like the large Hinge and the small grid's Hinge
+3x3, and modded blocks that share a block pair name. Each of them is a step of its own:
+the wheel equips exactly the block listed, whatever grid size the last block had.
+
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
 may share items. Each slot steps only through its own group. Going back to a group's
 slot equips the item it was on last.
@@ -361,6 +365,11 @@ higher levels in tile order, then checks that reordering a tool changes the sele
 `tests/separate_groups_check.py` puts a tool group, a block group, a mixed group and
 two groups sharing tools on separate slots of two toolbar pages, and checks that each
 slot steps only through its own group and continues it where it was.
+
+`tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
+blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through
+all of them and past them, the slot switches the size, and it still works after reloading
+the world. It writes the group file and loads the mod itself, in a creative world.
 
 `tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
 double click in edit mode only, and that the group equips them once they are in the
