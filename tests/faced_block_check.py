@@ -7,9 +7,10 @@ the default key like a player: Ctrl+G.
 
 The block in hand must be the faced one by type and subtype, in its size, from an empty
 hand and with another block in hand. The skin for new blocks must be the block's, and a
-click must place the block turned like the picked one. The build color stays, or with
---color (the "Pick the color too" option) becomes the block's. Ctrl+G must not open the
-G menu. It works without creative rights, and with no block in view it says so.
+click must place the block turned like the picked one, mirrored too in symmetry mode.
+The build color stays, or with --color (the "Pick the color too" option) becomes the
+block's. Ctrl+G must not open the G menu. It works without creative rights, and with no
+block in view it says so.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach and --keep work as in item_groups_check.py.
 """
@@ -283,6 +284,21 @@ def pick_checks(faced: Faced, wall: int, small: int, pick_color: bool) -> None:
             api.clear_input_state()
             time.sleep(1.0)
             check("the placed block is removed again", faced.count(wall) == len(before))
+
+    # In symmetry mode the picked block places mirrored, as any block does
+    api.set_game_option("cubeBuilderUseSymmetry", True)
+    api.set_grid_symmetry(wall, x=(0, 0, 0), x_odd=False)
+    if check("an armor block of the row is in the crosshair", faced.face(wall, ROW[0])):
+        held_is(faced, "the slope is still in hand", CUBE, "LargeBlockArmorSlope")
+        before = faced.cubes(wall)
+        faced.click()
+        new = [cell for cell in faced.cubes(wall) if cell not in before]
+        mirrored = (
+            len(new) == 2 and new[0][0] == -new[1][0] and new[0][1:] == new[1][1:]
+        )
+        check("symmetry: the picked block places mirrored", mirrored, f"new: {new}")
+    api.set_grid_symmetry(wall, x=None)
+    api.set_game_option("cubeBuilderUseSymmetry", False)
 
 
 def run(game: Game, pick_color: bool) -> None:
