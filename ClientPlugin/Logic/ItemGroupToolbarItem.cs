@@ -21,7 +21,7 @@ namespace ClientPlugin.Logic;
 // It is saved as a vanilla terminal group object builder with a marker name and no block,
 // so worlds and toolbar profiles stay loadable without the plugin: the game drops a terminal
 // group without a block on loading it. See MyToolbarItemFactoryPatch for the way back.
-public class ItemGroupToolbarItem : MyToolbarItem
+public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
 {
     public const string Marker = "ToolbarManager:";
 
@@ -43,6 +43,10 @@ public class ItemGroupToolbarItem : MyToolbarItem
     public static void OnSessionLoading() => activeGroupId = null;
 
     public ItemGroup Group => Config.Current.FindItemGroup(GroupId);
+
+    public List<ItemGroup.Member> Members => Group?.Members;
+
+    public ItemGroup.Member Held => Group?.Held;
 
     private string Position => Positions.TryGetValue(GroupId, out var kind) ? kind : null;
 

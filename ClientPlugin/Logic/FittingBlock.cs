@@ -20,7 +20,7 @@ using static ClientPlugin.Logic.BlockFit;
 namespace ClientPlugin.Logic;
 
 // Selects the next block of the group in use that fits where the cube builder aims,
-// see BlockFit for what fits
+// see BlockFit for what fits. The group is a player's group or the game's block variants.
 public static class FittingBlock
 {
     private static readonly Dictionary<MyDefinitionId, Shape> Shapes = new();
@@ -158,11 +158,11 @@ public static class FittingBlock
     }
 
     // Null without a group's block in hand aiming at an empty cell of a grid
-    public static Aimed Aim(ItemGroup group)
+    public static Aimed Aim(IGroupInUse group)
     {
         var builder = MyCubeBuilder.Static;
         if (
-            group == null
+            group?.Members is not { } members
             || builder is not { IsActivated: true }
             || !Aim(builder, out var grid, out var position, out var addDir)
         )
@@ -185,7 +185,7 @@ public static class FittingBlock
         };
 
         var dlc = MySession.Static.GetComponent<MySessionComponentDLC>();
-        foreach (var candidate in group.Members)
+        foreach (var candidate in members)
         {
             if (!candidate.Available || !(candidate.Definition is MyCubeBlockDefinition definition))
                 continue;
@@ -212,15 +212,15 @@ public static class FittingBlock
     // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
     // nothing fits, unless the group has no block of the grid's size: the quick press of
     // the wheel's modifier key
-    public static bool Select(ItemGroupToolbarItem item, MyCharacter character, int direction)
+    public static bool Select(IGroupInUse item, MyCharacter character, int direction)
     {
-        var aimed = Aim(item.Group);
+        var aimed = Aim(item);
         if (aimed == null)
             return false;
 
         var pick = Next(
             aimed.Candidates,
-            aimed.Members.IndexOf(item.Group.Held),
+            aimed.Members.IndexOf(item.Held),
             direction,
             aimed.Current,
             aimed.Target,
@@ -238,12 +238,7 @@ public static class FittingBlock
     }
 
     // Equips the picked block of the group, turned to fit
-    public static bool Take(
-        ItemGroupToolbarItem item,
-        MyCharacter character,
-        Aimed aimed,
-        Pick pick
-    )
+    public static bool Take(IGroupInUse item, MyCharacter character, Aimed aimed, Pick pick)
     {
         // The cube builder takes up the rotation it remembers for the block, as it does
         // when switching blocks. Both sizes, like MyCubeBuilderState.UpdateCubeBlockDefinition.
@@ -257,7 +252,7 @@ public static class FittingBlock
                 builder.m_cubeBuilderState.RotationsByDefinitionHash[definition.Id] = rotation;
 
         var member = aimed.Members[pick.Index];
-        var held = item.Group.Held;
+        var held = item.Held;
         if (member != held && !item.Equip(character, member, held))
             return false;
 

@@ -31,7 +31,7 @@ public static class FittingBlockPatch
         if (direction == 0 && !FittingBlock.IsQuickPress(input))
             return true;
 
-        var item = ItemGroupScrollPatch.GroupInUse(out var character);
+        var item = ItemGroupScrollPatch.AnyGroupInUse(out var character);
         if (item == null || !FittingBlock.Select(item, character, direction))
             return true;
 

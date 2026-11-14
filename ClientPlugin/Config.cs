@@ -37,6 +37,7 @@ public class Config : INotifyPropertyChanged
     private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
     private Binding previousFitKey = new Binding(MyKeys.None);
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
+    private bool gameBlockGroups = true;
 
     private ItemGroup[] itemGroups;
 
@@ -189,6 +190,16 @@ public class Config : INotifyPropertyChanged
     {
         get => quickSelectorKeys;
         set => SetField(ref quickSelectorKeys, value);
+    }
+
+    [Checkbox(
+        label: "Game block groups",
+        description: "The fitting blocks keys and the quick selector also work on the game's own\nblock variants, with a block in hand that is in no group in use"
+    )]
+    public bool GameBlockGroups
+    {
+        get => gameBlockGroups;
+        set => SetField(ref gameBlockGroups, value);
     }
 
     [XmlIgnore]
