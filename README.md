@@ -269,6 +269,39 @@ Separating multiple search patterns by space is not supported, currently.
 
 You can change the hotkey in the plugin's configuration.
 
+### Picking and cutting the block you face
+
+Press `Ctrl+G` or `Ctrl+Insert` with a block under the crosshair, up to 100 m away, to
+take it into your hand as the block to place. It is the same block exactly: its type and subtype in the grid's size,
+turned the same way, and its skin becomes the skin of the blocks you place. The build
+color stays as it is, unless **Pick the color too** is on in the plugin's configuration;
+the game's own color picker (`Shift+P`) takes the color and the skin without the block.
+It works with a block, a tool or nothing in hand, and in survival too: you get the block
+to place, not its components. Blocks you haven't researched or whose DLC you don't own
+are refused the way their toolbar slot would be.
+
+Press `Ctrl+Delete` to cut the block: it is removed and taken into your hand. This needs
+creative mode or the admin's creative tools, like removing blocks with the right mouse
+button; in survival use the grinder. If the grid would fall into separate parts without
+the block, a dialog tells how many and asks before anything is removed. In symmetry mode
+the blocks at the mirrored positions are removed as well, like the game does, and the
+question counts them in. The block in hand then places mirrored as usual. A seat with
+someone in it is not cut.
+
+The removal is the game's normal request, so it works in multiplayer, the server applies
+its own checks (safe zones, creative rights), and the [Undo](https://github.com/viktor-ferenczi/se-undo)
+plugin records it: `Ctrl+Z` puts the cut blocks back.
+
+The keys work on foot, with the jetpack and in the spectator camera. They do nothing in a
+seat, where `Ctrl+G` is the game's build mode, or while pasting. `Insert` and `Delete`
+turn the block in hand in the game; with these keys held they don't.
+
+In the game, `Ctrl+Delete` with creative tools deletes the whole grid you face, after a
+question. While the cut is bound to `Ctrl+Delete` it takes that key over. To get the
+game's grid delete back, bind the cut to another key or unbind it (right click on the key
+in the plugin's configuration). All three keys can be changed or turned off there. There
+is no gamepad binding.
+
 ### Configuration
 
 All key features of this plugin are configurable. You can change any of the configuration options without having to restart or reload anything. Please see below how to access the plugin's configuration dialog.
