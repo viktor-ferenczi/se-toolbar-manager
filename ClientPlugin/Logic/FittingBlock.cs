@@ -499,10 +499,19 @@ public static class FittingBlock
                     ? definition.BlockVariantsGroup.Id.ToString()
                 : definition.Id.ToString(),
             Conveyor = ConveyorTypes.Contains(definition.Id.TypeId.ToString()),
+            Style = StyleOf(definition.Id.SubtypeName),
         };
         Shapes[definition.Id] = shape;
         return shape;
     }
+
+    // The look of the game's conveyor tubes, see Shape.Style. Junctions, sorters,
+    // connectors and the plain caps go with any of them.
+    private static string StyleOf(string subtype) =>
+        subtype.Contains("ConveyorPipe") ? "industrial"
+        : subtype.Contains("ConveyorTubeDuct") ? "reinforced"
+        : subtype.StartsWith("ConveyorTube") || subtype.StartsWith("ConveyorFrame") ? "plain"
+        : null;
 
     // The conveyor and upgrade ports of the block's model, as MyConveyorLine.GetBlockLinePositions
     // and MyMultilineConveyorEndpoint.GetLinePositions(.., "detector_upgrade") find them
