@@ -66,7 +66,7 @@ public class ItemGroup
         }
 
         // The game refuses to equip a block of a DLC the player doesn't own
-        public bool Available =>
+        public virtual bool Available =>
             Item.Enabled
             && !(
                 Definition is MyCubeBlockDefinition block

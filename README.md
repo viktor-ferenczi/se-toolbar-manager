@@ -224,6 +224,25 @@ cells on the right of the last row. The plugin's configuration can change the ke
 Shift+Alt or Ctrl+Alt, or turn the panel off. If Shift is the fitting blocks wheel's
 modifier with the quick press on, pressing Shift before Ctrl also does the quick press.
 
+#### The game's block variants
+
+The fitting blocks keys and the quick selector also work without a group of your own.
+With a block in hand that has variants in the game, like the heavy armor cube with its
+slopes and corners, the variants of the block's size are the group: Shift picks the
+variant that fits the aimed position, Shift and the wheel or the extra mouse buttons
+step through the fitting ones, and Shift+Ctrl shows all of them to pick from. A group
+of yours in use comes first, so this applies to blocks from ordinary toolbar slots and
+from the G menu. Variants of a DLC you don't own, or not researched yet, are greyed out
+on the panel and never picked.
+
+The game's own keys stay as they are: the wheel without a modifier steps through all
+variants, pressing the block's slot again switches between the large and the small
+block, and so do the gamepad's controls for them. The fitting blocks keys and the quick
+selector are keyboard and mouse only.
+
+Turn **Game block groups** off in the plugin's configuration to keep them to your own
+groups.
+
 ### Quick block selection
 
 Press the `BACKSLASH` or `PIPE` key (on English keyboard) to open the quick

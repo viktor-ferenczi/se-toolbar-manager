@@ -8,7 +8,8 @@ blocks the next fitting block button steps through, which is the SE-652 matcher 
 Real mouse clicks with the keys still held must equip the clicked block, fitting or not,
 mark it selected and keep the selector open. Releasing a key must close it without having
 turned the camera. With a tool of a mixed group in hand nothing is marked and a click
-equips a block, and without a group in use the keys do nothing.
+equips a block, and with a block without variants or an empty hand the keys do nothing.
+The game's own block variants are in game_groups_check.py.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach uses a client this script started before with --keep, which leaves it running.
 """
@@ -24,7 +25,6 @@ from fit_check import (
     CASES,
     GROUP_SLOTS,
     GROUPS,
-    PLAIN_BLOCK,
     PLAIN_SLOT,
     Case,
     Fit,
@@ -324,17 +324,19 @@ def run_mixed(sel: Selector) -> None:
 
 
 def run_no_group(sel: Selector) -> None:
-    """Without a group in use the keys do nothing"""
+    """Without a group in use and without block variants the keys do nothing"""
     fit, game = sel.fit, sel.game
     fit.paste(CASES[0].blocks)
     game.holster()
+    # One gyroscope per grid size: no variants, unlike the armor of the plain slot
+    fit.api.set_toolbar_slot(PLAIN_SLOT, "MyObjectBuilder_Gyro/LargeBlockGyro")
     game.press_slot(PLAIN_SLOT)
     fit.aim(CASES[0].aim)
     sel.keys(KEYS)
     time.sleep(1.5)
     check(
-        "plain block: Shift+Ctrl opens nothing",
-        game.screen_index(SCREEN) is None and fit.held() == PLAIN_BLOCK,
+        "block without variants: Shift+Ctrl opens nothing",
+        game.screen_index(SCREEN) is None and fit.held() == "LargeBlockGyro",
         f"holds {fit.held()}",
     )
     sel.keys([])

@@ -86,29 +86,42 @@ public static class ItemGroupScrollPatch
         return GroupInUse(out _);
     }
 
+    // The player's group in use, or else the game's block variants of the block in hand
+    public static IGroupInUse AnyGroupInUse(out MyCharacter character)
+    {
+        if (GroupInUse(out character) is { } item)
+            return item;
+        return InGameplay(out character) ? BlockVariants.InUse() : null;
+    }
+
     // The group used last, while its tool, weapon or block is in the hand in gameplay
     public static ItemGroupToolbarItem GroupInUse(out MyCharacter character)
     {
-        character = MySession.Static?.ControlledEntity as MyCharacter;
-        var toolbar = MyToolbarComponent.CurrentToolbar;
-        if (
-            toolbar?.ToolbarType != MyToolbarType.Character
-            || !toolbar.CanPlayerActivateItems
-            || character == null
-            || MySession.Static.IsCameraUserControlledSpectator()
-            || MyGuiScreenGamePlay.DisableInput
-            || MyGuiScreenGamePlay.ActiveGameplayScreen != null
-            || MyScreenManager.GetScreenWithFocus() != MyGuiScreenGamePlay.Static
-        )
+        if (!InGameplay(out character))
             return null;
 
         // The group in use, even when an ordinary slot holding the same tool is selected
         var user = character;
+        var toolbar = MyToolbarComponent.CurrentToolbar;
         return Enumerable
             .Range(0, toolbar.SlotCount)
             .Select(toolbar.GetSlotItem)
             .OfType<ItemGroupToolbarItem>()
             .FirstOrDefault(candidate => candidate.ScrollsWith(user));
+    }
+
+    // The character's own toolbar in gameplay, with no screen over it
+    private static bool InGameplay(out MyCharacter character)
+    {
+        character = MySession.Static?.ControlledEntity as MyCharacter;
+        var toolbar = MyToolbarComponent.CurrentToolbar;
+        return toolbar?.ToolbarType == MyToolbarType.Character
+            && toolbar.CanPlayerActivateItems
+            && character != null
+            && !MySession.Static.IsCameraUserControlledSpectator()
+            && !MyGuiScreenGamePlay.DisableInput
+            && MyGuiScreenGamePlay.ActiveGameplayScreen == null
+            && MyScreenManager.GetScreenWithFocus() == MyGuiScreenGamePlay.Static;
     }
 }
 
