@@ -10,8 +10,8 @@ using VRage.Plugins;
 
 // Define assembly version when compiled by Pulsar
 #if !LOCAL_BUILD
-[assembly: AssemblyVersion("1.8.3.0")]
-[assembly: AssemblyFileVersion("1.8.3.0")]
+[assembly: AssemblyVersion("1.9.0.0")]
+[assembly: AssemblyFileVersion("1.9.0.0")]
 
 #endif
 
@@ -54,6 +54,7 @@ public class Plugin : IPlugin
         MyGuiScreenToolbarConfigBasePatch.OnSessionLoading();
         ItemGroupToolbarItem.OnSessionLoading();
         FittingBlock.OnSessionLoading();
+        BlockVariants.OnSessionLoading();
 
         // Another world may load other mods, so the definitions behind the group items change
         foreach (var group in Config.Current.ItemGroups)

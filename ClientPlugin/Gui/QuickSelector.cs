@@ -14,7 +14,8 @@ using static ClientPlugin.Logic.BlockFit;
 
 namespace ClientPlugin.Gui;
 
-// The items of the group in use on a grid in the middle of the screen, while the quick
+// The items of the group in use, a player's group or the game's block variants of the
+// block in hand, on a grid in the middle of the screen, while the quick
 // selector keys are held. Clicking one equips it, a block turned to fit like the fitting
 // blocks wheel does. The blocks that fit the aimed cell are highlighted.
 public class QuickSelector : MyGuiScreenBase
@@ -24,7 +25,7 @@ public class QuickSelector : MyGuiScreenBase
 
     private static QuickSelector open;
 
-    private readonly ItemGroupToolbarItem item;
+    private readonly IGroupInUse item;
     private readonly MyCharacter character;
     private readonly List<ItemGroup.Member> members;
 
@@ -43,8 +44,8 @@ public class QuickSelector : MyGuiScreenBase
         if (open != null || !IsHeld(input) || !IsNewPress(input))
             return;
 
-        var item = ItemGroupScrollPatch.GroupInUse(out var character);
-        if (item?.Group == null || item.Group.Members.Count == 0)
+        var item = ItemGroupScrollPatch.AnyGroupInUse(out var character);
+        if (item?.Members is not { Count: > 0 })
             return;
 
         MyGuiSandbox.AddScreen(new QuickSelector(item, character));
@@ -89,13 +90,13 @@ public class QuickSelector : MyGuiScreenBase
         Keys(Config.Current.QuickSelectorKeys) is (var a, var b, _)
         && (IsNewPressed(input, a) || IsNewPressed(input, b));
 
-    private QuickSelector(ItemGroupToolbarItem item, MyCharacter character)
+    private QuickSelector(IGroupInUse item, MyCharacter character)
         : base(new Vector2(0.5f, 0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR)
     {
         this.item = item;
         this.character = character;
-        members = item.Group.Members;
-        aimed = FittingBlock.Aim(item.Group);
+        members = item.Members;
+        aimed = FittingBlock.Aim(item);
         picks = aimed?.Evaluate();
 
         EnabledBackgroundFade = false;
@@ -167,13 +168,13 @@ public class QuickSelector : MyGuiScreenBase
         if (index >= 0 && picks[index].HasValue)
             FittingBlock.Take(item, character, aimed, picks[index].Value);
         else if (!member.Held)
-            item.Equip(character, member, item.Group.Held);
+            item.Equip(character, member, item.Held);
         SyncSelection();
     }
 
     private void SyncSelection()
     {
-        var held = item.Group?.Held;
+        var held = item.Held;
         var index = held == null ? -1 : members.IndexOf(held);
         grid.SelectedIndex = index >= 0 ? index : null;
     }
@@ -182,7 +183,7 @@ public class QuickSelector : MyGuiScreenBase
     {
         if (
             !IsHeld(MyInput.Static)
-            || item.Group == null
+            || item.Members != members
             || MySession.Static?.ControlledEntity != character
         )
         {
