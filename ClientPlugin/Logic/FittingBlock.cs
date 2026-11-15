@@ -84,6 +84,49 @@ public static class FittingBlock
         return 0;
     }
 
+    // The grid cell and face aimed at when the quick press was last done
+    private static (long Grid, Vector3I Position, Vector3I AddDir)? quickAim;
+
+    // Whether the cube builder aims at another cell or face of a grid than at the last
+    // quick press, with the wheel's modifier key still held alone. Then the quick press
+    // is done again, so moving the aim corrects the block without another press.
+    public static bool QuickAimMoved(IMyInput input)
+    {
+        var config = Config.Current;
+        var ctrl = input.IsAnyCtrlKeyPressed();
+        var shift = input.IsAnyShiftKeyPressed();
+        var alt = input.IsAnyAltKeyPressed();
+        var held =
+            config.QuickFit
+            && input.DeltaMouseScrollWheelValue() == 0
+            && config.FitScrollModifier switch
+            {
+                Config.FitModifier.Shift => shift && !ctrl && !alt,
+                Config.FitModifier.Ctrl => ctrl && !shift && !alt,
+                Config.FitModifier.Alt => alt && !ctrl && !shift,
+                _ => false,
+            };
+        if (!held)
+        {
+            quickAim = null;
+            return false;
+        }
+
+        // Equipping a block takes the placement box off the grid for some frames
+        if (
+            MyCubeBuilder.Static is not { IsActivated: true } builder
+            || !Aim(builder, out var grid, out var position, out var addDir)
+        )
+            return false;
+
+        var aim = (grid.EntityId, position, addDir);
+        if (aim == quickAim)
+            return false;
+
+        quickAim = aim;
+        return true;
+    }
+
     // A new press of the wheel's modifier key alone, for quick mode
     public static bool IsQuickPress(IMyInput input)
     {
@@ -211,8 +254,13 @@ public static class FittingBlock
     // Whether the press was for this, with a group's block in hand aiming at a grid cell
     // Direction 0 keeps the block in hand if it fits, turned to fit, and stays silent when
     // nothing fits, unless the group has no block of the grid's size: the quick press of
-    // the wheel's modifier key
-    public static bool Select(IGroupInUse item, MyCharacter character, int direction)
+    // the wheel's modifier key. Quiet never tells: the quick press repeated on moving the aim.
+    public static bool Select(
+        IGroupInUse item,
+        MyCharacter character,
+        int direction,
+        bool quiet = false
+    )
     {
         var aimed = Aim(item);
         if (aimed == null)
@@ -230,6 +278,7 @@ public static class FittingBlock
         // size at all
         if (
             !pick.HasValue
+            && !quiet
             && (direction != 0 || (aimed.Candidates.Count == 0 && item.Members.Count > 1))
         )
         {

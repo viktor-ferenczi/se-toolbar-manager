@@ -28,11 +28,15 @@ public static class FittingBlockPatch
             holdingButton = false;
 
         var direction = FittingBlock.Direction(input, out var middleButton);
-        if (direction == 0 && !FittingBlock.IsQuickPress(input))
+        var press = FittingBlock.IsQuickPress(input);
+        // Also on the frame of the press, to remember where it aimed
+        var moved = FittingBlock.QuickAimMoved(input);
+        if (direction == 0 && !press && !moved)
             return true;
 
         var item = ItemGroupScrollPatch.AnyGroupInUse(out var character);
-        if (item == null || !FittingBlock.Select(item, character, direction))
+        var quiet = direction == 0 && !press;
+        if (item == null || !FittingBlock.Select(item, character, direction, quiet))
             return true;
 
         holdingButton = middleButton;

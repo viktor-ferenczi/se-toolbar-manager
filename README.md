@@ -156,6 +156,10 @@ way it fits, or else selects the next block that fits. Then the wheel can step o
 there. When nothing fits, the quick press stays silent, unless the group has no block
 of the grid's size at all.
 
+While Shift stays held, the quick press is done again whenever the placement box moves
+to another cell or another face of a block. So you can hold Shift and move the aim until
+the block sits right, without pressing Shift again. These repeats are always silent.
+
 A block fits when its face matches the face of the block you aim at. The other blocks
 around it rank the candidates if they are of the same kind: armor with armor, beams with
 beams, and so on for the blocks of a game block group. Other neighbors don't count, so a

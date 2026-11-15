@@ -12,7 +12,8 @@ variants, the fitting ones marked, and a click must select the clicked variant. 
 game's own handling must stay: the plain wheel steps through all variants and a second
 press of the slot switches the block's size. A block without variants is a group of
 its own: Shift turns the collector's port to a conveyor line and leaves the gyroscope
-alone, without a selector. A group of the player still works with the same keys.
+alone, without a selector. With Shift held, moving the aim to another face turns the
+block again. A group of the player still works with the same keys.
 
 TBM_GAME_GROUPS_OFF=1 starts the client with the "Game block groups" option off and
 checks that the keys then leave the game's block alone, while the player's group works.
@@ -39,8 +40,10 @@ from fit_check import (
     LEFT,
     PLAIN_SLOT,
     RIGHT,
+    TARGET,
     Case,
     Fit,
+    add,
     cube,
     tube,
 )
@@ -124,17 +127,18 @@ def run_game_keys(fit: Fit) -> None:
         seen.append(fit.held())
     check(
         "game keys: the plain wheel steps through all variants and around",
-        set(seen) == set(HEAVY) and seen[0] == seen[-1] == HEAVY[0],
+        set(seen) == set(HEAVY) and seen[0] == seen[-1],
         str(seen),
     )
     fit_check.reset_wheel(game)
     game.press_slot(PLAIN_SLOT)
+    large = fit.held()
     game.press_slot(PLAIN_SLOT)
     small = fit.held()
     game.press_slot(PLAIN_SLOT)
     check(
         "game keys: pressing the slot again switches the size and back",
-        [small, fit.held()] == ["SmallHeavyBlockArmorBlock", HEAVY[0]],
+        [small, fit.held()] == [large.replace("Large", "Small", 1), large],
         f"{small}, {fit.held()}",
     )
 
@@ -237,6 +241,141 @@ def run_single(fit: Fit, sel: Selector) -> None:
     fit.api.set_toolbar_slot(PLAIN_SLOT, ARMOR + fit_check.PLAIN_BLOCK)
 
 
+# Two cells side by side. A conveyor line ends below the first one, and another line
+# ends at the far side of the second one.
+SIDE_LINE = [
+    ("ConveyorConnector", "ConveyorTube", add(TARGET, (2, 0, 0)), "Forward", "Right"),
+    ("ConveyorConnector", "ConveyorTube", add(TARGET, (3, 0, 0)), "Forward", "Right"),
+]
+# Armor below the second cell: a block with one port turns it to the side there
+MOVE_TURN = [tube(DOWN), tube((0, -2, 0)), cube((1, -1, 0)), *SIDE_LINE]
+# A line ends below the second cell too: only a block with ports down and to the side
+# fits there, not the straight tube or the cap that fit the first cell
+MOVE_SWITCH = [
+    tube(DOWN),
+    tube((0, -2, 0)),
+    tube((1, -1, 0)),
+    tube((1, -2, 0)),
+    *SIDE_LINE,
+]
+
+
+def move_with_shift(fit: Fit, blocks, hold) -> tuple[str | None, dict | None]:
+    """Shift goes down aiming at the first cell and stays down while the character
+    moves over the second one, without turning. Returns the block in hand over the first
+    cell and the block a left click then places into the second one."""
+    game = fit.game
+    fit.paste(blocks)
+    fit_check.reset_wheel(game)
+    if not hold():
+        return None, None
+    fit.aim(DOWN)
+    fit.button()
+    held = {"keys": ["LeftShift"], "scroll": game.wheel}
+    fit.api.set_input_state(**held)
+    time.sleep(1.5)
+    first = fit.held()
+
+    # A teleport leaves the injected input alone, the look-at of aiming would not
+    step = [b - a for a, b in zip(fit.world(TARGET), fit.world(add(TARGET, RIGHT)))]
+    position = fit.api.get_character()["position"]
+    fit.api.character_teleport(*[p + d for p, d in zip(position, step)])
+    time.sleep(2)
+    before = set(fit.cubes())
+    fit.api.set_input_state(mouse_left=True, **held)
+    time.sleep(0.3)
+    fit.api.set_input_state(**held)
+    placed = wait(
+        lambda: next(
+            (c for cell, c in fit.cubes().items() if cell not in before), None
+        ),
+        5,
+    )
+    fit.api._post(
+        "/v1/input/state", {"keyboard": {"keys": []}, "mouse": {"scroll": game.wheel}}
+    )
+    time.sleep(0.5)
+    return first, placed
+
+
+def run_move(fit: Fit, sel: Selector) -> None:
+    """With Shift held, aiming at another face does the quick press again: it turns a
+    single block, and selects another variant of the game or block of the player's
+    group when the one in hand doesn't fit there"""
+    game = fit.game
+
+    def describe(first, placed):
+        if not placed:
+            return f"held {first}, nothing placed"
+        cell = tuple(placed["cellMin"])
+        return (
+            f"held {first}, placed {placed['subtypeId']} at {cell} "
+            f"{placed['forward']} {placed['up']}"
+        )
+
+    def hold_plain(item, subtype, steps=1):
+        def hold():
+            fit.api.set_toolbar_slot(PLAIN_SLOT, "MyObjectBuilder_" + item)
+            GROUPS["Plain"] = [item] * steps
+            GROUP_SLOTS["Plain"] = PLAIN_SLOT
+            return fit_check.hold(fit, Case("move", "Plain", subtype, [], DOWN, []))
+
+        return hold
+
+    second = add(TARGET, RIGHT)
+
+    # The port on the collector's back goes down at the first cell, right at the second
+    first, placed = move_with_shift(
+        fit, MOVE_TURN, hold_plain("Collector/Collector", "Collector")
+    )
+    check(
+        "move: the collector's port turns to the second line",
+        bool(placed)
+        and tuple(placed["cellMin"]) == second
+        and placed["forward"] == "Left",
+        describe(first, placed),
+    )
+
+    # The junction is the first of the game's 14 conveyor variants, the tube comes later
+    hold_tube = hold_plain("ConveyorConnector/ConveyorTube", "ConveyorTube", 14)
+
+    # The slot holds the tube itself, not the first block of its variants, which leaves
+    # the game's cube builder without the variants
+    fit_check.reset_wheel(game)
+    opened = hold_tube() and sel.open()
+    count = len(sel.grid()["properties"]["items"]) if opened else 0
+    sel.release()
+    check(
+        "direct variant: the selector shows the variants of a tube from its own slot",
+        opened and count > 1,
+        f"{count} items",
+    )
+
+    first, placed = move_with_shift(fit, MOVE_SWITCH, hold_tube)
+    check(
+        "move: the game's straight tube stays at the first line, another variant "
+        "goes between the two lines",
+        bool(placed)
+        and first == "ConveyorTube"
+        and tuple(placed["cellMin"]) == second
+        and placed["subtypeId"] != "ConveyorTube",
+        describe(first, placed),
+    )
+
+    case = Case("move", "Conveyors", "LargeBlockArmorBlock", [], DOWN, [])
+    first, placed = move_with_shift(fit, MOVE_SWITCH, lambda: fit_check.hold(fit, case))
+    check(
+        "move: the group's cap goes on the first line, the curved tube between the two",
+        bool(placed)
+        and first == "LargeBlockConveyorCap"
+        and tuple(placed["cellMin"]) == second
+        and placed["subtypeId"] == "ConveyorTubeCurved",
+        describe(first, placed),
+    )
+    fit_check.reset_wheel(game)
+    fit.api.set_toolbar_slot(PLAIN_SLOT, ARMOR + fit_check.PLAIN_BLOCK)
+
+
 def run_off(fit: Fit, sel: Selector) -> None:
     """With the option off the keys leave the game's block alone"""
     case = CASES[0]
@@ -320,6 +459,7 @@ def main() -> int:
             run_shot(fit, sel)
             run_no_variants(fit, sel)
             run_single(fit, sel)
+            run_move(fit, sel)
 
         # A group of the player, with the same keys
         own = next(c for c in fit_check.CASES if c.name == "conveyor open end")
