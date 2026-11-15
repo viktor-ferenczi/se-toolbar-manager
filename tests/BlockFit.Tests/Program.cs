@@ -443,7 +443,8 @@ Presses(
     ("LargeBlockConveyorCap", identity)
 );
 
-// A junction's port has no look, so every tube starts there
+// A junction's port has no look, so every look starts there. The industrial pipes start
+// with their end piece, its wide end on the junction, not with a straight pipe.
 Presses(
     "looks: any tube at a junction",
     Grid(("LargeBlockConveyor", down, identity)),
@@ -451,13 +452,116 @@ Presses(
     {
         "LargeBlockArmorBlock",
         "LargeBlockConveyorPipeSeamless",
+        "LargeBlockConveyorPipeFlange",
+        "LargeBlockConveyorPipeEnd",
+        "LargeBlockConveyorPipeCorner",
         "ConveyorTube",
         "ConveyorTubeDuct",
     },
     "LargeBlockArmorBlock",
-    ("LargeBlockConveyorPipeSeamless", identity),
+    ("LargeBlockConveyorPipeEnd", null),
+    ("LargeBlockConveyorPipeCorner", null),
     ("ConveyorTube", identity),
-    ("ConveyorTubeDuct", ductUp)
+    ("ConveyorTubeDuct", ductUp),
+    ("LargeBlockConveyorPipeEnd", null)
+);
+
+// Where the wide end of the industrial pipe end points, and which pipes fit beside it
+var industrial = new[]
+{
+    "LargeBlockArmorBlock",
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange",
+    "LargeBlockConveyorPipeEnd",
+};
+void PipeEnd(string title, Dictionary<Int3, Placed> grid, Int3? wideEnd, params string[] fits)
+{
+    var candidates = Group(industrial);
+    var picks = Evaluate(candidates, CurrentTarget(), identity, Lookup(grid));
+    var got = picks.Where(p => p.HasValue).Select(p => industrial[p.Value.Index]).ToArray();
+    Check($"{title}: fitting pipes", got.SequenceEqual(fits), string.Join(", ", got));
+    if (wideEnd.HasValue)
+    {
+        var end = picks[3]?.Rotation.Apply(down);
+        Check($"{title}: the wide end", end.Equals(wideEnd), $"{end}");
+    }
+}
+PipeEnd(
+    "end: on a junction",
+    Grid(("LargeBlockConveyor", down, identity)),
+    down,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: on a plain tube",
+    Grid(("ConveyorTube", down, identity)),
+    down,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: between a pipe and a junction",
+    Grid(("LargeBlockConveyorPipeSeamless", down, identity), ("LargeBlockConveyor", up, identity)),
+    up,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: open end of a pipe line",
+    Grid(("LargeBlockConveyorPipeSeamless", down, identity)),
+    up,
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange",
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: between two pipes",
+    Grid(
+        ("LargeBlockConveyorPipeSeamless", down, identity),
+        ("LargeBlockConveyorPipeSeamless", up, identity)
+    ),
+    null,
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange"
+);
+
+// A reinforced tube has one open side. The next tube of the line, straight or curved,
+// turns its open side the same way, whichever way the block in hand is turned.
+foreach (var line in Rotation.All.Where(r => r.X.Equals(up) || r.X.Equals(down)))
+foreach (var name in new[] { "ConveyorTubeDuct", "ConveyorTubeDuctCurved", "ConveyorTubeDuctT" })
+{
+    var open = line.Apply(backward);
+    var pick = Next(
+        Group(name),
+        -1,
+        1,
+        Rotation.All.First(r => !r.Equals(line) && r.X.Equals(line.X)),
+        CurrentTarget(),
+        Lookup(Grid(("ConveyorTubeDuct", down, line)))
+    );
+    Check(
+        $"reinforced: {name} turns its open side {open} like the line",
+        pick.HasValue && pick.Value.Rotation.Apply(backward).Equals(open),
+        $"{pick?.Rotation}"
+    );
+}
+
+// The fitting blocks keep the order of the group, here with the group out of any order
+Presses(
+    "order: the fitting blocks in group order",
+    Grid(("ConveyorTubeDuct", down, ductUp)),
+    new[]
+    {
+        "ConveyorTubeDuctCurved",
+        "LargeBlockConveyorCap",
+        "ConveyorTube",
+        "ConveyorTubeDuct",
+        "LargeBlockConveyor",
+    },
+    "ConveyorTube",
+    ("ConveyorTubeDuct", null),
+    ("LargeBlockConveyor", null),
+    ("ConveyorTubeDuctCurved", null),
+    ("LargeBlockConveyorCap", identity),
+    ("ConveyorTubeDuct", null)
 );
 
 // Between tubes of two looks both looks fit, the third one doesn't
@@ -810,6 +914,11 @@ static Dictionary<string, Shape> Load(string path)
             Family = b.GetProperty("family").GetString(),
             Conveyor = b.GetProperty("conveyor").GetBoolean(),
             Style = b.GetProperty("style").GetString(),
+            End =
+                b.GetProperty("end").ValueKind == JsonValueKind.Null
+                    ? null
+                    : ReadInt3(b.GetProperty("end")),
+            Middle = b.GetProperty("middle").GetBoolean(),
         };
         directions[block.Name] = b.GetProperty("direction").GetString();
         rotationsAllowed[block.Name] = b.GetProperty("rotation").GetString();

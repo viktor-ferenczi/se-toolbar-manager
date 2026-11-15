@@ -179,7 +179,14 @@ that has no such port there, so a tube is not offered against the middle of anot
 The plain, reinforced and industrial tubes all connect to each other, but a line takes
 the tubes of its own look when the group has them: a reinforced tube continues with the
 reinforced tubes, not with the plain or industrial ones. Junctions, sorters, connectors
-and the plain caps go with any look.
+and the plain caps go with any look. A reinforced tube also turns its open side the way
+the line has it. The industrial pipes meet any other block with their pipe end, its wide
+end on that block: the pipe end is offered there instead of the straight pipes, also on
+a plain or reinforced tube, and it is not offered between two industrial pipes. The
+curved pipe and the pipe junctions have no end piece, so they fit as before.
+
+Fitting only narrows the group down. The blocks that fit keep the order they have in the
+group.
 Other blocks may: a thruster, tank or machine can leave a port against a beam or wall, as
 the game allows, so a large hydrogen thruster fits under a tank's port even when beams
 frame the space. An upgrade module goes on a refinery or assembler with its ports on the

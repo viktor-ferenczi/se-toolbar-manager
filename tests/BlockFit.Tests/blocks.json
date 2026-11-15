@@ -124,6 +124,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope": {
@@ -251,6 +253,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeBlockArmorCorner": {
@@ -378,6 +382,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeBlockArmorCornerInv": {
@@ -556,6 +562,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeHalfArmorBlock": {
@@ -666,6 +674,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope2Base": {
@@ -810,6 +820,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeBlockArmorSlope2Tip": {
@@ -971,6 +983,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeGridBeamBlock": {
@@ -1200,6 +1214,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockEnd": {
@@ -1429,6 +1445,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockJunction": {
@@ -1692,6 +1710,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockTJunction": {
@@ -1938,6 +1958,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope": {
@@ -2133,6 +2155,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockRound": {
@@ -2328,6 +2352,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockHalf": {
@@ -2557,6 +2583,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockHalfSlope": {
@@ -2718,6 +2746,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope2x1Base": {
@@ -2964,6 +2994,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeGridBeamBlockSlope2x1Tip": {
@@ -3159,6 +3191,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/BeamGroup"
  },
  "LargeBlockConveyor": {
@@ -3365,6 +3399,8 @@
   ],
   "conveyor": true,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTube": {
@@ -3553,6 +3589,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeCurved": {
@@ -3741,6 +3779,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeT": {
@@ -4010,6 +4050,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorCap": {
@@ -4052,6 +4094,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorPipeSeamless": {
@@ -4240,6 +4284,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeEnd": {
@@ -4428,6 +4474,12 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": [
+   0,
+   -1,
+   0
+  ],
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeFlange": {
@@ -4616,6 +4668,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": true,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCorner": {
@@ -4804,6 +4858,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeJunction": {
@@ -5010,6 +5066,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeT": {
@@ -5126,6 +5184,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockConveyorPipeCap": {
@@ -5168,6 +5228,8 @@
   "ports": [],
   "conveyor": false,
   "style": "industrial",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "LargeBlockSmallContainer": {
@@ -5374,6 +5436,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ContainerGroup"
  },
  "LargeRefinery": {
@@ -5726,6 +5790,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/RefineryGroup"
  },
  "LargeAssembler": {
@@ -6010,6 +6076,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/AssemblerGroup"
  },
  "LargeProductivityModule": {
@@ -6164,6 +6232,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/UpgradeModuleGroup"
  },
  "LargeEnergyModule": {
@@ -6318,6 +6388,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/UpgradeModuleGroup"
  },
  "SmallBlockConveyor": {
@@ -6524,6 +6596,8 @@
   ],
   "conveyor": true,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeSmall": {
@@ -6712,6 +6786,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeSmallCurved": {
@@ -6798,6 +6874,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "SmallBlockConveyorCap": {
@@ -6840,6 +6918,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "ConveyorTubeMedium": {
@@ -7028,6 +7108,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorFrameMedium": {
@@ -7216,6 +7298,8 @@
   ],
   "conveyor": true,
   "style": "plain",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "SmallShipConveyorHub": {
@@ -7678,6 +7762,8 @@
   ],
   "conveyor": true,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "SmallBlockConveyorCapMedium": {
@@ -7720,6 +7806,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockLargeHydrogenThrust": {
@@ -7930,6 +8018,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ThrusterHydroGroup"
  },
  "LargeBlockSmallHydrogenThrust": {
@@ -8054,6 +8144,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ThrusterHydroGroup"
  },
  "LargeHydrogenTank": {
@@ -8328,6 +8420,8 @@
   ],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/TankGroup"
  },
  "ConveyorTubeDuct": {
@@ -8618,6 +8712,8 @@
   ],
   "conveyor": true,
   "style": "reinforced",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeDuctCurved": {
@@ -8925,6 +9021,8 @@
   ],
   "conveyor": true,
   "style": "reinforced",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "ConveyorTubeDuctT": {
@@ -9279,6 +9377,8 @@
   ],
   "conveyor": true,
   "style": "reinforced",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorGroup"
  },
  "LargeBlockConveyorPipeIntersection": {
@@ -9425,6 +9525,8 @@
   ],
   "conveyor": true,
   "style": "industrial",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorPipeGroup"
  },
  "ConveyorTubeDuctSmall": {
@@ -9647,6 +9749,8 @@
   ],
   "conveyor": true,
   "style": "reinforced",
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/ConveyorSmallGroup"
  },
  "LargeBlockArmorRoundSlope": {
@@ -9774,6 +9878,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "armor"
  },
  "LargeArmorHalfPanelLight": {
@@ -9867,6 +9973,8 @@
   "ports": [],
   "conveyor": false,
   "style": null,
+  "end": null,
+  "middle": false,
   "family": "MyObjectBuilder_BlockVariantGroup/LightArmorPanelsGroup"
  }
 }

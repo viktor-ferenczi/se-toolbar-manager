@@ -141,15 +141,10 @@ def tube(cell, subtype="ConveyorTube", kind="ConveyorConnector"):
     return (kind, subtype, add(TARGET, cell), "Forward", "Up")
 
 
-def duct(cell):
-    """A reinforced tube, whose ports are at its sides, turned to run up and down"""
-    return (
-        "ConveyorConnector",
-        "ConveyorTubeDuct",
-        add(TARGET, cell),
-        "Backward",
-        "Right",
-    )
+def duct(cell, forward="Backward", up="Right"):
+    """A reinforced tube, whose ports are at its sides, turned to run up and down. Its
+    open side is at its back."""
+    return ("ConveyorConnector", "ConveyorTubeDuct", add(TARGET, cell), forward, up)
 
 
 SMALL_HUB = (-3, -1, -1)
@@ -291,6 +286,17 @@ CASES = [
         [duct(DOWN), duct((0, -2, 0))],
         DOWN,
         ["ConveyorTubeDuct", "ConveyorTubeDuctCurved", "ConveyorTubeDuct"],
+        "Backward",
+    ),
+    # The new tube turns its open side the way the line has it
+    Case(
+        "reinforced line turned",
+        "Upgrades",
+        "LargeBlockArmorBlock",
+        [duct(DOWN, "Right", "Forward"), duct((0, -2, 0), "Right", "Forward")],
+        DOWN,
+        ["ConveyorTubeDuct", "ConveyorTubeDuctCurved", "ConveyorTubeDuct"],
+        "Right",
     ),
     Case(
         "plain line",

@@ -500,13 +500,21 @@ public static class FittingBlock
                 : definition.Id.ToString(),
             Conveyor = ConveyorTypes.Contains(definition.Id.TypeId.ToString()),
             Style = StyleOf(definition.Id.SubtypeName),
+            End = definition.Id.SubtypeName.Contains("ConveyorPipeEnd")
+                ? new Int3(0, -1, 0)
+                : (Int3?)null,
+            Middle =
+                definition.Id.SubtypeName.Contains("ConveyorPipeSeamless")
+                || definition.Id.SubtypeName.Contains("ConveyorPipeFlange"),
         };
         Shapes[definition.Id] = shape;
         return shape;
     }
 
     // The look of the game's conveyor tubes, see Shape.Style. Junctions, sorters,
-    // connectors and the plain caps go with any of them.
+    // connectors and the plain caps go with any of them. Of the industrial pipes the end
+    // piece has its wide end at the bottom of its model, and the seamless and the flanged
+    // pipe are the straight pieces it stands in for, see Shape.End and Shape.Middle.
     private static string StyleOf(string subtype) =>
         subtype.Contains("ConveyorPipe") ? "industrial"
         : subtype.Contains("ConveyorTubeDuct") ? "reinforced"

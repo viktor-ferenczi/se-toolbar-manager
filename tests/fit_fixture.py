@@ -323,6 +323,10 @@ def main() -> None:
             "ports": ports(game, block, size, center, cube_size),
             "conveyor": block.findtext("Id/TypeId") in CONVEYOR_TYPES,
             "style": style(name),
+            # The wide end and the straight pieces of the industrial pipes, as
+            # FittingBlock.ShapeOf has them
+            "end": [0, -1, 0] if "ConveyorPipeEnd" in name else None,
+            "middle": "ConveyorPipeSeamless" in name or "ConveyorPipeFlange" in name,
             "family": (
                 "armor"
                 if block.find("CubeDefinition") is not None
