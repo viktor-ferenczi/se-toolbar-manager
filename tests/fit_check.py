@@ -373,6 +373,11 @@ def write_groups(c: rig.Client) -> None:
 
 
 def start(c: rig.Client):
+    # hold() needs the slots to equip the block they were left on
+    os.environ["TBM_CONFIG"] = os.environ.get("TBM_CONFIG", "") + (
+        "<ResetGroupSlots>false</ResetGroupSlots>"
+        "<ResetGameGroupSlots>false</ResetGameGroupSlots>"
+    )
     rig.stop(c)
     write_groups(c)
     rig.launch(c)
@@ -525,7 +530,8 @@ def reset_wheel(game: Game) -> None:
 
 def hold(fit: Fit, case: Case) -> bool:
     """Equips the group and steps it with the wheel until the case's first block is in
-    hand. Pressing the slot again would switch the block's size."""
+    hand. Pressing the slot again would switch the block's size. Needs the start over
+    options off, see start()."""
     game = fit.game
     game.holster()
     game.press_slot(GROUP_SLOTS[case.group])

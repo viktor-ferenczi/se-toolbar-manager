@@ -87,8 +87,15 @@ A group can hold both sizes of a block, like the large Hinge and the small grid'
 the wheel equips exactly the block listed, whatever grid size the last block had.
 
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
-may share items. Each slot steps only through its own group. Going back to a group's
-slot equips the item it was on last.
+may share items. Each slot steps only through its own group.
+
+Once you put the group's item away or pick another slot, the group's slot goes back to
+the group's first item, so the slot always shows the same icon. Turn **Group slots start
+over** off in the plugin's configuration to have the slot show and equip the item it was
+on last instead. **Game group slots start over** does the same for a slot of a block with
+the game's own variants, like the heavy armor cube: the slot equips its own block again
+instead of the variant you used last. Switching toolbar pages with the item still in
+hand doesn't count as leaving the slot.
 
 While holding a tool, weapon or block from the group used last, with that group on the
 current toolbar page, scroll up to move forward through the group or down to move backward.
@@ -428,6 +435,11 @@ higher levels in tile order, then checks that reordering a tool changes the sele
 `tests/separate_groups_check.py` puts a tool group, a block group, a mixed group and
 two groups sharing tools on separate slots of two toolbar pages, and checks that each
 slot steps only through its own group and continues it where it was.
+
+`tests/group_reset_check.py` checks that a group slot and a slot of a block with the
+game's variants start over once they are left by picking another slot or putting the block
+away, and continue where they were with the options off (`TBM_RESET_GROUPS=0`,
+`TBM_RESET_GAME=0`). It also checks both options in the plugin settings.
 
 `tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
 blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through

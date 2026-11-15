@@ -55,6 +55,7 @@ public class Plugin : IPlugin
         ItemGroupToolbarItem.OnSessionLoading();
         FittingBlock.OnSessionLoading();
         BlockVariants.OnSessionLoading();
+        GameGroupSlotPatch.OnSessionLoading();
 
         // Another world may load other mods, so the definitions behind the group items change
         foreach (var group in Config.Current.ItemGroups)

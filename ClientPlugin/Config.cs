@@ -38,6 +38,8 @@ public class Config : INotifyPropertyChanged
     private Binding previousFitKey = new Binding(MyKeys.None);
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
     private bool gameBlockGroups = true;
+    private bool resetGroupSlots = true;
+    private bool resetGameGroupSlots = true;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
     private bool pickBlockColor = true;
     private bool pickBlockSkin = true;
@@ -93,6 +95,26 @@ public class Config : INotifyPropertyChanged
     {
         get => useCharacterProfilesForBuildCockpit;
         set => SetField(ref useCharacterProfilesForBuildCockpit, value);
+    }
+
+    [Checkbox(
+        label: "Group slots start over",
+        description: "A group's toolbar slot goes back to the group's first item once it is\nnot in use any more, so the slot keeps showing the same icon"
+    )]
+    public bool ResetGroupSlots
+    {
+        get => resetGroupSlots;
+        set => SetField(ref resetGroupSlots, value);
+    }
+
+    [Checkbox(
+        label: "Game group slots start over",
+        description: "A toolbar slot of a block with the game's block variants goes back to its own\nblock once it is not in use any more, instead of the variant used last"
+    )]
+    public bool ResetGameGroupSlots
+    {
+        get => resetGameGroupSlots;
+        set => SetField(ref resetGameGroupSlots, value);
     }
 
     [Separator("Recent searches")]

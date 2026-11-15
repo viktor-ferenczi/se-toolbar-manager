@@ -4,12 +4,14 @@
 
 A tool group, an overlapping tool group, a block group and a mixed group of a tool
 and a block, on slots of two toolbar pages. Each slot steps only through its own group,
-and switching back to a slot continues its group where it was. Prints PASS or FAIL per
+and switching back to a slot continues its group where it was, with the "Group slots
+start over" option off (group_reset_check.py checks it on). Prints PASS or FAIL per
 check and exits non-zero on a failure. --attach and --keep work as in item_groups_check.py.
 """
 
 from __future__ import annotations
 
+import os
 import sys
 import time
 
@@ -172,6 +174,9 @@ def run(game: Game) -> None:
 def main() -> int:
     attach = "--attach" in sys.argv
     keep = "--keep" in sys.argv
+    os.environ["TBM_CONFIG"] = (
+        os.environ.get("TBM_CONFIG", "") + "<ResetGroupSlots>false</ResetGroupSlots>"
+    )
     client = rig.client()
     api = rig.connect(client) if attach else rig.start(client)
     game = Game(api, client)
