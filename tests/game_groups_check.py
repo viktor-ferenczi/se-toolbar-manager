@@ -10,8 +10,9 @@ Shift with the wheel must select the variant that fits the aimed gap, and a left
 must place it turned to fit. Shift+Ctrl must open the quick selector with the six
 variants, the fitting ones marked, and a click must select the clicked variant. The
 game's own handling must stay: the plain wheel steps through all variants and a second
-press of the slot switches the block's size. A block without variants (the gyroscope)
-gets neither, and a group of the player still works with the same keys.
+press of the slot switches the block's size. A block without variants is a group of
+its own: Shift turns the collector's port to a conveyor line and leaves the gyroscope
+alone, without a selector. A group of the player still works with the same keys.
 
 TBM_GAME_GROUPS_OFF=1 starts the client with the "Game block groups" option off and
 checks that the keys then leave the game's block alone, while the player's group works.
@@ -41,8 +42,9 @@ from fit_check import (
     Case,
     Fit,
     cube,
+    tube,
 )
-from item_groups_check import Game, check, results
+from item_groups_check import Game, check, results, wait
 from quick_selector_check import SCREEN, Selector
 
 OFF = os.environ.get("TBM_GAME_GROUPS_OFF") == "1"
@@ -177,6 +179,64 @@ def run_shot(fit: Fit, sel: Selector) -> None:
     sel.release()
 
 
+def place_collector(fit: Fit, shift: bool) -> dict | None:
+    """The collector placed on the open end of a conveyor line, after the quick Shift
+    press or without it"""
+    game = fit.game
+    fit.paste([tube(DOWN), tube((0, -2, 0))])
+    fit_check.reset_wheel(game)
+    fit.api.set_toolbar_slot(PLAIN_SLOT, "MyObjectBuilder_Collector/Collector")
+    game.press_slot(PLAIN_SLOT)
+    fit.aim(DOWN)
+    fit.button()
+    if shift:
+        fit.quick()
+    before = set(fit.cubes())
+    fit.button(mouse_left=True)
+    return wait(
+        lambda: next(
+            (c for cell, c in fit.cubes().items() if cell not in before), None
+        ),
+        5,
+    )
+
+
+def run_single(fit: Fit, sel: Selector) -> None:
+    """A block without variants from an ordinary slot: Shift turns it the way it fits.
+    The collector's only port is on its back, which has to face the line's open end."""
+    plain = place_collector(fit, shift=False)
+    turned = place_collector(fit, shift=True)
+
+    def facing(block):
+        return f"{block['forward']} {block['up']}" if block else "nothing placed"
+
+    check(
+        "single block: without Shift the collector's port misses the line",
+        bool(plain) and plain["forward"] != "Up",
+        facing(plain),
+    )
+    check(
+        "single block: Shift turns the collector's port to the line",
+        bool(turned)
+        and turned["subtypeId"] == "Collector"
+        and turned["forward"] == "Up",
+        facing(turned),
+    )
+    fit.paste([tube(DOWN), tube((0, -2, 0))])
+    fit.aim(DOWN)
+    sel.keys(quick_selector_check.KEYS)
+    time.sleep(1.5)
+    check(
+        "single block: Shift+Ctrl opens nothing",
+        sel.game.screen_index(SCREEN) is None and fit.held() == "Collector",
+        f"holds {fit.held()}",
+    )
+    sel.keys([])
+    time.sleep(0.5)
+    fit_check.reset_wheel(fit.game)
+    fit.api.set_toolbar_slot(PLAIN_SLOT, ARMOR + fit_check.PLAIN_BLOCK)
+
+
 def run_off(fit: Fit, sel: Selector) -> None:
     """With the option off the keys leave the game's block alone"""
     case = CASES[0]
@@ -259,6 +319,7 @@ def main() -> int:
                     sel.release()
             run_shot(fit, sel)
             run_no_variants(fit, sel)
+            run_single(fit, sel)
 
         # A group of the player, with the same keys
         own = next(c for c in fit_check.CASES if c.name == "conveyor open end")

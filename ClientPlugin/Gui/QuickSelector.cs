@@ -45,7 +45,11 @@ public class QuickSelector : MyGuiScreenBase
             return;
 
         var item = ItemGroupScrollPatch.AnyGroupInUse(out var character);
-        if (item?.Members is not { Count: > 0 })
+        if (item?.Members is not { Count: > 0 } members)
+            return;
+
+        // Nothing to choose from with a block that has no variants
+        if (item is BlockVariants && members.Count == 1)
             return;
 
         MyGuiSandbox.AddScreen(new QuickSelector(item, character));

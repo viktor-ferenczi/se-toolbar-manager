@@ -226,8 +226,12 @@ public static class FittingBlock
             aimed.Target,
             aimed.Lookup
         );
-        // The quick press tells only when the group has no block of the grid's size at all
-        if (!pick.HasValue && (direction != 0 || aimed.Candidates.Count == 0))
+        // The quick press tells only when a group of several blocks has none of the grid's
+        // size at all
+        if (
+            !pick.HasValue
+            && (direction != 0 || (aimed.Candidates.Count == 0 && item.Members.Count > 1))
+        )
         {
             NotifyNoFit();
             Log(aimed, "no fitting block");

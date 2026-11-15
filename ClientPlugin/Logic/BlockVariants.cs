@@ -25,7 +25,8 @@ public interface IGroupInUse
 }
 
 // The game's block variant group of the block in the cube builder, in the builder's
-// block size: the blocks the wheel steps through in the game
+// block size: the blocks the wheel steps through in the game. A block without variants
+// is alone in it.
 public sealed class BlockVariants : IGroupInUse
 {
     private static BlockVariants current;
@@ -73,15 +74,31 @@ public sealed class BlockVariants : IGroupInUse
         members = this.stages.Select(stage => (ItemGroup.Member)new Variant(stage)).ToList();
     }
 
-    private static List<MyCubeBlockDefinition> Stages =>
-        MyCubeBuilder.Static is { IsActivated: true } builder
-            ? builder.m_cubeBuilderState.CurrentBlockDefinitionStages
-            : null;
+    private static readonly List<MyCubeBlockDefinition> Single = new() { null };
 
-    // Null without a block in hand which has variants
+    // A block without variants is a group of its own, to turn it the way it fits
+    private static List<MyCubeBlockDefinition> Stages
+    {
+        get
+        {
+            if (MyCubeBuilder.Static is not { IsActivated: true } builder)
+                return null;
+
+            var stages = builder.m_cubeBuilderState.CurrentBlockDefinitionStages;
+            if (stages.Count > 1)
+                return stages;
+            if (builder.CurrentBlockDefinition == null)
+                return null;
+
+            Single[0] = builder.CurrentBlockDefinition;
+            return Single;
+        }
+    }
+
+    // Null without a block in hand
     public static BlockVariants InUse()
     {
-        if (!Config.Current.GameBlockGroups || Stages is not { Count: > 1 } stages)
+        if (!Config.Current.GameBlockGroups || Stages is not { } stages)
             return null;
 
         // The stages change with the block's variant group and size
@@ -103,6 +120,8 @@ public sealed class BlockVariants : IGroupInUse
         var index = Members?.IndexOf(member) ?? -1;
         if (index < 0)
             return false;
+        if (stages.Count == 1)
+            return true;
 
         var builder = MyCubeBuilder.Static;
         builder.UpdateCubeBlockStageDefinitionByBlockPair(stages[index].BlockPairName);

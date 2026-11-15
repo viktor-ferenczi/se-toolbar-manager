@@ -243,6 +243,11 @@ of yours in use comes first, so this applies to blocks from ordinary toolbar slo
 from the G menu. Variants of a DLC you don't own, or not researched yet, are greyed out
 on the panel and never picked.
 
+A block without variants works too, as a group of one: pressing Shift turns it the way
+it fits the aimed position right away. A collector, for example, snaps with its
+conveyor port onto the open end of a conveyor line. There is nothing to choose from, so
+Shift+Ctrl shows no panel for it, and the quick press stays silent when it doesn't fit.
+
 The game's own keys stay as they are: the wheel without a modifier steps through all
 variants, pressing the block's slot again switches between the large and the small
 block, and so do the gamepad's controls for them. The fitting blocks keys and the quick

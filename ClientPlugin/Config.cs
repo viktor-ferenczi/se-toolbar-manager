@@ -194,7 +194,7 @@ public class Config : INotifyPropertyChanged
 
     [Checkbox(
         label: "Game block groups",
-        description: "The fitting blocks keys and the quick selector also work on the game's own\nblock variants, with a block in hand that is in no group in use"
+        description: "The fitting blocks keys and the quick selector also work on the game's own\nblock variants, with a block in hand that is in no group in use.\nA block without variants is turned the way it fits."
     )]
     public bool GameBlockGroups
     {
