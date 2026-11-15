@@ -247,8 +247,11 @@ public class GroupEditor
         screen.OnCategoriesItemClicked(screen.m_categoriesListbox);
     }
 
-    private void RefreshItems()
+    private void RefreshItems(bool keepScroll = false)
     {
+        // Emptying the grid hides the panel's scrollbar, which resets the scroll offset
+        var panel = Grid.Owner as MyGuiControlScrollablePanel;
+        var offset = panel?.ScrollbarVPosition ?? 0f;
         Grid.SetItemsToDefault();
         var members = SelectedGroup?.Members;
         if (members == null)
@@ -277,6 +280,29 @@ public class GroupEditor
             );
             Grid.SetItemAt(i, item);
         }
+
+        if (keepScroll && panel != null)
+            KeepScroll(panel, offset, members.Count);
+    }
+
+    // Editing a group keeps the scroll offset. Only when no item would be left in view, as
+    // after removing the last one while scrolled to the end, the view goes up one row.
+    private void KeepScroll(MyGuiControlScrollablePanel panel, float offset, int count)
+    {
+        var step = Grid.ItemStep.Y;
+        var lastRowBottom = (count + Grid.ColumnsCount - 1) / Grid.ColumnsCount * step;
+        if (lastRowBottom <= offset + 0.0001f)
+            offset = Math.Max(0f, offset - step);
+
+        // Empty rows below the last item keep the offset in range, the scrollbar clamps it
+        var rows = (int)Math.Ceiling((offset + panel.m_scrolledArea.Height) / step);
+        Grid.RowsCount = Math.Max(Grid.RowsCount, rows);
+
+        panel.ScrollbarVPosition = offset;
+
+        // The item rectangles are still where the emptied grid put them, at offset 0. A
+        // click that gives the grid focus scrolls the panel to the clicked item's rectangle.
+        Grid.RefreshItemsRectangle();
     }
 
     private void OnGroupSelected()
@@ -383,7 +409,7 @@ public class GroupEditor
     {
         group.Items = items.ToArray();
         Groups = Groups;
-        RefreshItems();
+        RefreshItems(keepScroll: true);
     }
 
     private void OnDrop(object sender, MyDragAndDropEventArgs eventArgs)

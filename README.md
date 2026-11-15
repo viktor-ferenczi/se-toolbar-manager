@@ -438,6 +438,11 @@ the world. It writes the group file and loads the mod itself, in a creative worl
 Groups category after a new group, a rename and a duplicate, the selection after each, and
 the tiles of a group with blocks and of an empty group.
 
+`tests/delete_scroll_check.py` scrolls a long group in the group editor and removes blocks
+by right click at the top, middle and bottom of the rows in view and at the end of the
+list. It prints the scroll offset before and after each removal: the offset stays, and
+only the removal that leaves no block in view moves it up one row.
+
 `tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
 double click in edit mode only, and that the group equips them once they are in the
 inventory. It needs a Remote build whose grid gestures reach disabled items.
