@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import shutil
 import sys
+import time
 
 import rig
 from item_groups_check import TOOLBAR_CONFIG, Game, check, results
@@ -47,6 +48,17 @@ def select(game: Game, screen: int, name: str) -> None:
     game.api.control_set(
         "GroupSelector", drop_down(game, screen).index(name), screen=screen
     )
+
+
+def open_drop_down(game: Game, screen: int) -> None:
+    """Clicks the drop-down open, for the screenshot. Remote can't click a combobox by
+    name, so this clicks its pixel. GUI coordinates span the 4:3 rectangle centered in
+    the rig's 1280x720 window."""
+    selector = game.control(screen, "GroupSelector")
+    x = selector["topLeft"]["x"] + selector["size"]["x"] / 2
+    y = selector["topLeft"]["y"] + selector["size"]["y"] / 2
+    game.api.click(round(160 + 960 * x), round(720 * y))
+    time.sleep(1)
 
 
 def tiles(game: Game) -> dict[str, list[str]]:
@@ -98,7 +110,7 @@ def run(game: Game) -> None:
     order_check(game, screen, "duplicate", expected, "Group 1")
 
     select(game, screen, "Group 10")
-    game.click(screen, "GroupSelector")
+    open_drop_down(game, screen)
     game.shot("group-drop-down")
     # Closes the open list, or the G menu if the click didn't open one
     game.api.key("Escape")

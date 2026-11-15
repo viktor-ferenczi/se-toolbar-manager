@@ -98,7 +98,8 @@ in hand the wheel steps through the group instead of the game's block variants. 
 in menus or with Ctrl, Shift or Alt held keeps the game's normal behavior, except for the
 fitting blocks below.
 
-The G menu lists the groups under **Groups**. Drag a group onto the toolbar to use it.
+The G menu lists the groups under **Groups**, by name, each tile showing the group's first
+item. An empty group has an empty tile. Drag a group onto the toolbar to use it.
 Click its tile to open the editor with that group selected. The **TG** button
 at the bottom left of the G menu turns on edit mode, where the
 staging area shows the items of the group selected above it:
@@ -119,7 +120,9 @@ staging area shows the items of the group selected above it:
 - **New**, **Rename** and **Delete** manage the groups. **Duplicate** asks for a name
   and copies the selected group's items in their current order. New, Rename and
   Duplicate reject existing group names, ignoring case and surrounding spaces,
-  and leave the naming dialog open so you can correct the name.
+  and leave the naming dialog open so you can correct the name. The groups are listed by
+  name, ignoring case and with numbers by value (Group 2 before Group 10), and the group
+  you just made, renamed or copied stays selected in its new place.
 - **Reset default** restores or recreates the default **Hand Tools** group without
   changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
   grinder and hand drill, in that order.
@@ -430,6 +433,10 @@ slot steps only through its own group and continues it where it was.
 blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through
 all of them and past them, the slot switches the size, and it still works after reloading
 the world. It writes the group file and loads the mod itself, in a creative world.
+
+`tests/group_order_check.py` checks the order of the group editor's drop-down and of the
+Groups category after a new group, a rename and a duplicate, the selection after each, and
+the tiles of a group with blocks and of an empty group.
 
 `tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
 double click in edit mode only, and that the group equips them once they are in the
