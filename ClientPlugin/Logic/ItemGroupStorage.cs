@@ -54,8 +54,11 @@ public static class ItemGroupStorage
             }
         }
 
-        return groups.OrderBy(group => group.Order).ToArray();
+        return SortByName(groups);
     }
+
+    public static ItemGroup[] SortByName(IEnumerable<ItemGroup> groups) =>
+        groups.OrderBy(group => group.Name, GroupNameComparer.Instance).ToArray();
 
     public static void Save(ItemGroup[] groups)
     {
