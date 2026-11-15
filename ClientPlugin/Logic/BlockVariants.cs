@@ -75,6 +75,13 @@ public sealed class BlockVariants : IGroupInUse
     }
 
     private static readonly List<MyCubeBlockDefinition> Single = new() { null };
+    private static readonly List<MyCubeBlockDefinition> Derived = new();
+
+    // The block of the variant group and size which lists the others, as the game finds it
+    private static MyCubeBlockDefinition First(MyCubeBlockDefinition block) =>
+        block.BlockVariantsGroup?.Blocks?.FirstOrDefault(b =>
+            b.CubeSize == block.CubeSize && b.BlockStages != null
+        );
 
     // A block without variants is a group of its own, to turn it the way it fits
     private static List<MyCubeBlockDefinition> Stages
@@ -87,10 +94,28 @@ public sealed class BlockVariants : IGroupInUse
             var stages = builder.m_cubeBuilderState.CurrentBlockDefinitionStages;
             if (stages.Count > 1)
                 return stages;
-            if (builder.CurrentBlockDefinition == null)
+
+            MyCubeBlockDefinition block = builder.CurrentBlockDefinition;
+            if (block == null)
                 return null;
 
-            Single[0] = builder.CurrentBlockDefinition;
+            // A variant taken up directly, like from a toolbar slot holding it, leaves the
+            // cube builder without its variants. They are those of the group's first block.
+            if (First(block) is { } first)
+            {
+                if (Derived.Count == 0 || Derived[0] != first)
+                {
+                    Derived.Clear();
+                    Derived.Add(first);
+                    foreach (var id in first.BlockStages)
+                        if (MyDefinitionManager.Static.TryGetCubeBlockDefinition(id, out var stage))
+                            Derived.Add(stage);
+                }
+                if (Derived.Count > 1 && Derived.Contains(block))
+                    return Derived;
+            }
+
+            Single[0] = block;
             return Single;
         }
     }
@@ -123,7 +148,11 @@ public sealed class BlockVariants : IGroupInUse
         if (stages.Count == 1)
             return true;
 
+        // The cube builder gets its variants from the group's first block
         var builder = MyCubeBuilder.Static;
+        var state = builder.m_cubeBuilderState;
+        if (!state.CurrentBlockDefinitionStages.Contains(stages[index]))
+            state.CurrentBlockDefinition = stages[0];
         builder.UpdateCubeBlockStageDefinitionByBlockPair(stages[index].BlockPairName);
         builder.CubeBuilderState.SetCurrentBlockForBlockVariantGroup(
             MyDefinitionManager.Static.GetDefinitionGroup(stages[index].BlockPairName)
