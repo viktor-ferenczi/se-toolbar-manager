@@ -14,7 +14,7 @@ using static ClientPlugin.Logic.BlockFit;
 
 namespace ClientPlugin.Gui;
 
-// The items of the group in use, a player's group or the game's block variants of the
+// The items of the group in use, a custom block group or the vanilla block group of the
 // block in hand, on a grid in the middle of the screen, while the quick
 // selector keys are held. Clicking one equips it, a block turned to fit like the fitting
 // blocks wheel does. The blocks that fit the aimed cell are highlighted.

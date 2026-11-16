@@ -150,7 +150,7 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
     {
         // Like the game's toolbar, put the cube builder away before switching from a block.
         // Switching in place skips the builder's reset: the placement box could lose the grid
-        // in view, and a block of the same game block group would switch the grid size.
+        // in view, and a block of the same vanilla block group would switch the grid size.
         if (member != held && MyCubeBuilder.Static is { IsActivated: true })
             character.SwitchToWeapon(null);
 
@@ -217,7 +217,7 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
         {
             // Another slot, group or item is in use, or the hand is empty
             inUse = false;
-            if (Config.Current.ResetGroupSlots)
+            if (Config.Current.ResetCustomGroupSlots)
                 Positions.Remove(GroupId);
         }
 

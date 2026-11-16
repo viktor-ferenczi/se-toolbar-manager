@@ -365,7 +365,7 @@ public class GroupEditor
         MyGuiAudio.PlaySound(MyGuiSounds.HudItem);
     }
 
-    // The blocks of a game block group, the tiles with a + in the block grid, in the order the
+    // The blocks of a vanilla block group, the tiles with a + in the block grid, in the order the
     // game cycles through them. On the toolbar such a tile would take the mouse wheel to cycle
     // its own variants, so the group gets its blocks one by one instead. Blocks not unlocked
     // yet are kept, like greyed out items. Null for a block without variants.
@@ -421,7 +421,7 @@ public class GroupEditor
         )
             return;
 
-        // Only the block grid has game block groups, the variant panel lists single blocks
+        // Only the block grid has vanilla block groups, the variant panel lists single blocks
         Insert(
             DefinitionOf(eventArgs.Item.UserData),
             eventArgs.DropTo.ItemIndex,

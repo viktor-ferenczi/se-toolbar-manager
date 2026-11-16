@@ -175,7 +175,8 @@ def main() -> int:
     attach = "--attach" in sys.argv
     keep = "--keep" in sys.argv
     os.environ["TBM_CONFIG"] = (
-        os.environ.get("TBM_CONFIG", "") + "<ResetGroupSlots>false</ResetGroupSlots>"
+        os.environ.get("TBM_CONFIG", "")
+        + "<ResetCustomGroupSlots>false</ResetCustomGroupSlots>"
     )
     client = rig.client()
     api = rig.connect(client) if attach else rig.start(client)

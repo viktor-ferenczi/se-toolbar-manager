@@ -3,15 +3,15 @@ isolated client of rig.py.
 
     TBM_SLOT=15 uv run --with httpx python tests/group_reset_check.py [--attach] [--keep]
 
-A group of two armor slopes, a slot of the game's heavy armor block, whose game block
-variant group has six blocks, and a welder are on the toolbar. Each group slot is used,
+A custom block group of two armor slopes, a slot of the heavy armor block, whose vanilla
+block group has six blocks, and a welder are on the toolbar. Each group slot is used,
 moved on to another block with the wheel, and left by picking the welder or by putting
-the block away. The option "Group slots start over" makes the group slot show and equip
-its first block again, "Game group slots start over" makes the game's slot equip its own
-block instead of the variant used last. Turned off, both continue where they were. While
+the block away. The option "Custom block groups start over" makes the custom block group's
+slot show and equip its first block again, "Vanilla block groups start over" makes the
+heavy armor block's slot equip that block instead of the variant used last. Turned off, both continue where they were. While
 a slot is in use, pressing it again and switching toolbar pages change nothing.
 
-TBM_RESET_GROUPS=0 and TBM_RESET_GAME=0 start the client with that option off, both are
+TBM_RESET_CUSTOM=0 and TBM_RESET_VANILLA=0 start the client with that option off, both are
 on by default. The plugin settings must show both options, checked as configured.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach uses a client this script started before with --keep, which leaves it running.
@@ -26,8 +26,8 @@ import time
 import rig
 from item_groups_check import GUN, TOOLBAR_CONFIG, Game, check, held_check, results
 
-RESET_GROUPS = os.environ.get("TBM_RESET_GROUPS", "1") == "1"
-RESET_GAME = os.environ.get("TBM_RESET_GAME", "1") == "1"
+RESET_CUSTOM = os.environ.get("TBM_RESET_CUSTOM", "1") == "1"
+RESET_VANILLA = os.environ.get("TBM_RESET_VANILLA", "1") == "1"
 
 CUBE = "CubeBlock/"
 LIGHT = "LargeBlockArmorSlope"
@@ -48,8 +48,8 @@ GROUP_SLOT = 0
 GAME_SLOT = 1
 WELDER_SLOT = 2
 OPTIONS = {
-    "Group slots start over": RESET_GROUPS,
-    "Game group slots start over": RESET_GAME,
+    "Custom block groups start over": RESET_CUSTOM,
+    "Vanilla block groups start over": RESET_VANILLA,
 }
 
 
@@ -184,7 +184,7 @@ def leave(game: Game, how: str) -> None:
 
 
 def group_slot(game: Game, icons: Icons) -> None:
-    word = "starts over" if RESET_GROUPS else "continues"
+    word = "starts over" if RESET_CUSTOM else "continues"
     for how in ("welder", "holster"):
         game.press_slot(GROUP_SLOT)
         if subtype(game.held()) != HEAVY:
@@ -196,7 +196,7 @@ def group_slot(game: Game, icons: Icons) -> None:
 
         leave(game, how)
         game.shot(f"group-after-{how}")
-        first = LIGHT if RESET_GROUPS else HEAVY
+        first = LIGHT if RESET_CUSTOM else HEAVY
         icons.shows(
             f"group, after {how}: the slot {word}, shows {first}", GROUP_SLOT, first
         )
@@ -234,7 +234,7 @@ def group_slot(game: Game, icons: Icons) -> None:
 
 
 def game_slot(game: Game, icons: Icons) -> None:
-    word = "starts over" if RESET_GAME else "continues"
+    word = "starts over" if RESET_VANILLA else "continues"
     for how in ("welder", "holster"):
         game.press_slot(GAME_SLOT)
         if subtype(game.held()) == GAME_BLOCK:
@@ -255,7 +255,7 @@ def game_slot(game: Game, icons: Icons) -> None:
             f"game, after {how}: the slot shows its own block", GAME_SLOT, GAME_BLOCK
         )
         game.press_slot(GAME_SLOT)
-        expected = GAME_BLOCK if RESET_GAME else variant
+        expected = GAME_BLOCK if RESET_VANILLA else variant
         held_check(
             game,
             f"game, after {how}: the slot {word}, equips {expected}",
@@ -280,12 +280,12 @@ def run(game: Game) -> None:
 
 
 def main() -> int:
-    if not (RESET_GROUPS and RESET_GAME):
+    if not (RESET_CUSTOM and RESET_VANILLA):
         os.environ["TBM_CONFIG"] = os.environ.get("TBM_CONFIG", "") + (
-            f"<ResetGroupSlots>{str(RESET_GROUPS).lower()}</ResetGroupSlots>"
-            f"<ResetGameGroupSlots>{str(RESET_GAME).lower()}</ResetGameGroupSlots>"
+            f"<ResetCustomGroupSlots>{str(RESET_CUSTOM).lower()}</ResetCustomGroupSlots>"
+            f"<ResetVanillaGroupSlots>{str(RESET_VANILLA).lower()}</ResetVanillaGroupSlots>"
         )
-    print(f"Group slots start over: {RESET_GROUPS}, game group slots: {RESET_GAME}")
+    print(f"Custom block groups start over: {RESET_CUSTOM}, vanilla: {RESET_VANILLA}")
 
     attach = "--attach" in sys.argv
     keep = "--keep" in sys.argv

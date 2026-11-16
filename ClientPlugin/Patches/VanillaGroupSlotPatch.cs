@@ -11,11 +11,11 @@ namespace ClientPlugin.Patches;
 // ReSharper disable UnusedType.Global
 // ReSharper disable InconsistentNaming
 
-// The cube builder remembers the variant used last per game block variant group, and a slot
+// The cube builder remembers the variant used last per vanilla block group, and a slot
 // of the group's block equips that one. With the option on, the slot goes back to its own
 // block once its block is not in the hand any more, so it equips the block its icon shows.
 [HarmonyPatch(typeof(MyToolbar))]
-public static class GameGroupSlotPatch
+public static class VanillaGroupSlotPatch
 {
     private static List<MyCubeBlockDefinition> inUse = new();
     private static List<MyCubeBlockDefinition> found = new();
@@ -45,7 +45,7 @@ public static class GameGroupSlotPatch
         }
 
         if (
-            Config.Current.ResetGameGroupSlots
+            Config.Current.ResetVanillaGroupSlots
             && MyCubeBuilder.Static?.CubeBuilderState is { } state
         )
         {

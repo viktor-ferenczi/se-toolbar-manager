@@ -1,8 +1,8 @@
-"""In-game checks of game block groups added to a group, on the isolated client of rig.py.
+"""In-game checks of vanilla block groups added to a group, on the isolated client of rig.py.
 
     TBM_SLOT=15 uv run --with httpx python tests/block_variants_check.py [--attach] [--keep]
 
-The light and heavy armor blocks of the G menu are game block groups (the tiles with a +).
+The light and heavy armor blocks of the G menu are vanilla block groups (the tiles with a +).
 Dragged or double clicked into a group, they add their blocks one by one. Slot presses and
 the mouse wheel then step through the group's own order, not the game's variant cycle.
 Without --attach the game restarts at the end to check that the group reloads as saved.
@@ -45,7 +45,7 @@ def build_group(game: Game) -> tuple[list[str], list[str]]:
     game.drag_to_group(screen, "Light Armor Block", 0)
     light = items(game)
     check(
-        "drag adds the blocks of the game group, its first block first",
+        "drag adds the blocks of the vanilla block group, its first block first",
         len(light) > 1 and light[0] == LIGHT and len(set(light)) == len(light),
         str(light),
     )
@@ -59,7 +59,7 @@ def build_group(game: Game) -> tuple[list[str], list[str]]:
     both = items(game)
     heavy = both[len(light) :]
     check(
-        "double click appends the blocks of another game group",
+        "double click appends the blocks of another vanilla block group",
         both[: len(light)] == light
         and len(heavy) > 1
         and heavy[0] == HEAVY

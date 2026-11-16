@@ -73,7 +73,10 @@ cleaned up after 90 days, but only when a profile is deleted the next time.
 
 ### Groups
 
-A group puts several tools, weapons and blocks into one slot of your character toolbar.
+A custom block group, or group for short, is one you make in Toolbar Manager. It puts
+several tools, weapons and blocks into one slot of your character toolbar. The game's own
+predefined groups, like the heavy armor cube with its slopes and corners (the block tiles
+with a `+` in the G menu), are called vanilla block groups here.
 Using the slot equips the first available item in tile order. Pressing the slot again
 with a tool or weapon of the group in hand moves on to the next item, all tiers of a tool
 counting as one. With the default group that is welder, grinder, then hand drill. With a
@@ -90,18 +93,18 @@ Several groups can be on the toolbar at the same time, on any slots and pages, a
 may share items. Each slot steps only through its own group.
 
 Once you put the group's item away or pick another slot, the group's slot goes back to
-the group's first item, so the slot always shows the same icon. Turn **Group slots start
-over** off in the plugin's configuration to have the slot show and equip the item it was
-on last instead. **Game group slots start over** does the same for a slot of a block with
-the game's own variants, like the heavy armor cube: the slot equips its own block again
-instead of the variant you used last. Switching toolbar pages with the item still in
+the group's first item, so the slot always shows the same icon. Turn **Custom block groups
+start over** off in the plugin's configuration to have the slot show and equip the item it
+was on last instead. **Vanilla block groups start over** does the same for a slot of a
+block in a vanilla block group, like the heavy armor cube: the slot equips its own block
+again instead of the variant you used last. Switching toolbar pages with the item still in
 hand doesn't count as leaving the slot.
 
 While holding a tool, weapon or block from the group used last, with that group on the
 current toolbar page, scroll up to move forward through the group or down to move backward.
 The wheel and the slot pick the first available item of each kind in tile order,
 regardless of its level, and every block is a step of its own. With a block of the group
-in hand the wheel steps through the group instead of the game's block variants. Scrolling
+in hand the wheel steps through the group instead of its vanilla block group. Scrolling
 in menus or with Ctrl, Shift or Alt held keeps the game's normal behavior, except for the
 fitting blocks below.
 
@@ -115,7 +118,7 @@ staging area shows the items of the group selected above it:
   add them at the end. The block variants on the right can be dragged in too. Greyed out
   items, which you don't have or haven't researched yet, can be added as well, so a group
   can be set up before you get every tier of a tool.
-- A game block group, a block tile with a `+` in its corner like the Light Armor Block,
+- A vanilla block group, a block tile with a `+` in its corner like the Light Armor Block,
   adds its blocks one by one, in the order the game cycles through them. Blocks already
   in the group stay where they are. This way the group can mix blocks of several game
   groups, and single blocks can be moved or removed. To add only one block of a game
@@ -172,7 +175,7 @@ the block sits right, without pressing Shift again. These repeats are always sil
 
 A block fits when its face matches the face of the block you aim at. The other blocks
 around it rank the candidates if they are of the same kind: armor with armor, beams with
-beams, and so on for the blocks of a game block group. Other neighbors don't count, so a
+beams, and so on for the blocks of a vanilla block group. Other neighbors don't count, so a
 beam can continue past a wall instead of being closed off to hug it. A face that would
 stick out where the neighbor has none, like a full face against the slanted side of a
 slope, counts more than leaving part of the neighbor's face uncovered. Armor closes
@@ -218,7 +221,7 @@ blocks of that size. Modded blocks
 work the same way when their models name their ports like the game's blocks do
 (`detector_conveyor`, `detector_conveyor_small`, `detector_upgrade`) and their
 definitions have mount points; armor counts as one kind if it is built from the game's
-armor shapes, other blocks by their block variant group.
+armor shapes, other blocks by their vanilla block group.
 
 The plugin's configuration can change the wheel's modifier key to Ctrl or Alt or turn it
 off, turn the quick press off, assign the next and previous actions to other mouse buttons, and add keyboard keys
@@ -246,7 +249,7 @@ cells on the right of the last row. The plugin's configuration can change the ke
 Shift+Alt or Ctrl+Alt, or turn the panel off. If Shift is the fitting blocks wheel's
 modifier with the quick press on, pressing Shift before Ctrl also does the quick press.
 
-#### The game's block variants
+#### Vanilla block groups
 
 The fitting blocks keys and the quick selector also work without a group of your own.
 With a block in hand that has variants in the game, like the heavy armor cube with its
@@ -267,7 +270,7 @@ variants, pressing the block's slot again switches between the large and the sma
 block, and so do the gamepad's controls for them. The fitting blocks keys and the quick
 selector are keyboard and mouse only.
 
-Turn **Game block groups** off in the plugin's configuration to keep them to your own
+Turn **Vanilla block groups** off in the plugin's configuration to keep them to your own
 groups.
 
 ### Quick block selection
@@ -436,10 +439,10 @@ higher levels in tile order, then checks that reordering a tool changes the sele
 two groups sharing tools on separate slots of two toolbar pages, and checks that each
 slot steps only through its own group and continues it where it was.
 
-`tests/group_reset_check.py` checks that a group slot and a slot of a block with the
-game's variants start over once they are left by picking another slot or putting the block
-away, and continue where they were with the options off (`TBM_RESET_GROUPS=0`,
-`TBM_RESET_GAME=0`). It also checks both options in the plugin settings.
+`tests/group_reset_check.py` checks that a custom block group slot and a slot of a block
+in a vanilla block group start over once they are left by picking another slot or putting the block
+away, and continue where they were with the options off (`TBM_RESET_CUSTOM=0`,
+`TBM_RESET_VANILLA=0`). It also checks both options in the plugin settings.
 
 `tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
 blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through

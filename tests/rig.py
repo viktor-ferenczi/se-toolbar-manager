@@ -197,7 +197,7 @@ def write_configs(c: Client) -> None:
     options = os.environ.get("TBM_CONFIG", "")
     off = {
         "TBM_STAGING_DISABLED": "EnableStagingArea",
-        "TBM_GAME_GROUPS_OFF": "GameBlockGroups",
+        "TBM_VANILLA_GROUPS_OFF": "VanillaBlockGroups",
     }
     for env, name in off.items():
         if os.environ.get(env) == "1":

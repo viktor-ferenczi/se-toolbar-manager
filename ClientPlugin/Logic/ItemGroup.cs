@@ -76,7 +76,7 @@ public class ItemGroup
                     ?.GetFirstMissingDefinitionDLC(block, Sync.MyId) != null
             );
 
-        // The game tells the block in the hand by the first block of its game block group, so
+        // The game tells the block in the hand by the first block of its vanilla block group, so
         // after the group's first block the others would look held too. The block itself counts.
         public bool Held =>
             Item is MyToolbarItemCubeBlock

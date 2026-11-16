@@ -37,9 +37,9 @@ public class Config : INotifyPropertyChanged
     private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
     private Binding previousFitKey = new Binding(MyKeys.None);
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
-    private bool gameBlockGroups = true;
-    private bool resetGroupSlots = true;
-    private bool resetGameGroupSlots = true;
+    private bool vanillaBlockGroups = true;
+    private bool resetCustomGroupSlots = true;
+    private bool resetVanillaGroupSlots = true;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
     private bool pickBlockColor = true;
     private bool pickBlockSkin = true;
@@ -98,23 +98,23 @@ public class Config : INotifyPropertyChanged
     }
 
     [Checkbox(
-        label: "Group slots start over",
-        description: "A group's toolbar slot goes back to the group's first item once it is\nnot in use any more, so the slot keeps showing the same icon"
+        label: "Custom block groups start over",
+        description: "A custom block group's toolbar slot goes back to the group's first item once it is\nnot in use any more, so the slot keeps showing the same icon"
     )]
-    public bool ResetGroupSlots
+    public bool ResetCustomGroupSlots
     {
-        get => resetGroupSlots;
-        set => SetField(ref resetGroupSlots, value);
+        get => resetCustomGroupSlots;
+        set => SetField(ref resetCustomGroupSlots, value);
     }
 
     [Checkbox(
-        label: "Game group slots start over",
-        description: "A toolbar slot of a block with the game's block variants goes back to its own\nblock once it is not in use any more, instead of the variant used last"
+        label: "Vanilla block groups start over",
+        description: "A toolbar slot of a block in a vanilla block group goes back to that block\nonce it is not in use any more, instead of the variant used last"
     )]
-    public bool ResetGameGroupSlots
+    public bool ResetVanillaGroupSlots
     {
-        get => resetGameGroupSlots;
-        set => SetField(ref resetGameGroupSlots, value);
+        get => resetVanillaGroupSlots;
+        set => SetField(ref resetVanillaGroupSlots, value);
     }
 
     [Separator("Recent searches")]
@@ -218,13 +218,13 @@ public class Config : INotifyPropertyChanged
     }
 
     [Checkbox(
-        label: "Game block groups",
-        description: "The fitting blocks keys and the quick selector also work on the game's own\nblock variants, with a block in hand that is in no group in use.\nA block without variants is turned the way it fits."
+        label: "Vanilla block groups",
+        description: "The fitting blocks keys and the quick selector also work on vanilla block groups,\nwith a block in hand that is in no group in use.\nA block without variants is turned the way it fits."
     )]
-    public bool GameBlockGroups
+    public bool VanillaBlockGroups
     {
-        get => gameBlockGroups;
-        set => SetField(ref gameBlockGroups, value);
+        get => vanillaBlockGroups;
+        set => SetField(ref vanillaBlockGroups, value);
     }
 
     [Separator("Faced block")]

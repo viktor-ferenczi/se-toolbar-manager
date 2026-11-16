@@ -375,8 +375,8 @@ def write_groups(c: rig.Client) -> None:
 def start(c: rig.Client):
     # hold() needs the slots to equip the block they were left on
     os.environ["TBM_CONFIG"] = os.environ.get("TBM_CONFIG", "") + (
-        "<ResetGroupSlots>false</ResetGroupSlots>"
-        "<ResetGameGroupSlots>false</ResetGameGroupSlots>"
+        "<ResetCustomGroupSlots>false</ResetCustomGroupSlots>"
+        "<ResetVanillaGroupSlots>false</ResetVanillaGroupSlots>"
     )
     rig.stop(c)
     write_groups(c)

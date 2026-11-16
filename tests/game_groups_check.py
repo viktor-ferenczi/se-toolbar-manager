@@ -1,10 +1,10 @@
-"""In-game check of the fitting blocks keys and the quick selector on the game's own
-block variants, on the isolated client of rig.py.
+"""In-game check of the fitting blocks keys and the quick selector on vanilla block
+groups, on the isolated client of rig.py.
 
     TBM_SLOT=16 uv run --with httpx python tests/game_groups_check.py [--attach] [--keep]
 
-A heavy armor block from an ordinary toolbar slot is in hand, which is in no group of
-the player. The game's block variant group of heavy armor has six blocks per size. With
+A heavy armor block from an ordinary toolbar slot is in hand, which is in no custom block
+group. The vanilla block group of heavy armor has six blocks per size. With
 the grids of fit_check.py: the next fitting block button, the quick Shift press and
 Shift with the wheel must select the variant that fits the aimed gap, and a left click
 must place it turned to fit. Shift+Ctrl must open the quick selector with the six
@@ -13,10 +13,10 @@ game's own handling must stay: the plain wheel steps through all variants and a 
 press of the slot switches the block's size. A block without variants is a group of
 its own: Shift turns the collector's port to a conveyor line and leaves the gyroscope
 alone, without a selector. With Shift held, moving the aim to another face turns the
-block again. A group of the player still works with the same keys.
+block again. A custom block group still works with the same keys.
 
-TBM_GAME_GROUPS_OFF=1 starts the client with the "Game block groups" option off and
-checks that the keys then leave the game's block alone, while the player's group works.
+TBM_VANILLA_GROUPS_OFF=1 starts the client with the "Vanilla block groups" option off and
+checks that the keys then leave the game's block alone, while the custom block group works.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach uses a client this script started before with --keep, which leaves it running.
 """
@@ -50,7 +50,7 @@ from fit_check import (
 from item_groups_check import Game, check, results, wait
 from quick_selector_check import SCREEN, Selector
 
-OFF = os.environ.get("TBM_GAME_GROUPS_OFF") == "1"
+OFF = os.environ.get("TBM_VANILLA_GROUPS_OFF") == "1"
 
 # The large blocks of the game's ArmorHeavyCubeGroup, in the group's order
 HEAVY = [
@@ -461,7 +461,7 @@ def main() -> int:
             run_single(fit, sel)
             run_move(fit, sel)
 
-        # A group of the player, with the same keys
+        # A custom block group, with the same keys
         own = next(c for c in fit_check.CASES if c.name == "conveyor open end")
         fit_check.run_case(fit, own)
         quick_selector_check.run_case(sel, own)

@@ -12,8 +12,8 @@ using Sandbox.Game.World;
 
 namespace ClientPlugin.Logic;
 
-// What the fitting blocks keys and the quick selector work on: a player's group on a
-// toolbar slot, or the game's block variants of the block in hand
+// What the fitting blocks keys and the quick selector work on: a custom block group on a
+// toolbar slot, or the vanilla block group of the block in hand
 public interface IGroupInUse
 {
     // Null once the group is gone
@@ -24,7 +24,7 @@ public interface IGroupInUse
     bool Equip(MyCharacter character, ItemGroup.Member member, ItemGroup.Member held);
 }
 
-// The game's block variant group of the block in the cube builder, in the builder's
+// The vanilla block group of the block in the cube builder, in the builder's
 // block size: the blocks the wheel steps through in the game. A block without variants
 // is alone in it.
 public sealed class BlockVariants : IGroupInUse
@@ -123,7 +123,7 @@ public sealed class BlockVariants : IGroupInUse
     // Null without a block in hand
     public static BlockVariants InUse()
     {
-        if (!Config.Current.GameBlockGroups || Stages is not { } stages)
+        if (!Config.Current.VanillaBlockGroups || Stages is not { } stages)
             return null;
 
         // The stages change with the block's variant group and size
