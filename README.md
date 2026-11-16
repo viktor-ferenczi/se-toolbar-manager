@@ -298,7 +298,7 @@ for narrowing down in case of ambiguity:
 - `PHat` **Parachute Hatch** only
 
 The order of characters must match exactly. Lower case characters and
-space are skipped after a matching upper chase character or digit.
+space are skipped after a matching upper case character or digit.
 
 Separating multiple search patterns by space is not supported, currently.
 
@@ -375,6 +375,7 @@ _in alphabetical order_
 - SwiftyTech - Stargate Dimensions
 
 **Thank you very much for all your support and testing effort!**
+
 ## Development
 
 This project is based on the
@@ -424,7 +425,7 @@ items in `ClientPlugin/ClientPlugin.csproj`.
 [Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, edit mode, using
 the groups with different tools in the inventory and with a block, the staging area and
 saving the world. It
-prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar`, a
+prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar` (or `TBM_PULSAR_TEMPLATE`), a
 working copy of Remote with the `cubeBlock` field of the character state
 ([CometWorks/remote#51](https://github.com/CometWorks/remote/pull/51); `TBM_REMOTE`,
 default `~/ws/se/se1/plugins/remote`) and a claimed
@@ -475,6 +476,28 @@ leave the block alone.
 `tests/faced_block_check.py` checks picking the faced block with `Ctrl+G`: the block in
 hand, its size, skin and placed orientation, in symmetry mode too, and without creative
 rights. With `--color` it also checks the **Also pick color** option.
+
+`tests/block_variants_check.py` adds the light and heavy armor vanilla block groups to a
+group and checks that the slot and the wheel step through the group's own order, also
+after a restart.
+
+`tests/grid_aim_check.py` steps a group of light armor blocks while facing a grid and
+checks that a click still places the new block on it.
+
+`tests/staging_info_check.py` checks that a click in the staging area and in the group
+editor's grid updates the info panel on the right.
+
+`tests/fit_check.py` checks the fitting blocks keys, the wheel and the quick press on
+small static grids with gaps, and `tests/quick_selector_check.py` the quick selector on
+the same grids. Both use test slot 16.
+
+`tests/BlockFit.Tests` holds the offline counterparts of `tests/fit_check.py`. They need
+no game, only the vanilla block definitions in `tests/BlockFit.Tests/blocks.json`, which
+`tests/fit_fixture.py` extracts from the installed game:
+
+```bash
+dotnet run --project tests/BlockFit.Tests
+```
 
 ### Release
 

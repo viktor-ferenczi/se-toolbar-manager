@@ -22,6 +22,9 @@ TBM_BIN64 sets the game's Bin64 folder, for hosts without a Steam library file.
 
 TBM_CONFIG=<XML elements> sets options in the plugin's configuration file.
 
+TBM_PULSAR_TEMPLATE is the Pulsar folder the client's own one is made from
+(default ~/.config/Pulsar).
+
 TBM_REMOTE points to the Remote working copy (default ~/ws/se/se1/plugins/remote),
 SE_WORKSPACE to the workspace (default: three levels above this repository).
 """
