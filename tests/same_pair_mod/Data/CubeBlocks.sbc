@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two large blocks with the same BlockPairName, as some mods have them. For same_pair_check.py -->
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <CubeBlocks>
+        <Definition>
+            <Id>
+                <TypeId>CubeBlock</TypeId>
+                <SubtypeId>TbmTwinA</SubtypeId>
+            </Id>
+            <DisplayName>Twin A</DisplayName>
+            <Icon>Textures\GUI\Icons\Cubes\light_armor_cube.dds</Icon>
+            <Description>Description_LightArmor</Description>
+            <CubeSize>Large</CubeSize>
+            <BlockTopology>Cube</BlockTopology>
+            <Size x="1" y="1" z="1" />
+            <ModelOffset x="0" y="0" z="0" />
+            <CubeDefinition>
+                <CubeTopology>Box</CubeTopology>
+                <ShowEdges>true</ShowEdges>
+                <Sides>
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                </Sides>
+            </CubeDefinition>
+            <Components>
+                <Component Subtype="SteelPlate" Count="20" />
+                <Component Subtype="SteelPlate" Count="5" />
+            </Components>
+            <CriticalComponent Subtype="SteelPlate" Index="0" />
+            <BlockPairName>TbmTwin</BlockPairName>
+            <EdgeType>Light</EdgeType>
+            <BuildTimeSeconds>8</BuildTimeSeconds>
+            <PCU>1</PCU>
+            <IsAirTight>true</IsAirTight>
+        </Definition>
+        <Definition>
+            <Id>
+                <TypeId>CubeBlock</TypeId>
+                <SubtypeId>TbmTwinB</SubtypeId>
+            </Id>
+            <DisplayName>Twin B</DisplayName>
+            <Icon>Textures\GUI\Icons\Cubes\light_armor_cube.dds</Icon>
+            <Description>Description_LightArmor</Description>
+            <CubeSize>Large</CubeSize>
+            <BlockTopology>Cube</BlockTopology>
+            <Size x="1" y="1" z="1" />
+            <ModelOffset x="0" y="0" z="0" />
+            <CubeDefinition>
+                <CubeTopology>Box</CubeTopology>
+                <ShowEdges>true</ShowEdges>
+                <Sides>
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                    <Side Model="Models\Cubes\Large\Armor\SquarePlate.mwm" PatternWidth="4" PatternHeight="2" />
+                </Sides>
+            </CubeDefinition>
+            <Components>
+                <Component Subtype="SteelPlate" Count="20" />
+                <Component Subtype="SteelPlate" Count="5" />
+            </Components>
+            <CriticalComponent Subtype="SteelPlate" Index="0" />
+            <BlockPairName>TbmTwin</BlockPairName>
+            <EdgeType>Light</EdgeType>
+            <BuildTimeSeconds>8</BuildTimeSeconds>
+            <PCU>1</PCU>
+            <IsAirTight>true</IsAirTight>
+        </Definition>
+    </CubeBlocks>
+</Definitions>

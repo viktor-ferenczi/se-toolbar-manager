@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Gui;
@@ -30,6 +33,12 @@ public class ItemGroupToolbarItem : MyToolbarItem
     private static readonly Dictionary<string, string> Positions = new();
     private static string activeGroupId;
 
+    // The game's own switch to a block variant: the block as it is, with its rotation
+    private static readonly MethodInfo SetBuilderBlock = AccessTools.Method(
+        typeof(MyCubeBuilder),
+        "UpdateCubeBlockStageDefinition"
+    );
+
     // Loading a world activates its saved selected slot, which must not step that group on
     public static void OnSessionLoading() => activeGroupId = null;
 
@@ -37,9 +46,15 @@ public class ItemGroupToolbarItem : MyToolbarItem
 
     private string Position => Positions.TryGetValue(GroupId, out var kind) ? kind : null;
 
-    // Whether this group is the one in use, so using it again moves to its next kind
+    // Whether this group is the one in use, so using it again moves to its next kind.
+    // The slot switches a block's size, which leaves the other block of its pair in the hand.
     private bool IsCurrent(ItemGroup.Member held) =>
-        activeGroupId == GroupId && held != null && held.Kind == Position;
+        activeGroupId == GroupId
+        && held != null
+        && (
+            held.Kind == Position
+            || ItemGroup.SamePair(held, Group?.Members.FirstOrDefault(m => m.Kind == Position))
+        );
 
     public ItemGroupToolbarItem(string groupId)
     {
@@ -128,11 +143,30 @@ public class ItemGroupToolbarItem : MyToolbarItem
 
         // The game's own activation of a tool or block slot, which also syncs it in multiplayer.
         // Switching to a group whose item is already in the hand only makes it the current one.
-        if (member != held && !member.Item.Activate())
+        if (member != held && !ActivateMember(member))
             return false;
         Positions[GroupId] = member.Kind;
         activeGroupId = GroupId;
         WantsToBeActivated = true;
+        return true;
+    }
+
+    // The game equips a block by its pair: the one of the builder's current size, and of two
+    // blocks of that size the one the pair knows. A group listing more than one block of a
+    // pair needs the block itself in the hand, or it could never tell which one it is on.
+    private bool ActivateMember(ItemGroup.Member member)
+    {
+        var block = member.Definition as MyCubeBlockDefinition;
+        var exact = block != null && Group.SharesPair(member);
+        var builder = MyCubeBuilder.Static;
+        if (exact)
+            builder?.CubeBuilderState?.SetCubeSize(block.CubeSize);
+
+        if (!member.Item.Activate())
+            return false;
+
+        if (exact && builder is { IsActivated: true } && builder.CurrentBlockDefinition != block)
+            SetBuilderBlock.Invoke(builder, new object[] { block });
         return true;
     }
 
