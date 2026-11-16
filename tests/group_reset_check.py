@@ -7,9 +7,9 @@ A custom block group of two armor slopes, a slot of the heavy armor block, whose
 block group has six blocks, and a welder are on the toolbar. Each group slot is used,
 moved on to another block with the wheel, and left by picking the welder or by putting
 the block away. The option "Custom block groups start over" makes the custom block group's
-slot show and equip its first block again, "Vanilla block groups start over" makes the
-heavy armor block's slot equip that block instead of the variant used last. Turned off, both continue where they were. While
-a slot is in use, pressing it again and switching toolbar pages change nothing.
+slot show and equip its first block again. "Vanilla block groups start over" makes the
+heavy armor block's slot equip the block its icon shows instead of the variant used
+last. Turned off, both continue where they were. While a slot is in use, pressing it again and switching toolbar pages change nothing.
 
 TBM_RESET_CUSTOM=0 and TBM_RESET_VANILLA=0 start the client with that option off, both are
 on by default. The plugin settings must show both options, checked as configured.

@@ -109,7 +109,7 @@ public class Config : INotifyPropertyChanged
 
     [Checkbox(
         label: "Vanilla block groups start over",
-        description: "A toolbar slot of a block in a vanilla block group goes back to that block\nonce it is not in use any more, instead of the variant used last"
+        description: "Picking the toolbar slot of a vanilla block group again after leaving it\nequips the block its icon shows, not the variant used last"
     )]
     public bool ResetVanillaGroupSlots
     {

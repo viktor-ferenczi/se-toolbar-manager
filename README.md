@@ -96,8 +96,9 @@ Once you put the group's item away or pick another slot, the group's slot goes b
 the group's first item, so the slot always shows the same icon. Turn **Custom block groups
 start over** off in the plugin's configuration to have the slot show and equip the item it
 was on last instead. **Vanilla block groups start over** does the same for a slot of a
-block in a vanilla block group, like the heavy armor cube: the slot equips its own block
-again instead of the variant you used last. Switching toolbar pages with the item still in
+block in a vanilla block group, like the heavy armor cube. Its icon always shows the
+cube, but the game equips the variant you used last, say a slope. With the option on,
+picking the slot again after leaving it equips the cube, the block its icon shows. Switching toolbar pages with the item still in
 hand doesn't count as leaving the slot.
 
 While holding a tool, weapon or block from the group used last, with that group on the
