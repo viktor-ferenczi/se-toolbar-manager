@@ -25,284 +25,34 @@ After enabling the plugin it will be active for all single- and multiplayer worl
 
 ## Features
 
-This plugin allows for the saving, loading and convenient editing of character and block
-toolbars. For example, you can quickly load a "standard" toolbar for your character into 
-any game (including multiplayer ones), which can greatly speed up your builds by using 
-toolbar slots you have already memorized. It can also be used to fix the broken toolbars of
-your ships in survival based on the profiles you saved in your creative design world earlier.
+Toolbar Manager saves, loads and edits character and block toolbars. Load your usual
+character toolbar into any world, multiplayer included, and build with the slots you
+already know by heart. Or fix the broken toolbars of a ship in survival from the profiles
+you saved in your creative design world.
 
-This plugin works for both offline and online multiplayer games without
-the need for any server side support. Toolbar profiles are saved locally,
-nothing is stored on any server.
+It works offline and in online multiplayer without any support from the server. Toolbar
+profiles are saved on your computer, nothing goes to a server.
+
+### Saving and loading toolbars (profiles)
+
+The **G menu** has new buttons at the bottom left to manage saved toolbar profiles:
+
+- **New** saves the open toolbar as a new profile.
+- **Load** replaces the open toolbar with the selected profile.
+- **Merge** loads only the used slots of the profile and leaves the other slots as they are.
+- **Rename** and **Delete** rename and delete profiles.
+
+Where the profiles are stored and how their backups work: [Profile folders and backups](Docs/profiles.md).
 
 ### Editing toolbars
 
-This plugin adds a new "Staging" area in the G menu, which allows for the convenient reordering
-of toolbar items, including moving them between toolbar pages.
+The G menu gets a **Staging** area, where you can reorder toolbar items and move them
+between toolbar pages.
 
-The staging areas are preserved for the character and each block with a toolbar in-memory during
-gameplay, but **not saved** over sessions (world loads) and game restarts. Please save your
-toolbars into profiles after editing.
-
-You can disable the staging area in the plugin's configuration, should it cause any issues.
-
-### Saving/loading toolbars (profiles)
-
-The **G menu** has a new TM buttons at the bottom left to manage saved toolbar profiles.
-
-**New** saves the currently open toolbar as a new profile.
-
-**Load** overwrites your currently open toolbar from the selected profile.
-
-**Merge** loads only the used slots from the profile and leaves the rest of them as is.
-
-You can also **Rename** and **Delete** toolbar profiles.
-
-#### Profile folders (for backup)
-
-Saved toolbars are stored as XML files in folders under:
-`%AppData%\Roaming\SpaceEngineers\ToolbarManager`
-
-There are subdirectories for each toolbar type. Toolbars within the same type are compatible,
-however they may not have the same amount of slots available in-game. For example, it is
-possible to save the toolbar from any Cockpit and load the profile into a Remote Control.
-
-Up to 6 backups of each profile is kept, even after deleting the profile. Renaming profiles
-also renames the backup files. Orphaned backup files (with the main profile deleted) are
-cleaned up after 90 days, but only when a profile is deleted the next time.
-
-### Groups
-
-A custom block group, or group for short, is one you make in Toolbar Manager. It puts
-several tools, weapons and blocks into one slot of your character toolbar. The game's own
-predefined groups, like the heavy armor cube with its slopes and corners (the block tiles
-with a `+` in the G menu), are called vanilla block groups here.
-
-Using the slot equips the first available item in tile order. Pressing the slot again
-with a tool or weapon of the group in hand moves on to the next item, all tiers of a tool
-counting as one. With the default group that is welder, grinder, then hand drill. With a
-block of the group in hand, pressing the slot again does what it does on a block's own
-slot: it switches between the block's large and small variant. Tools you don't carry,
-blocks you haven't unlocked and blocks of DLCs you don't own are skipped. If none of the
-items can be used, nothing happens.
-
-A group can hold both sizes of a block, like the large Hinge and the small grid's Hinge
-3x3, and modded blocks that share a block pair name. Each of them is a step of its own:
-the wheel equips exactly the block listed, whatever grid size the last block had.
-
-Several groups can be on the toolbar at the same time, on any slots and pages, and they
-may share items. Each slot steps only through its own group.
-
-When you put the group's item away or pick another slot, the group's slot goes back to
-the group's first item, so it always shows the same icon. To have the slot show and equip
-the item it was on last instead, turn off **Custom block groups start over** in the
-plugin's configuration.
-
-**Vanilla block groups start over** does the same for a slot of a block in a vanilla block
-group, like the heavy armor cube. The slot's icon always shows the cube, but the game
-equips the variant you used last, say a slope. With the option on, picking the slot again
-after leaving it equips the cube, the block its icon shows.
-
-Switching toolbar pages with the item still in hand doesn't count as leaving the slot.
-
-While holding a tool, weapon or block from the group used last, with that group on the
-current toolbar page, scroll up to move forward through the group or down to move backward.
-The wheel and the slot pick the first available item of each kind in tile order,
-regardless of its level, and every block is a step of its own. With a block of the group
-in hand the wheel steps through the group instead of its vanilla block group. Scrolling
-in menus or with Ctrl, Shift or Alt held keeps the game's normal behavior, except for the
-fitting blocks below.
-
-The G menu lists the groups under **Groups**, by name, each tile showing the group's first
-item. An empty group has an empty tile. Drag a group onto the toolbar to use it.
-Click its tile to open the editor with that group selected. The **TG** button
-at the bottom left of the G menu turns on edit mode, where the
-staging area shows the items of the group selected above it:
-
-- Drag tools, weapons and blocks from the G menu into the group, or double click them to
-  add them at the end. The block variants on the right can be dragged in too. Greyed out
-  items, which you don't have or haven't researched yet, can be added as well, so a group
-  can be set up before you get every tier of a tool.
-- A vanilla block group, a block tile with a `+` in its corner like the Light Armor Block,
-  adds its blocks one by one, in the order the game cycles through them. Blocks already
-  in the group stay where they are. This way the group can mix blocks of several game
-  groups, and single blocks can be moved or removed. To add only one block of a game
-  group, drag it from the block variants on the right. A group saved before version 1.7.4
-  keeps such a tile as its first block only; add the tile again to get the others.
-- Drag items inside the group to change their order. The first one wins, so put the one
-  you prefer first. For example, an Enhanced Welder before an Elite Welder is selected
-  when both are in your inventory. Right click removes an item.
-- **New**, **Rename** and **Delete** manage the groups. **Duplicate** asks for a name
-  and copies the selected group's items in their current order. New, Rename and
-  Duplicate reject existing group names, ignoring case and surrounding spaces,
-  and leave the naming dialog open so you can correct the name. The groups are listed by
-  name, ignoring case and with numbers by value (Group 2 before Group 10), and the group
-  you just made, renamed or copied stays selected in its new place.
-- **Reset default** restores or recreates the default **Hand Tools** group without
-  changing other groups: the Elite, Proficient, Enhanced and basic tiers of the welder,
-  grinder and hand drill, in that order.
-- **Done** or **TG** again brings the staging area back. The group editor is also
-  available when staging is disabled; closing it returns to the normal G menu.
-
-The **Edit groups** button in the plugin's configuration opens the G menu in edit mode, when
-you are in a world.
-
-Each group is saved as a separate XML file in `ToolbarManager/Groups` under the game's
-user data folder, beside the `Character`, `Ship` and other toolbar profile folders.
-Group names use the same filename sanitizing rules as toolbar profile names. Renaming
-or deleting a group renames or removes its file.
-
-Toolbar slots holding a group are saved
-with the world and in toolbar profiles. A world saved with group slots still loads without
-the plugin; those slots are just empty then. On a dedicated server the server does not keep
-group slots, so you have to put them back after reconnecting.
-
-#### Fitting blocks
-
-With a block of a group in hand and the placement box on a grid, hold Shift and turn the
-mouse wheel to step through only the blocks of the group that fit there, each turned the
-way it fits. The extra mouse buttons do the same without the wheel: the forward button
-(mouse 5) selects the next fitting block, the back button (mouse 4) the previous one.
-After the last fitting block it starts over. For example, with the light armor blocks in
-a group it picks the cube for a hole in a wall, the slope for a gap in a row of slopes
-and the corner at the corner of a sloped roof. If nothing in the group fits, the game's
-sound of a refused placement plays, a short message says so and the block in hand stays.
-The wheel without Shift steps through the whole group as before.
-
-Pressing Shift alone is the quick way: it keeps the block in hand if it fits, turned the
-way it fits, or else selects the next block that fits. Then the wheel can step on from
-there. When nothing fits, the quick press stays silent, unless the group has no block
-of the grid's size at all.
-
-While Shift stays held, the quick press is done again whenever the placement box moves
-to another cell or another face of a block. So you can hold Shift and move the aim until
-the block sits right, without pressing Shift again. These repeats are always silent.
-
-A block fits when its face matches the face of the block you aim at. The other blocks
-around it rank the candidates if they are of the same kind: armor with armor, beams with
-beams, and so on for the blocks of a vanilla block group. Other neighbors don't count, so a
-beam can continue past a wall instead of being closed off to hug it. A face that would
-stick out where the neighbor has none, like a full face against the slanted side of a
-slope, counts more than leaving part of the neighbor's face uncovered. Armor closes
-surfaces, so for armor both count on every side; other blocks, like a half beam in a frame
-of full beams, only must not stick out past their neighbors. The blocks of the group that
-match best are the ones that fit. The shapes come from the blocks' mount points.
-
-A gap in a row is the exception: aim at a block that has the same block, turned the same
-way, on the other side of the gap, and that block fits the gap too, whatever else is
-around. So a rounded armor block goes back between its two neighbors even with a half
-armor block beside the row, where the beams of the group would otherwise match better.
-
-Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
-neighbor pointing into the block has to be met by a port of the same kind (large
-conveyor, small conveyor or upgrade), and at least one port has to connect. A conveyor
-block (tube, junction, sorter or connector) also may not have a port running into a block
-that has no such port there, so a tube is not offered against the middle of another tube.
-Other blocks may: a thruster, tank or machine can leave a port against a beam or wall, as
-the game allows, so a large hydrogen thruster fits under a tank's port even when beams
-frame the space. An upgrade module goes on a refinery or assembler with its ports on the
-machine's upgrade ports, with as many of them connected as possible. Ports of a kind
-the block doesn't have are left alone: a tube may run past a machine's upgrade ports, and
-armor may cover them. A block without ports fits an open conveyor end only as a cap of the
-port's size, mounted on that end alone: the small cap on a small port, the medium cap on
-the large port of a small grid's medium conveyors.
-
-The plain, reinforced and industrial tubes all connect to each other, but a line takes
-the tubes of its own look when the group has them: a reinforced tube continues with the
-reinforced tubes, not with the plain or industrial ones. Junctions, sorters, connectors
-and the plain caps go with any look. A reinforced tube also turns its open side the way
-the line has it. The industrial pipes meet any other block with their pipe end, its wide
-end on that block: the pipe end is offered there instead of the straight pipes, also on
-a plain or reinforced tube, and it is not offered between two industrial pipes. The
-curved pipe and the pipe junctions have no end piece, so they fit as before.
-
-Fitting only narrows the group down. The blocks that fit keep the order they have in the
-group.
-
-This works on small grids too, with small and medium conveyors, and for blocks larger
-than one cube, placed the way the game places them against the aimed face. With a block in
-hand that has no variant of the aimed grid's size, the fitting blocks come from the group's
-blocks of that size. Modded blocks
-work the same way when their models name their ports like the game's blocks do
-(`detector_conveyor`, `detector_conveyor_small`, `detector_upgrade`) and their
-definitions have mount points; armor counts as one kind if it is built from the game's
-armor shapes, other blocks by their vanilla block group.
-
-The plugin's configuration can change the wheel's modifier key to Ctrl or Alt or turn it
-off, turn the quick press off, assign the next and previous actions to other mouse buttons, and add keyboard keys
-for them. When the middle button is assigned, a plain middle button press that selects a
-block doesn't paint; otherwise it paints as in the game.
-
-#### Quick selector
-
-With a tool, weapon or block of a group in hand, hold Shift+Ctrl to see all items of
-the group on a small panel in the middle of the screen. The mouse is free while the keys
-are held, so the camera doesn't turn. Click an item to equip it, the same way the group's
-slot or the wheel would. The panel stays open, so you can click another one, and marks
-the item in hand as selected. Releasing either key closes it and gives back normal
-control.
-
-When the placement box is on a grid, the blocks that fit the aimed position are
-highlighted in green, by the same rules as the fitting blocks wheel above, and their
-tooltip says so. Clicking one of them selects it turned the way it fits. The other blocks
-can still be clicked. Tools and weapons are never marked, and with a tool in hand
-nothing is, because there is no placement box then. Items you can't use now are greyed
-out.
-
-The panel is about 16:9: a group of 12 items gets 5 columns and 3 rows, with the empty
-cells on the right of the last row. The plugin's configuration can change the keys to
-Shift+Alt or Ctrl+Alt, or turn the panel off. If Shift is the fitting blocks wheel's
-modifier with the quick press on, pressing Shift before Ctrl also does the quick press.
-
-#### Vanilla block groups
-
-The fitting blocks keys and the quick selector also work without a group of your own.
-With a block in hand that has variants in the game, like the heavy armor cube with its
-slopes and corners, the variants of the block's size are the group: Shift picks the
-variant that fits the aimed position, Shift and the wheel or the extra mouse buttons
-step through the fitting ones, and Shift+Ctrl shows all of them to pick from. A group
-of yours in use comes first, so this applies to blocks from ordinary toolbar slots and
-from the G menu. Variants of a DLC you don't own, or not researched yet, are greyed out
-on the panel and never picked.
-
-A block without variants works too, as a group of one: pressing Shift turns it the way
-it fits the aimed position right away. A collector, for example, snaps with its
-conveyor port onto the open end of a conveyor line. There is nothing to choose from, so
-Shift+Ctrl shows no panel for it, and the quick press stays silent when it doesn't fit.
-
-The game's own keys stay as they are: the wheel without a modifier steps through all
-variants, pressing the block's slot again switches between the large and the small
-block, and so do the gamepad's controls for them. The fitting blocks keys and the quick
-selector are keyboard and mouse only.
-
-Turn **Vanilla block groups** off in the plugin's configuration to keep them to your own
-groups.
-
-### Quick block selection
-
-Press the `BACKSLASH` or `PIPE` key (on English keyboard) to open the quick
-block search menu. It works the same way as the original menu, but the search
-rules are optimized to find blocks primarily by capital letters and digits:
-
-- `AB` **Armor Blocks**
-- `PB` **Programmable Block**
-- `SK` **Survival Kit**
-- `AT` **Atmospheric Thrusters**
-- `LHT` **Large Hydrogen Thrusters**
-- `211` **All 2x1x1 armor blocks**
-
-Adding the subsequent lower case letters after an upper case one allows
-for narrowing down in case of ambiguity:
-
-- `PH` **Parachute Hatch** and **Point Hand**
-- `PHat` **Parachute Hatch** only
-
-The order of characters must match exactly. Lower case characters and
-space are skipped after a matching upper case character or digit.
-
-Separating multiple search patterns by space is not supported, currently.
-
-You can change the hotkey in the plugin's configuration.
+The staging areas of the character and of each block with a toolbar are kept in memory
+while you play, but they are **not saved** over world loads and game restarts. Save your
+toolbars into profiles after editing. The staging area can be turned off in the plugin's
+configuration.
 
 ### Picking the block you face
 
@@ -312,12 +62,62 @@ grid's size and turned the same way. Its color and skin become the color and ski
 blocks you place; turn off **Also pick color** or **Also pick skin** in the plugin's
 configuration to keep your own. The game's color picker (`Shift+P`) takes the color and
 the skin without the block. It works with a block, a tool or nothing in hand, and in
-survival too: you get the block to place, not its components. Blocks you haven't researched or whose
-DLC you don't own are refused the way their toolbar slot would be.
+survival too: you get the block to place, not its components. Blocks you haven't
+researched or whose DLC you don't own are refused the way their toolbar slot would be.
 
 The key works on foot, with the jetpack and in the spectator camera. It does nothing in a
 seat, where `Ctrl+G` is the game's build mode. It can be changed or turned off in the
 plugin's configuration. There is no gamepad binding.
+
+### Quick block selection
+
+Press the `BACKSLASH` or `PIPE` key (on an English keyboard) to open the G menu with the
+block search active. The search finds blocks mainly by their capital letters and digits:
+
+- `AB` **Armor Blocks**
+- `PB` **Programmable Block**
+- `SK` **Survival Kit**
+- `AT` **Atmospheric Thrusters**
+- `LHT` **Large Hydrogen Thrusters**
+- `211` **All 2x1x1 armor blocks**
+
+Add the lower case letters that follow a capital letter to narrow down an ambiguous search:
+
+- `PH` **Parachute Hatch** and **Point Hand**
+- `PHat` **Parachute Hatch** only
+
+The order of characters must match exactly. Lower case characters and
+space are skipped after a matching upper case character or digit.
+
+Several search patterns separated by spaces are not supported. The key can be changed in
+the plugin's configuration.
+
+### Groups
+
+A custom block group, or group for short, puts several tools, weapons and blocks into one
+slot of your character toolbar. Pressing the slot again or turning the mouse wheel steps
+through the group. You make groups in the G menu's group editor (the **TG** button) and
+drag them onto the toolbar from the **Groups** category. How the slot, the wheel and the
+editor work: [Custom block groups](Docs/groups.md).
+
+### Fitting blocks
+
+With a block of a group in hand and the placement box on a grid, hold Shift and turn the
+mouse wheel to step through only the blocks of the group that fit there, each turned the
+way it fits. Pressing Shift alone picks a fitting block right away. The extra mouse
+buttons step forward and back. How a block is found to fit: [Fitting blocks](Docs/fitting-blocks.md).
+
+### Quick selector
+
+Hold Shift+Ctrl with an item of a group in hand to see all items of the group on a panel
+and click one to equip it. The blocks that fit the aimed position are highlighted.
+Details: [Quick selector](Docs/quick-selector.md).
+
+### Vanilla block groups
+
+The fitting blocks keys and the quick selector also work on the game's own block variants,
+like the heavy armor cube with its slopes and corners, without a group of your own.
+Details: [Vanilla block groups](Docs/vanilla-block-groups.md).
 
 ### Configuration
 
@@ -378,128 +178,5 @@ _in alphabetical order_
 
 ## Development
 
-This project is based on the
-[Space Engineers client plugin template](https://github.com/viktor-ferenczi/se-client-plugin-template).
-
-### Prerequisites
-
-- [Space Engineers](https://store.steampowered.com/app/244850/Space_Engineers/)
-- [Python 3.12](https://python.org) (requires 3.12 or newer)
-- [Pulsar](https://github.com/SpaceGT/Pulsar)
-- [.NET Framework 4.8.1 Developer Pack](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net481) and
-  [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-
-### Setting up a working copy
-
-`Directory.Build.props` finds the game's `Bin64` folder through Steam. To override it, run
-`setup.py`, which writes the detected path into `Directory.Build.props.user` (a local, **not
-committed** file), or edit that file by hand.
-
-Load the working copy through a Pulsar development folder: start Pulsar with `-sources`, then
-add this repository with the Sources button. Building the solution does not deploy the plugin.
-It is copied into Pulsar's `Local` plugin folder only if `Pulsar` is set in
-`Directory.Build.props.user` or passed as `-p:Pulsar=...`.
-
-### Plugin version
-
-The plugin version lives in `Version.Build.props`, which **is** committed and imported by
-`Directory.Build.props`. Bump the version there.
-
-### Building and debugging on .NET 10
-
-- Start the game with the `Interim.exe` Pulsar executable with the `-sources` command line option.
-- Click on the Sources button in Pulsar's dialog, then register this repository as a development folder.
-- Load `ToolbarManager.xml` (the PluginHub registration) as well.
-- Select `Debug` mode and run `Interim.exe`, then attach the debugger.
-- Select `Release` mode to test exactly how Pulsar will build and run the plugin on the player's machine.
-
-### Accessing internal, protected and private members in game code
-
-The [Krafs publicizer](https://github.com/krafs/Publicizer) is enabled for `Sandbox.Game` and
-`Sandbox.Graphics`, see `ClientPlugin/Tools/GameAssembliesToPublicize.cs` and the `Publicize`
-items in `ClientPlugin/ClientPlugin.csproj`.
-
-### In-game checks
-
-`tests/item_groups_check.py` checks the groups in a headless client driven through the
-[Remote](https://github.com/CometWorks/remote) plugin: the G menu entry, edit mode, using
-the groups with different tools in the inventory and with a block, the staging area and
-saving the world. It
-prints PASS or FAIL per check. It needs Linux, the game, Pulsar in `~/.config/Pulsar` (or `TBM_PULSAR_TEMPLATE`), a
-working copy of Remote with the `cubeBlock` field of the character state
-([CometWorks/remote#51](https://github.com/CometWorks/remote/pull/51); `TBM_REMOTE`,
-default `~/ws/se/se1/plugins/remote`) and a claimed
-test slot of the workspace, see `tests/rig.py`:
-
-```bash
-TBM_SLOT=15 uv run --with httpx python tests/item_groups_check.py
-```
-
-`tests/editor_modes_check.py` checks TG, Done, tile selection and editing with staging
-enabled and disabled, using the same test slot.
-
-`tests/tool_order_check.py` checks button and wheel cycling with lower levels before
-higher levels in tile order, then checks that reordering a tool changes the selection.
-
-`tests/separate_groups_check.py` puts a tool group, a block group, a mixed group and
-two groups sharing tools on separate slots of two toolbar pages, and checks that each
-slot steps only through its own group and continues it where it was.
-
-`tests/group_reset_check.py` checks that a custom block group slot and a slot of a block
-in a vanilla block group start over once they are left by picking another slot or putting the block
-away, and continue where they were with the options off (`TBM_RESET_CUSTOM=0`,
-`TBM_RESET_VANILLA=0`). It also checks both options in the plugin settings.
-
-`tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
-blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through
-all of them and past them, the slot switches the size, and it still works after reloading
-the world. It writes the group file and loads the mod itself, in a creative world.
-
-`tests/group_order_check.py` checks the order of the group editor's drop-down and of the
-Groups category after a new group, a rename and a duplicate, the selection after each, and
-the tiles of a group with blocks and of an empty group.
-
-`tests/delete_scroll_check.py` scrolls a long group in the group editor and removes blocks
-by right click at the top, middle and bottom of the rows in view and at the end of the
-list. It prints the scroll offset before and after each removal: the offset stays, and
-only the removal that leaves no block in view moves it up one row.
-
-`tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
-double click in edit mode only, and that the group equips them once they are in the
-inventory. It needs a Remote build whose grid gestures reach disabled items.
-
-`tests/game_groups_check.py` checks the fitting blocks keys and the quick selector with a
-heavy armor block from an ordinary toolbar slot, and Shift on blocks without variants.
-The game's own wheel and slot must keep working, and with the option off the keys must
-leave the block alone.
-
-`tests/faced_block_check.py` checks picking the faced block with `Ctrl+G`: the block in
-hand, its size, skin and placed orientation, in symmetry mode too, and without creative
-rights. With `--color` it also checks the **Also pick color** option.
-
-`tests/block_variants_check.py` adds the light and heavy armor vanilla block groups to a
-group and checks that the slot and the wheel step through the group's own order, also
-after a restart.
-
-`tests/grid_aim_check.py` steps a group of light armor blocks while facing a grid and
-checks that a click still places the new block on it.
-
-`tests/staging_info_check.py` checks that a click in the staging area and in the group
-editor's grid updates the info panel on the right.
-
-`tests/fit_check.py` checks the fitting blocks keys, the wheel and the quick press on
-small static grids with gaps, and `tests/quick_selector_check.py` the quick selector on
-the same grids. Both use test slot 16.
-
-`tests/BlockFit.Tests` holds the offline counterparts of `tests/fit_check.py`. They need
-no game, only the vanilla block definitions in `tests/BlockFit.Tests/blocks.json`, which
-`tests/fit_fixture.py` extracts from the installed game:
-
-```bash
-dotnet run --project tests/BlockFit.Tests
-```
-
-### Release
-
-- Always make the final release from a RELEASE build and test it before publishing.
-- Pulsar compiles the source code on the player's machine, watch out for differences.
+Building, debugging and releasing the plugin: [Development](Docs/development.md). The
+in-game and offline checks: [Checks](Docs/checks.md).
