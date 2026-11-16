@@ -420,6 +420,11 @@ the world. It writes the group file and loads the mod itself, in a creative worl
 double click in edit mode only, and that the group equips them once they are in the
 inventory. It needs a Remote build whose grid gestures reach disabled items.
 
+`tests/game_groups_check.py` checks the fitting blocks keys and the quick selector with a
+heavy armor block from an ordinary toolbar slot, and Shift on blocks without variants.
+The game's own wheel and slot must keep working, and with the option off the keys must
+leave the block alone.
+
 ### Release
 
 - Always make the final release from a RELEASE build and test it before publishing.
