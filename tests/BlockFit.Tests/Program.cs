@@ -394,6 +394,197 @@ Presses(
     ("LargeBlockConveyorPipeSeamless", identity)
 );
 
+// The plain, reinforced and industrial tubes all connect to each other. An open end
+// takes the tubes of its own look, and the blocks that go with any look: the plain cap
+// and the junction. The industrial cap is left to the industrial pipes.
+var ductUp = Rotation.All.First(r => r.X.Equals(up) && r.Y.Equals(right));
+var looks = new[]
+{
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeCap",
+    "LargeBlockConveyor",
+    "ConveyorTube",
+    "ConveyorTubeCurved",
+    "ConveyorTubeDuct",
+    "ConveyorTubeDuctCurved",
+    "LargeBlockConveyorCap",
+};
+Presses(
+    "looks: plain tube end",
+    Grid(("ConveyorTube", down, identity)),
+    looks,
+    "LargeBlockConveyorPipeSeamless",
+    ("LargeBlockConveyor", null),
+    ("ConveyorTube", identity),
+    ("ConveyorTubeCurved", null),
+    ("LargeBlockConveyorCap", identity),
+    ("LargeBlockConveyor", null)
+);
+Presses(
+    "looks: reinforced tube end",
+    Grid(("ConveyorTubeDuct", down, ductUp)),
+    looks,
+    "LargeBlockConveyorPipeSeamless",
+    ("LargeBlockConveyor", null),
+    ("ConveyorTubeDuct", ductUp),
+    ("ConveyorTubeDuctCurved", null),
+    ("LargeBlockConveyorCap", identity),
+    ("LargeBlockConveyor", null)
+);
+Presses(
+    "looks: industrial pipe end",
+    Grid(("LargeBlockConveyorPipeSeamless", down, identity)),
+    looks,
+    "ConveyorTube",
+    ("LargeBlockConveyorCap", identity),
+    ("LargeBlockConveyorPipeSeamless", identity),
+    ("LargeBlockConveyorPipeCap", identity),
+    ("LargeBlockConveyor", null),
+    ("LargeBlockConveyorCap", identity)
+);
+
+// A junction's port has no look, so every look starts there. The industrial pipes start
+// with their end piece, its wide end on the junction, not with a straight pipe.
+Presses(
+    "looks: any tube at a junction",
+    Grid(("LargeBlockConveyor", down, identity)),
+    new[]
+    {
+        "LargeBlockArmorBlock",
+        "LargeBlockConveyorPipeSeamless",
+        "LargeBlockConveyorPipeFlange",
+        "LargeBlockConveyorPipeEnd",
+        "LargeBlockConveyorPipeCorner",
+        "ConveyorTube",
+        "ConveyorTubeDuct",
+    },
+    "LargeBlockArmorBlock",
+    ("LargeBlockConveyorPipeEnd", null),
+    ("LargeBlockConveyorPipeCorner", null),
+    ("ConveyorTube", identity),
+    ("ConveyorTubeDuct", ductUp),
+    ("LargeBlockConveyorPipeEnd", null)
+);
+
+// Where the wide end of the industrial pipe end points, and which pipes fit beside it
+var industrial = new[]
+{
+    "LargeBlockArmorBlock",
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange",
+    "LargeBlockConveyorPipeEnd",
+};
+void PipeEnd(string title, Dictionary<Int3, Placed> grid, Int3? wideEnd, params string[] fits)
+{
+    var candidates = Group(industrial);
+    var picks = Evaluate(candidates, CurrentTarget(), identity, Lookup(grid));
+    var got = picks.Where(p => p.HasValue).Select(p => industrial[p.Value.Index]).ToArray();
+    Check($"{title}: fitting pipes", got.SequenceEqual(fits), string.Join(", ", got));
+    if (wideEnd.HasValue)
+    {
+        var end = picks[3]?.Rotation.Apply(down);
+        Check($"{title}: the wide end", end.Equals(wideEnd), $"{end}");
+    }
+}
+PipeEnd(
+    "end: on a junction",
+    Grid(("LargeBlockConveyor", down, identity)),
+    down,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: on a plain tube",
+    Grid(("ConveyorTube", down, identity)),
+    down,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: between a pipe and a junction",
+    Grid(("LargeBlockConveyorPipeSeamless", down, identity), ("LargeBlockConveyor", up, identity)),
+    up,
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: open end of a pipe line",
+    Grid(("LargeBlockConveyorPipeSeamless", down, identity)),
+    up,
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange",
+    "LargeBlockConveyorPipeEnd"
+);
+PipeEnd(
+    "end: between two pipes",
+    Grid(
+        ("LargeBlockConveyorPipeSeamless", down, identity),
+        ("LargeBlockConveyorPipeSeamless", up, identity)
+    ),
+    null,
+    "LargeBlockConveyorPipeSeamless",
+    "LargeBlockConveyorPipeFlange"
+);
+
+// A reinforced tube has one open side. The next tube of the line, straight or curved,
+// turns its open side the same way, whichever way the block in hand is turned.
+foreach (var line in Rotation.All.Where(r => r.X.Equals(up) || r.X.Equals(down)))
+foreach (var name in new[] { "ConveyorTubeDuct", "ConveyorTubeDuctCurved", "ConveyorTubeDuctT" })
+{
+    var open = line.Apply(backward);
+    var pick = Next(
+        Group(name),
+        -1,
+        1,
+        Rotation.All.First(r => !r.Equals(line) && r.X.Equals(line.X)),
+        CurrentTarget(),
+        Lookup(Grid(("ConveyorTubeDuct", down, line)))
+    );
+    Check(
+        $"reinforced: {name} turns its open side {open} like the line",
+        pick.HasValue && pick.Value.Rotation.Apply(backward).Equals(open),
+        $"{pick?.Rotation}"
+    );
+}
+
+// The fitting blocks keep the order of the group, here with the group out of any order
+Presses(
+    "order: the fitting blocks in group order",
+    Grid(("ConveyorTubeDuct", down, ductUp)),
+    new[]
+    {
+        "ConveyorTubeDuctCurved",
+        "LargeBlockConveyorCap",
+        "ConveyorTube",
+        "ConveyorTubeDuct",
+        "LargeBlockConveyor",
+    },
+    "ConveyorTube",
+    ("ConveyorTubeDuct", null),
+    ("LargeBlockConveyor", null),
+    ("ConveyorTubeDuctCurved", null),
+    ("LargeBlockConveyorCap", identity),
+    ("ConveyorTubeDuct", null)
+);
+
+// Between tubes of two looks both looks fit, the third one doesn't
+Presses(
+    "looks: gap between a plain and a reinforced tube",
+    Grid(("ConveyorTube", down, identity), ("ConveyorTubeDuct", up, ductUp)),
+    new[] { "LargeBlockConveyorPipeSeamless", "ConveyorTube", "ConveyorTubeDuct" },
+    "LargeBlockConveyorPipeSeamless",
+    ("ConveyorTube", identity),
+    ("ConveyorTubeDuct", ductUp),
+    ("ConveyorTube", identity)
+);
+
+// Without a tube of the line's look in the group the other looks still fit
+Presses(
+    "looks: only other looks in the group",
+    Grid(("ConveyorTubeDuct", down, ductUp)),
+    new[] { "LargeBlockArmorBlock", "LargeBlockConveyorPipeSeamless", "ConveyorTube" },
+    "LargeBlockArmorBlock",
+    ("LargeBlockConveyorPipeSeamless", identity),
+    ("ConveyorTube", identity)
+);
+
 // Stepping backward visits the same fits in the opposite order
 step = -1;
 Presses(
@@ -524,7 +715,119 @@ Presses(
     ("ConveyorTubeMedium", null)
 );
 at = null;
+
+// Small grid: the reinforced small tube goes on a reinforced small tube
+aim = backward;
+Presses(
+    "small grid: reinforced tube end",
+    Grid(("ConveyorTubeDuctSmall", backward, identity)),
+    new[] { "SmallBlockConveyorCap", "ConveyorTubeSmall", "ConveyorTubeDuctSmall" },
+    "ConveyorTubeSmall",
+    ("ConveyorTubeDuctSmall", identity),
+    ("SmallBlockConveyorCap", null),
+    ("ConveyorTubeDuctSmall", identity)
+);
+
+aim = down;
 smallGrid = false;
+
+// A gap in a row of rounded armor with a half armor block beside it, aimed at a block of
+// the row: the rounded armor sticks out past the half block, which the beams and the
+// panel aren't measured against, yet it fits its row as well as they fit
+var roundedRow = Grid(
+    ("LargeBlockArmorRoundSlope", forward, Facing(up, left)),
+    ("LargeBlockArmorRoundSlope", backward, Facing(up, left)),
+    ("LargeHalfArmorBlock", right, Facing(up, backward))
+);
+var roundedGroup = new[]
+{
+    "LargeBlockArmorBlock",
+    "LargeBlockArmorRoundSlope",
+    "LargeArmorHalfPanelLight",
+    "LargeGridBeamBlockSlope",
+    "LargeGridBeamBlockRound",
+};
+foreach (var towards in new[] { backward, forward })
+{
+    aim = towards;
+    Presses(
+        $"row gap: rounded armor beside a half block, aimed {(towards.Equals(forward) ? "forward" : "backward")}",
+        roundedRow,
+        roundedGroup,
+        "LargeBlockArmorBlock",
+        ("LargeBlockArmorRoundSlope", Facing(up, left)),
+        ("LargeGridBeamBlockSlope", null),
+        ("LargeGridBeamBlockRound", null),
+        ("LargeBlockArmorRoundSlope", Facing(up, left))
+    );
+}
+
+// The same without the beams, which are DLC blocks: the panel is the best of the rest
+aim = backward;
+Presses(
+    "row gap: rounded armor and a panel",
+    roundedRow,
+    new[] { "LargeBlockArmorBlock", "LargeBlockArmorRoundSlope", "LargeArmorHalfPanelLight" },
+    "LargeBlockArmorBlock",
+    ("LargeBlockArmorRoundSlope", Facing(up, left)),
+    ("LargeArmorHalfPanelLight", null),
+    ("LargeBlockArmorRoundSlope", Facing(up, left))
+);
+
+// A row needs the same block on both sides: one rounded armor block beside the gap
+// doesn't bring the rounded armor back
+Presses(
+    "row gap: no row with one neighbor",
+    Grid(
+        ("LargeBlockArmorRoundSlope", backward, Facing(up, left)),
+        ("LargeHalfArmorBlock", right, Facing(up, backward))
+    ),
+    roundedGroup,
+    "LargeBlockArmorBlock",
+    ("LargeGridBeamBlockSlope", null),
+    ("LargeGridBeamBlockRound", null),
+    ("LargeGridBeamBlockSlope", null)
+);
+
+// The group of the in-game check, tests/fit_check.py: rounded armor, a panel and tubes
+var rows = new[]
+{
+    "LargeBlockArmorBlock",
+    "LargeBlockArmorRoundSlope",
+    "LargeArmorHalfPanelLight",
+    "ConveyorTube",
+    "ConveyorTubeCurved",
+    "ConveyorTubeDuct",
+    "ConveyorTubeDuctCurved",
+};
+Presses(
+    "in-game: rounded row",
+    roundedRow,
+    rows,
+    "LargeBlockArmorBlock",
+    ("LargeBlockArmorRoundSlope", Facing(up, left)),
+    ("LargeArmorHalfPanelLight", null),
+    ("LargeBlockArmorRoundSlope", null)
+);
+aim = down;
+Presses(
+    "in-game: reinforced line",
+    Grid(("ConveyorTubeDuct", down, ductUp), ("ConveyorTubeDuct", new Int3(0, -2, 0), ductUp)),
+    rows,
+    "LargeBlockArmorBlock",
+    ("ConveyorTubeDuct", ductUp),
+    ("ConveyorTubeDuctCurved", null),
+    ("ConveyorTubeDuct", ductUp)
+);
+Presses(
+    "in-game: plain line",
+    Grid(("ConveyorTube", down, identity), ("ConveyorTube", new Int3(0, -2, 0), identity)),
+    rows,
+    "LargeBlockArmorBlock",
+    ("ConveyorTube", identity),
+    ("ConveyorTubeCurved", null),
+    ("ConveyorTube", identity)
+);
 
 // Armor may sit on a machine's open upgrade ports, and a tube may pass them
 Presses(
@@ -610,6 +913,12 @@ static Dictionary<string, Shape> Load(string path)
                 .ToArray(),
             Family = b.GetProperty("family").GetString(),
             Conveyor = b.GetProperty("conveyor").GetBoolean(),
+            Style = b.GetProperty("style").GetString(),
+            End =
+                b.GetProperty("end").ValueKind == JsonValueKind.Null
+                    ? null
+                    : ReadInt3(b.GetProperty("end")),
+            Middle = b.GetProperty("middle").GetBoolean(),
         };
         directions[block.Name] = b.GetProperty("direction").GetString();
         rotationsAllowed[block.Name] = b.GetProperty("rotation").GetString();

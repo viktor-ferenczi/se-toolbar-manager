@@ -166,6 +166,11 @@ surfaces, so for armor both count on every side; other blocks, like a half beam 
 of full beams, only must not stick out past their neighbors. The blocks of the group that
 match best are the ones that fit. The shapes come from the blocks' mount points.
 
+A gap in a row is the exception: aim at a block that has the same block, turned the same
+way, on the other side of the gap, and that block fits the gap too, whatever else is
+around. So a rounded armor block goes back between its two neighbors even with a half
+armor block beside the row, where the beams of the group would otherwise match better.
+
 Blocks with conveyor or upgrade ports fit by their ports instead: every port of a
 neighbor pointing into the block has to be met by a port of the same kind (large
 conveyor, small conveyor or upgrade), and at least one port has to connect. A conveyor
@@ -179,6 +184,18 @@ the block doesn't have are left alone: a tube may run past a machine's upgrade p
 armor may cover them. A block without ports fits an open conveyor end only as a cap of the
 port's size, mounted on that end alone: the small cap on a small port, the medium cap on
 the large port of a small grid's medium conveyors.
+
+The plain, reinforced and industrial tubes all connect to each other, but a line takes
+the tubes of its own look when the group has them: a reinforced tube continues with the
+reinforced tubes, not with the plain or industrial ones. Junctions, sorters, connectors
+and the plain caps go with any look. A reinforced tube also turns its open side the way
+the line has it. The industrial pipes meet any other block with their pipe end, its wide
+end on that block: the pipe end is offered there instead of the straight pipes, also on
+a plain or reinforced tube, and it is not offered between two industrial pipes. The
+curved pipe and the pipe junctions have no end piece, so they fit as before.
+
+Fitting only narrows the group down. The blocks that fit keep the order they have in the
+group.
 
 This works on small grids too, with small and medium conveyors, and for blocks larger
 than one cube, placed the way the game places them against the aimed face. With a block in

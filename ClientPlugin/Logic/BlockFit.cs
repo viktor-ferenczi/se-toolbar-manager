@@ -6,7 +6,9 @@ namespace ClientPlugin.Logic;
 
 // Finds the blocks of a group that fit an empty cell of a grid: their face matches the face
 // of the aimed block, the neighbors of their family rank them, and their conveyor and
-// upgrade ports line up with the neighbors' ports.
+// upgrade ports line up with the neighbors' ports. Of the conveyor blocks only those
+// of the look of the connected ones fit, if there are any, and a gap in a row of a block
+// takes that block. The blocks that fit keep the order of the group.
 // It knows no game types, so it can be tested offline on real block definitions.
 //
 // Coordinates follow the game: a block's local cells run from 0 to Size - 1 along x right,
@@ -31,6 +33,10 @@ public static class BlockFit
 
     // An aimed face that differs more than this doesn't fit at all
     private const double MaxMismatch = 1.0;
+
+    // Added to the score for each connection that doesn't suit the look of a conveyor block.
+    // More than the tolerance, so a tube that suits the line rules out those that don't.
+    private const double StyleMismatch = 0.1;
 
     public struct Int3 : IEquatable<Int3>
     {
@@ -164,6 +170,18 @@ public static class BlockFit
         // their ports may end against a block. Other blocks, like a thruster or a tank, may
         // leave a port against a beam or a wall, as the game allows.
         public bool Conveyor;
+
+        // The look of a conveyor tube, like the plain, the reinforced and the industrial
+        // ones, which all connect to each other. Null for the blocks that go with any.
+        public string Style;
+
+        // The direction of the port that ends a line of the tube's look on any other block,
+        // like the wide end of the industrial pipe end. Null without such a port.
+        public Int3? End;
+
+        // A straight tube that only continues a line of its look, because the look has an
+        // end piece for the other blocks
+        public bool Middle;
 
         public bool HasPorts => Ports.Length != 0;
 
@@ -343,13 +361,20 @@ public static class BlockFit
         if (block.Shape.HasPorts)
         {
             var own = new HashSet<string>(block.Shape.Ports.Select(p => p.Kind));
-            var connected = PortsFit(block, grid, cells, Only(incoming, own));
-            return connected > 0 ? -0.001 * connected : (double?)null;
+            var faces = Only(incoming, own);
+            var connected = PortsFit(block, grid, cells, faces);
+            return connected > 0
+                ? StyleMismatch * OtherLooks(block, grid, faces)
+                    + 0.001 * Misaligned(block, grid, faces)
+                    - 0.001 * connected
+                : (double?)null;
         }
 
         var conveyor = Only(incoming, new HashSet<string> { LargePort, SmallPort });
         if (conveyor.Count != 0)
-            return CapFits(block, boundary, conveyor, target.LargePortSpan) ? 0 : (double?)null;
+            return CapFits(block, boundary, conveyor, target.LargePortSpan)
+                ? StyleMismatch * OtherLooks(block, grid, conveyor)
+                : (double?)null;
 
         // A face sticking out where the neighbor has none, like a full face against the
         // slanted side of a slope, is worse than leaving part of the neighbor's face
@@ -425,6 +450,91 @@ public static class BlockFit
         return incoming.Count;
     }
 
+    // The number of connections of the block that don't suit its look: to a tube of another
+    // look, of a straight piece that only continues its own look to any other block, and of
+    // an end piece with its end on its own look or its other port on anything else
+    private static int OtherLooks(
+        Placed block,
+        Func<Int3, Placed> grid,
+        Dictionary<(Int3, Int3), HashSet<string>> faces
+    )
+    {
+        var shape = block.Shape;
+        if (shape.Style == null)
+            return 0;
+
+        var end = shape.End.HasValue ? block.Rotation.Apply(shape.End.Value) : (Int3?)null;
+        return faces.Keys.Count(face =>
+        {
+            var other = grid(face.Item1 + face.Item2).Shape;
+            var foreign = other.Style != shape.Style;
+            if (end.HasValue && face.Item2.Equals(end.Value))
+                return !foreign;
+            return foreign && (other.Style != null || shape.Middle || end.HasValue);
+        });
+    }
+
+    // How much the sides of the block differ from the sides of the connected blocks of its
+    // look, in face units. It turns a tube with one side unlike the others, such as the open
+    // side of the reinforced tubes, the way the line is turned.
+    private static double Misaligned(
+        Placed block,
+        Func<Int3, Placed> grid,
+        Dictionary<(Int3, Int3), HashSet<string>> faces
+    )
+    {
+        if (block.Shape.Style == null)
+            return 0;
+
+        var differing = 0;
+        foreach (var (cell, d) in faces.Keys)
+        {
+            var other = grid(cell + d);
+            if (other.Shape.Style != block.Shape.Style)
+                continue;
+            foreach (var side in Int3.Directions)
+            {
+                if (side.Equals(d) || side.Equals(-d))
+                    continue;
+                var own = block.Face(cell, side);
+                var theirs = other.Face(cell + d, side);
+                for (var k = 0; k < own.Length; k++)
+                    if (own[k] != theirs[k])
+                        differing++;
+            }
+        }
+
+        return (double)differing / (Samples * Samples);
+    }
+
+    // The rotation in which the block fills a gap in a row of the same block: the aimed
+    // block and the one on the opposite side are the same block, turned the same way.
+    // Null if the cell isn't such a gap. Conveyor blocks go by their ports instead.
+    private static Rotation RowGap(Candidate candidate, Target target, Func<Int3, Placed> grid)
+    {
+        var shape = candidate.Shape;
+        var aimed = grid(target.Aimed);
+        if (shape.HasPorts || aimed?.Shape != shape)
+            return null;
+
+        var rotation = candidate.Rotations.FirstOrDefault(r => r.Equals(aimed.Rotation));
+        if (rotation == null)
+            return null;
+
+        var block = new Placed(shape, rotation, Position(shape, rotation, target));
+        if (block.Cells.Any(cell => grid(cell) != null))
+            return null;
+
+        var opposite = block.Position + block.Position - aimed.Position;
+        var other = grid(opposite);
+        return
+            other?.Shape == shape
+            && other.Rotation.Equals(rotation)
+            && other.Position.Equals(opposite)
+            ? rotation
+            : null;
+    }
+
     private static Dictionary<(Int3, Int3), HashSet<string>> Only(
         Dictionary<(Int3, Int3), HashSet<string>> incoming,
         HashSet<string> kinds
@@ -491,12 +601,26 @@ public static class BlockFit
 
         // Only the best shapes fit
         var fitting = picks.Where(p => p.HasValue).Select(p => p.Value.Score).ToList();
-        if (fitting.Count != 0)
+        var best = fitting.Count != 0 ? fitting.Min() : 0;
+        for (var i = 0; i < picks.Length; i++)
+            if (picks[i].HasValue && picks[i].Value.Score > best + Tolerance)
+                picks[i] = null;
+
+        // The block of a row fits its gap as well as the best, even when the scores say
+        // otherwise, like a rounded armor block that sticks out past a half block beside
+        // the row, which the beams in the group aren't measured against
+        for (var i = 0; i < picks.Length; i++)
         {
-            var best = fitting.Min();
-            for (var i = 0; i < picks.Length; i++)
-                if (picks[i].HasValue && picks[i].Value.Score > best + Tolerance)
-                    picks[i] = null;
+            if (picks[i].HasValue)
+                continue;
+            var rotation = RowGap(candidates[i], target, grid);
+            if (rotation != null)
+                picks[i] = new Pick
+                {
+                    Index = i,
+                    Rotation = rotation,
+                    Score = best,
+                };
         }
 
         return picks;
