@@ -142,7 +142,7 @@ def build(game: Game, screen: int, panel: Panel) -> None:
     game.name_dialog(screen, "NewGroupButton", GROUP)
     game.select_category(screen, "Armor Blocks")
     sizes = {}
-    # A double click adds a block, or the blocks of a game block group one by one
+    # A double click adds a block, or the blocks of a vanilla block group one by one
     for name in game.grid_names(screen):
         game.double_click_block(screen, name)
         _, grid = panel.nodes()

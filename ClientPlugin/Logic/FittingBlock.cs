@@ -20,7 +20,7 @@ using static ClientPlugin.Logic.BlockFit;
 namespace ClientPlugin.Logic;
 
 // Selects the next block of the group in use that fits where the cube builder aims,
-// see BlockFit for what fits. The group is a player's group or the game's block variants.
+// see BlockFit for what fits. The group is a custom block group or the vanilla block group of the block in hand.
 public static class FittingBlock
 {
     private static readonly Dictionary<MyDefinitionId, Shape> Shapes = new();

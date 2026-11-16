@@ -87,7 +87,7 @@ public static class ItemGroupScrollPatch
         return GroupInUse(out _);
     }
 
-    // The player's group in use, or else the game's block variants of the block in hand
+    // The custom block group in use, or else the vanilla block group of the block in hand
     public static IGroupInUse AnyGroupInUse(out MyCharacter character)
     {
         if (GroupInUse(out character) is { } item)
@@ -127,7 +127,7 @@ public static class ItemGroupScrollPatch
 }
 
 // The cube builder handles the wheel before the toolbar does, cycling the block in the hand
-// through its game block group. A group's block leaves the wheel to the group.
+// through its vanilla block group. A group's block leaves the wheel to the group.
 [HarmonyPatch(typeof(MyCubeBuilder))]
 public static class ItemGroupBlockVariantsPatch
 {

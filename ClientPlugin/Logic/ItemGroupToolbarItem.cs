@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +33,14 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
     // and only the group used last steps on from the held item.
     private static readonly Dictionary<string, string> Positions = new();
     private static string activeGroupId;
+
+    // Equipping a tool goes through the server in multiplayer and leaves the hand empty until
+    // it answers. Meanwhile the group stays the one in use.
+    private const int SwitchMilliseconds = 2000;
+    private static int equippedAt;
+
+    // Whether the group was in use at this slot's last update, to start over once it isn't
+    private bool inUse;
 
     // The game's own switch to a block variant: the block as it is, with its rotation
     private static readonly MethodInfo SetBuilderBlock = AccessTools.Method(
@@ -141,7 +150,7 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
     {
         // Like the game's toolbar, put the cube builder away before switching from a block.
         // Switching in place skips the builder's reset: the placement box could lose the grid
-        // in view, and a block of the same game block group would switch the grid size.
+        // in view, and a block of the same vanilla block group would switch the grid size.
         if (member != held && MyCubeBuilder.Static is { IsActivated: true })
             character.SwitchToWeapon(null);
 
@@ -151,6 +160,7 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
             return false;
         Positions[GroupId] = member.Kind;
         activeGroupId = GroupId;
+        equippedAt = Environment.TickCount;
         WantsToBeActivated = true;
         return true;
     }
@@ -201,6 +211,16 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
         // Show the held item of the group in use, or else the one using the group would equip
         var held = group.Held;
         var current = IsCurrent(held);
+        if (current)
+            inUse = true;
+        else if (inUse && !Switching(held))
+        {
+            // Another slot, group or item is in use, or the hand is empty
+            inUse = false;
+            if (Config.Current.ResetCustomGroupSlots)
+                Positions.Remove(GroupId);
+        }
+
         var shown =
             (current ? held : null) ?? group.Pick(Position) ?? group.Members.FirstOrDefault();
         if (shown != null)
@@ -209,6 +229,11 @@ public class ItemGroupToolbarItem : MyToolbarItem, IGroupInUse
         WantsToBeSelected = current;
         return changes;
     }
+
+    private bool Switching(ItemGroup.Member held) =>
+        held == null
+        && activeGroupId == GroupId
+        && unchecked(Environment.TickCount - equippedAt) < SwitchMilliseconds;
 
     public override bool Equals(object obj) =>
         obj is ItemGroupToolbarItem other && other.GroupId == GroupId;

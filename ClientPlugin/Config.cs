@@ -37,7 +37,9 @@ public class Config : INotifyPropertyChanged
     private FitMouseButton previousFitButton = FitMouseButton.ExtraButton1;
     private Binding previousFitKey = new Binding(MyKeys.None);
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
-    private bool gameBlockGroups = true;
+    private bool vanillaBlockGroups = true;
+    private bool resetCustomGroupSlots = true;
+    private bool resetVanillaGroupSlots = true;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
     private bool pickBlockColor = true;
     private bool pickBlockSkin = true;
@@ -93,6 +95,26 @@ public class Config : INotifyPropertyChanged
     {
         get => useCharacterProfilesForBuildCockpit;
         set => SetField(ref useCharacterProfilesForBuildCockpit, value);
+    }
+
+    [Checkbox(
+        label: "Custom block groups start over",
+        description: "A custom block group's toolbar slot goes back to the group's first item once it is\nnot in use any more, so the slot keeps showing the same icon"
+    )]
+    public bool ResetCustomGroupSlots
+    {
+        get => resetCustomGroupSlots;
+        set => SetField(ref resetCustomGroupSlots, value);
+    }
+
+    [Checkbox(
+        label: "Vanilla block groups start over",
+        description: "Picking the toolbar slot of a vanilla block group again after leaving it\nequips the block its icon shows, not the variant used last"
+    )]
+    public bool ResetVanillaGroupSlots
+    {
+        get => resetVanillaGroupSlots;
+        set => SetField(ref resetVanillaGroupSlots, value);
     }
 
     [Separator("Recent searches")]
@@ -196,13 +218,13 @@ public class Config : INotifyPropertyChanged
     }
 
     [Checkbox(
-        label: "Game block groups",
-        description: "The fitting blocks keys and the quick selector also work on the game's own\nblock variants, with a block in hand that is in no group in use.\nA block without variants is turned the way it fits."
+        label: "Vanilla block groups",
+        description: "The fitting blocks keys and the quick selector also work on vanilla block groups,\nwith a block in hand that is in no group in use.\nA block without variants is turned the way it fits."
     )]
-    public bool GameBlockGroups
+    public bool VanillaBlockGroups
     {
-        get => gameBlockGroups;
-        set => SetField(ref gameBlockGroups, value);
+        get => vanillaBlockGroups;
+        set => SetField(ref vanillaBlockGroups, value);
     }
 
     [Separator("Faced block")]
