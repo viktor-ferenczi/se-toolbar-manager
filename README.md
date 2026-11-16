@@ -77,6 +77,7 @@ A custom block group, or group for short, is one you make in Toolbar Manager. It
 several tools, weapons and blocks into one slot of your character toolbar. The game's own
 predefined groups, like the heavy armor cube with its slopes and corners (the block tiles
 with a `+` in the G menu), are called vanilla block groups here.
+
 Using the slot equips the first available item in tile order. Pressing the slot again
 with a tool or weapon of the group in hand moves on to the next item, all tiers of a tool
 counting as one. With the default group that is welder, grinder, then hand drill. With a
@@ -92,14 +93,17 @@ the wheel equips exactly the block listed, whatever grid size the last block had
 Several groups can be on the toolbar at the same time, on any slots and pages, and they
 may share items. Each slot steps only through its own group.
 
-Once you put the group's item away or pick another slot, the group's slot goes back to
-the group's first item, so the slot always shows the same icon. Turn **Custom block groups
-start over** off in the plugin's configuration to have the slot show and equip the item it
-was on last instead. **Vanilla block groups start over** does the same for a slot of a
-block in a vanilla block group, like the heavy armor cube. Its icon always shows the
-cube, but the game equips the variant you used last, say a slope. With the option on,
-picking the slot again after leaving it equips the cube, the block its icon shows. Switching toolbar pages with the item still in
-hand doesn't count as leaving the slot.
+When you put the group's item away or pick another slot, the group's slot goes back to
+the group's first item, so it always shows the same icon. To have the slot show and equip
+the item it was on last instead, turn off **Custom block groups start over** in the
+plugin's configuration.
+
+**Vanilla block groups start over** does the same for a slot of a block in a vanilla block
+group, like the heavy armor cube. The slot's icon always shows the cube, but the game
+equips the variant you used last, say a slope. With the option on, picking the slot again
+after leaving it equips the cube, the block its icon shows.
+
+Switching toolbar pages with the item still in hand doesn't count as leaving the slot.
 
 While holding a tool, weapon or block from the group used last, with that group on the
 current toolbar page, scroll up to move forward through the group or down to move backward.
