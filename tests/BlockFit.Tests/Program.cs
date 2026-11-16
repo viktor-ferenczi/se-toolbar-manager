@@ -1,7 +1,7 @@
 // Offline tests of BlockFit on vanilla block definitions from blocks.json, which
 // tests/fit_fixture.py extracts from the installed game.
 //
-//     dotnet run --project tests/BlockFit.Tests [-- --scores]
+//     dotnet run --project tests/BlockFit.Tests [-- --scores | --bench]
 //
 // Prints PASS or FAIL per check and exits non-zero on a failure. --scores also prints
 // the score of every candidate. --bench times the evaluation of a 100 block group.
