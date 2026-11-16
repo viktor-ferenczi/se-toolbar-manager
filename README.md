@@ -440,6 +440,10 @@ heavy armor block from an ordinary toolbar slot, and Shift on blocks without var
 The game's own wheel and slot must keep working, and with the option off the keys must
 leave the block alone.
 
+`tests/faced_block_check.py` checks picking the faced block with `Ctrl+G`: the block in
+hand, its size, skin and placed orientation, in symmetry mode too, and without creative
+rights. With `--color` it also checks the **Also pick color** option.
+
 ### Release
 
 - Always make the final release from a RELEASE build and test it before publishing.

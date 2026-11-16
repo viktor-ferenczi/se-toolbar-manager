@@ -17,8 +17,8 @@ using VRageMath;
 
 namespace ClientPlugin.Logic;
 
-// Picks the block the player faces as the block to place, with its type, subtype, skin and
-// orientation
+// Picks the block the player faces as the block to place, with its type, subtype, color,
+// skin and orientation
 public static class FacedBlock
 {
     private static MyHudNotification notification;
