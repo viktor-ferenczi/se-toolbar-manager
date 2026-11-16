@@ -286,6 +286,21 @@ Separating multiple search patterns by space is not supported, currently.
 
 You can change the hotkey in the plugin's configuration.
 
+### Picking the block you face
+
+Press `Ctrl+G` with a block under the crosshair, up to 100 m away, to take it into your
+hand as the block to place. It is the same block exactly: its type and subtype in the
+grid's size and turned the same way. Its color and skin become the color and skin of the
+blocks you place; turn off **Also pick color** or **Also pick skin** in the plugin's
+configuration to keep your own. The game's color picker (`Shift+P`) takes the color and
+the skin without the block. It works with a block, a tool or nothing in hand, and in
+survival too: you get the block to place, not its components. Blocks you haven't researched or whose
+DLC you don't own are refused the way their toolbar slot would be.
+
+The key works on foot, with the jetpack and in the spectator camera. It does nothing in a
+seat, where `Ctrl+G` is the game's build mode. It can be changed or turned off in the
+plugin's configuration. There is no gamepad binding.
+
 ### Configuration
 
 All key features of this plugin are configurable. You can change any of the configuration options without having to restart or reload anything. Please see below how to access the plugin's configuration dialog.
@@ -424,6 +439,10 @@ inventory. It needs a Remote build whose grid gestures reach disabled items.
 heavy armor block from an ordinary toolbar slot, and Shift on blocks without variants.
 The game's own wheel and slot must keep working, and with the option off the keys must
 leave the block alone.
+
+`tests/faced_block_check.py` checks picking the faced block with `Ctrl+G`: the block in
+hand, its size, skin and placed orientation, in symmetry mode too, and without creative
+rights. With `--color` it also checks the **Also pick color** option.
 
 ### Release
 
