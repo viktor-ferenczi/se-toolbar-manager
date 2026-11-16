@@ -189,13 +189,18 @@ def ensure_pulsar(c: Client) -> None:
 
 
 def write_configs(c: Client) -> None:
-    """Remote settings, experimental mode, and optional staging override for tests."""
+    """Remote settings, experimental mode, and options a test turns off."""
     c.appdata.mkdir(parents=True, exist_ok=True)
     c.config.unlink(missing_ok=True)
-    if os.environ.get("TBM_STAGING_DISABLED") == "1":
+    options = {
+        "TBM_STAGING_DISABLED": "EnableStagingArea",
+        "TBM_GAME_GROUPS_OFF": "GameBlockGroups",
+    }
+    off = [name for env, name in options.items() if os.environ.get(env) == "1"]
+    if off:
         c.config.parent.mkdir(parents=True, exist_ok=True)
         c.config.write_text(
-            "<Config><EnableStagingArea>false</EnableStagingArea></Config>"
+            "<Config>" + "".join(f"<{n}>false</{n}>" for n in off) + "</Config>"
         )
     (c.appdata / "Remote.cfg").write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n'

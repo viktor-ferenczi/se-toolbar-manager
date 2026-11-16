@@ -156,6 +156,10 @@ way it fits, or else selects the next block that fits. Then the wheel can step o
 there. When nothing fits, the quick press stays silent, unless the group has no block
 of the grid's size at all.
 
+While Shift stays held, the quick press is done again whenever the placement box moves
+to another cell or another face of a block. So you can hold Shift and move the aim until
+the block sits right, without pressing Shift again. These repeats are always silent.
+
 A block fits when its face matches the face of the block you aim at. The other blocks
 around it rank the candidates if they are of the same kind: armor with armor, beams with
 beams, and so on for the blocks of a game block group. Other neighbors don't count, so a
@@ -231,6 +235,30 @@ The panel is about 16:9: a group of 12 items gets 5 columns and 3 rows, with the
 cells on the right of the last row. The plugin's configuration can change the keys to
 Shift+Alt or Ctrl+Alt, or turn the panel off. If Shift is the fitting blocks wheel's
 modifier with the quick press on, pressing Shift before Ctrl also does the quick press.
+
+#### The game's block variants
+
+The fitting blocks keys and the quick selector also work without a group of your own.
+With a block in hand that has variants in the game, like the heavy armor cube with its
+slopes and corners, the variants of the block's size are the group: Shift picks the
+variant that fits the aimed position, Shift and the wheel or the extra mouse buttons
+step through the fitting ones, and Shift+Ctrl shows all of them to pick from. A group
+of yours in use comes first, so this applies to blocks from ordinary toolbar slots and
+from the G menu. Variants of a DLC you don't own, or not researched yet, are greyed out
+on the panel and never picked.
+
+A block without variants works too, as a group of one: pressing Shift turns it the way
+it fits the aimed position right away. A collector, for example, snaps with its
+conveyor port onto the open end of a conveyor line. There is nothing to choose from, so
+Shift+Ctrl shows no panel for it, and the quick press stays silent when it doesn't fit.
+
+The game's own keys stay as they are: the wheel without a modifier steps through all
+variants, pressing the block's slot again switches between the large and the small
+block, and so do the gamepad's controls for them. The fitting blocks keys and the quick
+selector are keyboard and mouse only.
+
+Turn **Game block groups** off in the plugin's configuration to keep them to your own
+groups.
 
 ### Quick block selection
 
@@ -391,6 +419,11 @@ the world. It writes the group file and loads the mod itself, in a creative worl
 `tests/greyed_items_check.py` checks that greyed out tools go into a group by drag and
 double click in edit mode only, and that the group equips them once they are in the
 inventory. It needs a Remote build whose grid gestures reach disabled items.
+
+`tests/game_groups_check.py` checks the fitting blocks keys and the quick selector with a
+heavy armor block from an ordinary toolbar slot, and Shift on blocks without variants.
+The game's own wheel and slot must keep working, and with the option off the keys must
+leave the block alone.
 
 ### Release
 
