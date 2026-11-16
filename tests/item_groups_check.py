@@ -336,8 +336,9 @@ class Game:
         }
 
     def exception_count(self) -> int:
-        """Exceptions in the game log, except the debug listener port another client holds
-        and LinuxCompat's list of shims, which has a WindowsException"""
+        """Exceptions in the game log, except the debug listener port another client holds,
+        the game's retry of a world load from XML and LinuxCompat's list of shims, which
+        has a WindowsException"""
         text = self.client.log.read_text(errors="replace")
         return len(
             [
@@ -347,6 +348,7 @@ class Game:
                 and not line.lstrip().startswith("at ")
                 and "SocketException" not in line
                 and "MyLoadingNeedXMLException" not in line
+                and "UnloadOnException" not in line
                 and "[LinuxCompat]" not in line
             ]
         )
@@ -542,7 +544,7 @@ def run(game: Game) -> None:
     game.retry_name(screen, "NewGroupButton", " hand tools ", "Builder")
     check(
         "new group created and selected",
-        game.group_names(screen) == ["Hand Tools", "Builder"]
+        game.group_names(screen) == ["Builder", "Hand Tools"]
         and game.selected_group(screen) == "Builder"
         and game.group_items(screen) == [],
         f"{game.group_names(screen)}, {game.selected_group(screen)}",
@@ -642,7 +644,7 @@ def run(game: Game) -> None:
     game.wait_screen("MyGuiScreenMessageBox", present=False)
     check(
         "group renamed, another one created and deleted",
-        game.group_names(screen) == ["Hand Tools", "Builder Kit"],
+        game.group_names(screen) == ["Builder Kit", "Hand Tools"],
         str(game.group_names(screen)),
     )
 
@@ -655,7 +657,7 @@ def run(game: Game) -> None:
     game.select_category(screen, "Groups")
     check(
         "Groups shows both groups",
-        game.grid_names(screen) == ["Hand Tools", "Builder Kit"],
+        game.grid_names(screen) == ["Builder Kit", "Hand Tools"],
         str(game.grid_names(screen)),
     )
     game.grid_click(
@@ -720,7 +722,7 @@ def run(game: Game) -> None:
         "reset restores the default group",
         game.selected_group(screen) == "Hand Tools"
         and game.group_items(screen)[:2] == ["Elite Welder", "Proficient Welder"]
-        and game.group_names(screen) == ["Hand Tools", "Builder Kit"],
+        and game.group_names(screen) == ["Builder Kit", "Hand Tools"],
         str(game.group_items(screen)[:2]),
     )
     check(

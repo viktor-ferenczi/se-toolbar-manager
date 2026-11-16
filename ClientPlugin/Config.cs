@@ -242,7 +242,8 @@ public class Config : INotifyPropertyChanged
         get => itemGroups ?? (itemGroups = ItemGroupStorage.Load());
         set
         {
-            var groups = value ?? Array.Empty<ItemGroup>();
+            // Always in name order, so a new, renamed or duplicated group goes to its place
+            var groups = ItemGroupStorage.SortByName(value ?? Array.Empty<ItemGroup>());
             ItemGroupStorage.Save(groups);
             itemGroups = groups;
         }

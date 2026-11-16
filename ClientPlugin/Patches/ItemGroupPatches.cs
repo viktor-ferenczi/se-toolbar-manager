@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClientPlugin.Gui;
@@ -254,22 +255,21 @@ public static class ItemGroupsToolbarConfigPatch
         if (!IsCharacterToolbar(__instance))
             return;
 
-        var character = __instance.m_character;
-        var playerId = MySession.Static.LocalPlayerId;
+        // Groups come in name order, each shown with its first item. An empty group gets an
+        // empty tile with the + in the corner, so it can be clicked to fill it.
         foreach (var group in Config.Current.ItemGroups)
         {
             var matches = searchCondition is MySearchByCategoryCondition byCategory
                 ? byCategory.SelectedCategories.Contains(Category)
                 : searchCondition == null || searchCondition.MatchesCondition(group.Name);
-            if (!matches || group.Members.Count == 0)
+            if (!matches)
                 continue;
 
-            // Shows the item using the group would equip, but stays enabled without any,
-            // so the group can be put on the toolbar before getting the tools
+            // Stays enabled without any usable item, so the group can be put on the toolbar
+            // before getting the tools
             var item = new ItemGroupToolbarItem(group.Id);
-            item.Update(character, playerId);
             var gridItem = new MyGuiGridItem(
-                item.Icons,
+                group.Members.FirstOrDefault()?.Item.Icons ?? Array.Empty<string>(),
                 null,
                 group.Name,
                 new MyGuiScreenToolbarConfigBase.GridItemUserData

@@ -224,8 +224,11 @@ public class GroupEditor
 
     private void RefreshGroups()
     {
+        // The default group first, as before groups were sorted by name
         if (SelectedGroup == null)
-            selectedGroupId = Groups.FirstOrDefault()?.Id;
+            selectedGroupId =
+                Config.Current.FindItemGroup(ItemGroup.DefaultId)?.Id
+                ?? Groups.FirstOrDefault()?.Id;
 
         groupSelector.ClearItems();
         for (var i = 0; i < Groups.Length; i++)

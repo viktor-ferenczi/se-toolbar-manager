@@ -24,6 +24,7 @@ public class ItemGroup
 
     public string Name = "";
 
+    // The position in name order, saved for versions before 1.9.0 which listed groups by it
     public int Order;
 
     // Definition ids, like MyObjectBuilder_PhysicalGunObject/Welder4Item for a tool or
