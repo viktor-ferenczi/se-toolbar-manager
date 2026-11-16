@@ -290,11 +290,11 @@ You can change the hotkey in the plugin's configuration.
 
 Press `Ctrl+G` with a block under the crosshair, up to 100 m away, to take it into your
 hand as the block to place. It is the same block exactly: its type and subtype in the
-grid's size, turned the same way, and its skin becomes the skin of the blocks you place.
-The build color stays as it is, unless **Pick the color too** is on in the plugin's
-configuration; the game's own color picker (`Shift+P`) takes the color and the skin
-without the block. It works with a block, a tool or nothing in hand, and in survival too:
-you get the block to place, not its components. Blocks you haven't researched or whose
+grid's size and turned the same way. Its color and skin become the color and skin of the
+blocks you place; turn off **Also pick color** or **Also pick skin** in the plugin's
+configuration to keep your own. The game's color picker (`Shift+P`) takes the color and
+the skin without the block. It works with a block, a tool or nothing in hand, and in
+survival too: you get the block to place, not its components. Blocks you haven't researched or whose
 DLC you don't own are refused the way their toolbar slot would be.
 
 The key works on foot, with the jetpack and in the spectator camera. It does nothing in a

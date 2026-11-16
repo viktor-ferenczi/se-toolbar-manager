@@ -79,7 +79,7 @@ public static class FacedBlock
     }
 
     // Equips the block like its toolbar slot would, so the game's research, DLC and safe zone
-    // rules apply. The skin is the one new blocks get, as the game's color picker sets it.
+    // rules apply. The color and skin go to the new blocks, as the game's color picker sets them.
     private static void Pick(MySlimBlock block, MyCharacter character)
     {
         var definition = block.BlockDefinition;
@@ -120,8 +120,12 @@ public static class FacedBlock
             SwitchVariant.Invoke(builder, new object[] { definition });
 
         FittingBlock.TurnTo(definition.Id, rotation);
-        var skin = block.SkinSubtypeId;
-        player.BuildArmorSkin = skin == MyStringHash.NullOrEmpty ? string.Empty : skin.ToString();
+        if (Config.Current.PickBlockSkin)
+        {
+            var skin = block.SkinSubtypeId;
+            player.BuildArmorSkin =
+                skin == MyStringHash.NullOrEmpty ? string.Empty : skin.ToString();
+        }
         if (Config.Current.PickBlockColor)
             player.ChangeOrSwitchToColor(block.ColorMaskHSV);
     }

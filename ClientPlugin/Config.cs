@@ -39,7 +39,8 @@ public class Config : INotifyPropertyChanged
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
     private bool gameBlockGroups = true;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
-    private bool pickBlockColor;
+    private bool pickBlockColor = true;
+    private bool pickBlockSkin = true;
 
     private ItemGroup[] itemGroups;
 
@@ -207,7 +208,7 @@ public class Config : INotifyPropertyChanged
     [Separator("Faced block")]
     [Keybind(
         label: "Pick block",
-        description: "Takes the block you face into the hand as the block to place,\nwith its type, skin and orientation"
+        description: "Takes the block you face into the hand as the block to place,\nwith its type and orientation"
     )]
     public Binding PickBlockKey
     {
@@ -216,13 +217,23 @@ public class Config : INotifyPropertyChanged
     }
 
     [Checkbox(
-        label: "Pick the color too",
+        label: "Also pick color",
         description: "Picking a block also selects its color for new blocks"
     )]
     public bool PickBlockColor
     {
         get => pickBlockColor;
         set => SetField(ref pickBlockColor, value);
+    }
+
+    [Checkbox(
+        label: "Also pick skin",
+        description: "Picking a block also selects its skin for new blocks"
+    )]
+    public bool PickBlockSkin
+    {
+        get => pickBlockSkin;
+        set => SetField(ref pickBlockSkin, value);
     }
 
     [XmlIgnore]

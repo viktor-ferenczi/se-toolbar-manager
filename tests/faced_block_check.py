@@ -8,7 +8,7 @@ the default key like a player: Ctrl+G.
 The block in hand must be the faced one by type and subtype, in its size, from an empty
 hand and with another block in hand. The skin for new blocks must be the block's, and a
 click must place the block turned like the picked one, mirrored too in symmetry mode.
-The build color stays, or with --color (the "Pick the color too" option) becomes the
+The build color stays, or with --color (the "Also pick color" option) becomes the
 block's. Ctrl+G must not open the G menu. It works without creative rights, and with no
 block in view it says so.
 Prints PASS or FAIL per check and exits non-zero on a failure.
@@ -336,8 +336,10 @@ def main() -> int:
     attach = "--attach" in sys.argv
     keep = "--keep" in sys.argv
     pick_color = "--color" in sys.argv
-    if pick_color:
-        os.environ["TBM_CONFIG"] = "<PickBlockColor>true</PickBlockColor>"
+    # The option defaults to on; without --color the check runs with it off
+    os.environ["TBM_CONFIG"] = (
+        f"<PickBlockColor>{str(pick_color).lower()}</PickBlockColor>"
+    )
     client = rig.client()
     api = rig.connect(client) if attach else rig.start(client)
     game = Game(api, client)
