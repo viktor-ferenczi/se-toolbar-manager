@@ -11,8 +11,9 @@ slot show and equip its first block again. "Vanilla block groups start over" mak
 heavy armor block's slot equip the block its icon shows instead of the variant used
 last. Turned off, both continue where they were. While a slot is in use, pressing it again and switching toolbar pages change nothing.
 
-TBM_RESET_CUSTOM=0 and TBM_RESET_VANILLA=0 start the client with that option off, both are
-on by default. The plugin settings must show both options, checked as configured.
+By default the configuration file sets neither option, so the plugin's defaults apply:
+custom on, vanilla off. TBM_RESET_CUSTOM=0 and TBM_RESET_VANILLA=1 save the other value.
+The plugin settings must show both options, checked as expected.
 Prints PASS or FAIL per check and exits non-zero on a failure.
 --attach uses a client this script started before with --keep, which leaves it running.
 """
@@ -27,7 +28,7 @@ import rig
 from item_groups_check import GUN, TOOLBAR_CONFIG, Game, check, held_check, results
 
 RESET_CUSTOM = os.environ.get("TBM_RESET_CUSTOM", "1") == "1"
-RESET_VANILLA = os.environ.get("TBM_RESET_VANILLA", "1") == "1"
+RESET_VANILLA = os.environ.get("TBM_RESET_VANILLA", "0") == "1"
 
 CUBE = "CubeBlock/"
 LIGHT = "LargeBlockArmorSlope"
@@ -280,12 +281,18 @@ def run(game: Game) -> None:
 
 
 def main() -> int:
-    if not (RESET_CUSTOM and RESET_VANILLA):
-        os.environ["TBM_CONFIG"] = os.environ.get("TBM_CONFIG", "") + (
+    if not RESET_CUSTOM or RESET_VANILLA:
+        saved = (
             f"<ResetCustomGroupSlots>{str(RESET_CUSTOM).lower()}</ResetCustomGroupSlots>"
             f"<ResetVanillaGroupSlots>{str(RESET_VANILLA).lower()}</ResetVanillaGroupSlots>"
         )
-    print(f"Custom block groups start over: {RESET_CUSTOM}, vanilla: {RESET_VANILLA}")
+    else:
+        saved = ""
+    os.environ["TBM_CONFIG"] = os.environ.get("TBM_CONFIG", "") + saved
+    print(
+        f"Saved: {saved or 'defaults'}; expected custom block groups start over:"
+        f" {RESET_CUSTOM}, vanilla: {RESET_VANILLA}"
+    )
 
     attach = "--attach" in sys.argv
     keep = "--keep" in sys.argv

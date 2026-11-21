@@ -26,8 +26,9 @@ slot steps only through its own group and continues it where it was.
 
 `tests/group_reset_check.py` checks that a custom block group slot and a slot of a block
 in a vanilla block group start over once they are left by picking another slot or putting the block
-away, and continue where they were with the options off (`TBM_RESET_CUSTOM=0`,
-`TBM_RESET_VANILLA=0`). It also checks both options in the plugin settings.
+away, and continue where they were with the options off. By default the custom option is
+on and the vanilla one off; `TBM_RESET_CUSTOM=0` and `TBM_RESET_VANILLA=1` change them.
+It also checks both options in the plugin settings.
 
 `tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
 blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through

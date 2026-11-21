@@ -39,7 +39,7 @@ public class Config : INotifyPropertyChanged
     private QuickSelectorChord quickSelectorKeys = QuickSelectorChord.ShiftCtrl;
     private bool vanillaBlockGroups = true;
     private bool resetCustomGroupSlots = true;
-    private bool resetVanillaGroupSlots = true;
+    private bool resetVanillaGroupSlots;
     private Binding pickBlockKey = new Binding(MyKeys.G, ctrl: true);
     private bool pickBlockColor = true;
     private bool pickBlockSkin = true;

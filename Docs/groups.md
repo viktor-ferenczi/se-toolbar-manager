@@ -28,7 +28,8 @@ plugin's configuration.
 **Vanilla block groups start over** does the same for a slot of a block in a vanilla block
 group, like the heavy armor cube. The slot's icon always shows the cube, but the game
 equips the variant you used last, say a slope. With the option on, picking the slot again
-after leaving it equips the cube, the block its icon shows.
+after leaving it equips the cube, the block its icon shows. It is off by default, which
+keeps the game's own behavior.
 
 Switching toolbar pages with the item still in hand doesn't count as leaving the slot.
 
