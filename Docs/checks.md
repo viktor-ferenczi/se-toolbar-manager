@@ -28,9 +28,7 @@ slot steps only through its own group and continues it where it was.
 in a vanilla block group start over once they are left by picking another slot or putting the block
 away, and continue where they were with the options off. By default the custom option is
 on and the vanilla one off; `TBM_RESET_CUSTOM=0` and `TBM_RESET_VANILLA=1` change them.
-`TBM_FROM_1_9_0=1` starts from a configuration saved by 1.9.0, with both options on and no
-`ConfigVersion`, and expects the vanilla option turned off. It also checks both options in
-the plugin settings.
+It also checks both options in the plugin settings.
 
 `tests/same_pair_check.py` checks a group with both sizes of a block and with two modded
 blocks sharing a `BlockPairName` (the mod in `tests/same_pair_mod`): the wheel steps through

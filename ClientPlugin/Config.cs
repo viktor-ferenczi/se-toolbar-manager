@@ -258,12 +258,6 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref pickBlockSkin, value);
     }
 
-    // Raised when a change needs saved configs migrated, see ConfigStorage.Migrate.
-    // A config file without it was saved before version 1.9.1 of the plugin.
-    public const int LatestVersion = 1;
-
-    public int ConfigVersion { get; set; }
-
     [XmlIgnore]
     public ItemGroup[] ItemGroups
     {
@@ -310,7 +304,7 @@ public class Config : INotifyPropertyChanged
 
     #region Property change notification boilerplate
 
-    public static readonly Config Default = new Config { ConfigVersion = LatestVersion };
+    public static readonly Config Default = new Config();
     public static readonly Config Current = ConfigStorage.Load();
 
     public static void Save()
