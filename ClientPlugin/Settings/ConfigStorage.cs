@@ -32,7 +32,10 @@ public static class ConfigStorage
         try
         {
             using (var streamReader = File.OpenText(path))
-                return (Config)xmlSerializer.Deserialize(streamReader) ?? Config.Default;
+            {
+                var config = (Config)xmlSerializer.Deserialize(streamReader);
+                return config == null ? Config.Default : Migrate(config);
+            }
         }
         catch (Exception)
         {
@@ -42,5 +45,19 @@ public static class ConfigStorage
         }
 
         return Config.Default;
+    }
+
+    private static Config Migrate(Config config)
+    {
+        if (config.ConfigVersion < 1)
+        {
+            // 1.9.0 shipped "Vanilla block groups start over" on and saved it for everyone
+            // who opened the settings, chosen or not. It changes the game's own behavior,
+            // so turn it off once. Players who want it turn it on again.
+            config.ResetVanillaGroupSlots = false;
+        }
+
+        config.ConfigVersion = Config.LatestVersion;
+        return config;
     }
 }
